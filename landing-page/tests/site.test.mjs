@@ -34,23 +34,50 @@ test('the real Pearl Studio screenshot is unchanged, labelled and opens at full 
   assert.doesNotMatch(html, /alpine-story|ring-card|fake-btn/);
 });
 
-test('Mac beta calls to action open email, with no invented installer or access guarantee', () => {
-  const ctas = [...html.matchAll(/<a\b[^>]*href="mailto:jamesbodebiyi@gmail.com\?subject=Growth%20Factory%20Mac%20streamer%20beta"[^>]*>Join the Mac beta/g)];
-  assert.ok(ctas.length >= 3);
-  assert.match(html, /Opens an email draft/);
-  assert.match(html, /No claim of instant access/);
+test('the primary calls to action lead to the waitlist, with no invented installer or access guarantee', () => {
+  assert.ok([...html.matchAll(/<a\b[^>]*href="#waitlist"/g)].length >= 1);
+  assert.ok([...html.matchAll(/href="mailto:jamesbodebiyi@gmail.com\?subject=Growth%20Factory%20Mac%20streamer%20beta"/g)].length >= 3);
+  assert.match(html, /opens an email draft/i);
+  assert.match(html, /not a claim of instant access/i);
   assert.match(html, /Apple Silicon/);
   assert.doesNotMatch(html, /Download for Mac|data-download|theclipfactory-frontend-two\.vercel\.app/);
   assert.doesNotMatch(html, /Suburbbaby|Streamer University|trusted by/i);
 });
 
-test('the page prioritizes clips, review and export and discloses unverified services', () => {
-  const sections = ['how','tools','platforms','privacy','pricing','faq','get'];
+test('the page runs hero, three app features, waitlist, then pricing at the bottom', () => {
+  const sections = ['factory','studio','library','waitlist','faq','pricing'];
   const order = sections.map((id) => html.indexOf(`<section id="${id}"`));
   for (const [i,at] of order.entries()) assert.ok(at > 0, `missing #${sections[i]}`);
   assert.deepEqual([...order].sort((a,b) => a-b), order);
-  for (const name of ['TikTok','Instagram Reels','YouTube Shorts']) assert.ok(html.includes(`<li>${name}</li>`));
-  for (const wording of ['The first beta focuses on clipping and export','not a claim that live billing is launch-verified','require the app open','No surprise posts','a saved recording']) assert.ok(html.includes(wording),wording);
+  assert.ok(html.indexOf('streamer-hero') < order[0], 'hero leads the page');
+  assert.ok(order.at(-1) > html.indexOf('<section id="waitlist"'), 'pricing stays below the waitlist');
+  assert.equal(html.lastIndexOf('<section'), order.at(-1), 'pricing is the last section');
+  for (const label of ['Feature 01 / Factory','Feature 02 / Studio','Feature 03 / Library']) assert.ok(html.includes(label), label);
+});
+
+test('feature illustrations are labelled as illustrations, not screenshots', () => {
+  const captions = [...html.matchAll(/Illustration of [^<]*/g)].map((m) => m[0]);
+  assert.equal(captions.length, 3);
+  for (const caption of captions) assert.match(caption, /Not a screenshot; sample/);
+  assert.ok([...html.matchAll(/class="panel-tag">Sample</g)].length === 3);
+  assert.match(html, /Actual app interface/);
+});
+
+test('the page keeps its clipping focus and discloses unverified services', () => {
+  for (const wording of ['Export-first in this beta','not a claim that live billing is launch-verified','needs the app open','Nothing posts itself','a saved recording','does not predict views']) assert.ok(html.includes(wording),wording);
+  assert.ok(html.includes('no signed Mac installer'));
+});
+
+test('the waitlist form collects beta-screening answers and states where they go', () => {
+  const form = html.slice(html.indexOf('<form class="waitlist-form"'), html.indexOf('</form>'));
+  assert.match(form, /novalidate/);
+  for (const name of ['email','mac','stream','channel']) assert.ok(form.includes(`name="${name}"`), name);
+  assert.match(form, /id="wl-email"[^>]*type="email"[^>]*required/);
+  for (const id of ['wl-email','wl-mac','wl-stream','wl-channel']) assert.ok(form.includes(`for="${id}"`), `label for ${id}`);
+  assert.match(form, /data-waitlist-status role="status" aria-live="polite"/);
+  assert.match(form, /This site stores nothing and sets no cookies/);
+  assert.match(form, /<noscript>/);
+  assert.doesNotMatch(form, /You're in|Thanks, you are on the list|position #/i);
 });
 
 test('the mobile menu keeps its accessible associations', () => {
@@ -66,16 +93,28 @@ function element(attributes = {}) {
     focus() { this.focused = true; },
   };
 }
+function waitlistForm() {
+  const status = element(); status.textContent = ''; status.className = '';
+  const fields = { email: element(), mac: element(), stream: element(), channel: element() };
+  for (const input of Object.values(fields)) input.value = '';
+  const form = element();
+  form.querySelector = (selector) => selector === '[data-waitlist-status]' ? status
+    : fields[(selector.match(/name="([a-z]+)"/) || [])[1]] ?? null;
+  return { form, status, fields };
+}
 function harness() {
   const menu = element(), nav = element(), pricing = element();
   pricing.classes = new Set(); pricing.classList = { add(name) { pricing.classes.add(name); } };
   const month = element(), year = element(); month.dataset.interval = 'month'; year.dataset.interval = 'year';
   pricing.dataset.interval = 'month'; pricing.querySelectorAll = () => [month,year];
   const events = {}, media = { matches: false, addEventListener(name,fn) { this.events ??= {}; this.events[name] = fn; } };
+  const waitlist = waitlistForm();
+  const assigned = [];
   const document = { querySelector: (selector) => selector === '.menu-btn' ? menu : nav,
-    querySelectorAll: () => [pricing], addEventListener: (name,fn) => { events[name] = fn; } };
-  runInNewContext(js, { document, window: { matchMedia: () => media } });
-  return { menu,nav,pricing,month,year,events,media };
+    querySelectorAll: (selector) => selector === '[data-waitlist]' ? [waitlist.form] : [pricing],
+    addEventListener: (name,fn) => { events[name] = fn; } };
+  runInNewContext(js, { document, window: { matchMedia: () => media, location: { assign: (url) => assigned.push(url) } } });
+  return { menu,nav,pricing,month,year,events,media,waitlist,assigned };
 }
 test('mobile menu opens, closes on Escape/link and resets at desktop width', () => {
   const h = harness(); h.menu.events.click();
@@ -100,6 +139,38 @@ test('canonical links use this project and assets are versioned to avoid stale t
   const layout = await readFile(new URL('site/layout.mjs',root),'utf8');
   assert.match(layout,/https:\/\/clipfactory-landing.vercel.app/);
   assert.match(layout,/https:\/\/github.com\/jduhking\/clipfactory/);
-  assert.match(html,/styles.css\?v=pearl-streamer-2/);
+  assert.match(html,/styles.css\?v=pearl-streamer-3/);
   assert.doesNotMatch(html,/fonts.googleapis.com|growth-factory-landing.vercel.app/);
+});
+test('the waitlist form rejects a missing or malformed email without opening a draft', () => {
+  const h = harness();
+  let prevented = 0;
+  h.waitlist.form.events.submit({ preventDefault: () => { prevented += 1; } });
+  assert.equal(prevented, 1);
+  assert.equal(h.assigned.length, 0);
+  assert.match(h.waitlist.status.textContent, /email address we can reply to/);
+  assert.match(h.waitlist.status.className, /is-error/);
+  assert.equal(h.waitlist.fields.email.attributes['aria-invalid'], 'true');
+  assert.equal(h.waitlist.fields.email.focused, true);
+  h.waitlist.fields.email.value = 'streamer@example';
+  h.waitlist.form.events.submit({ preventDefault() {} });
+  assert.equal(h.assigned.length, 0);
+});
+test('a valid entry prepares a prefilled draft with the answers given', () => {
+  const h = harness();
+  h.waitlist.fields.email.value = ' streamer@example.com ';
+  h.waitlist.fields.mac.value = 'MacBook Air (Apple Silicon)';
+  h.waitlist.fields.stream.value = 'horror games';
+  h.waitlist.form.events.submit({ preventDefault() {} });
+  assert.equal(h.assigned.length, 1);
+  const url = h.assigned[0];
+  assert.match(url, /^mailto:jamesbodebiyi@gmail.com\?subject=Growth%20Factory%20Mac%20streamer%20beta&body=/);
+  const body = decodeURIComponent(url.split('&body=')[1]);
+  assert.match(body, /Email: streamer@example\.com/);
+  assert.match(body, /Mac: MacBook Air \(Apple Silicon\)/);
+  assert.match(body, /Streams: horror games/);
+  assert.match(body, /Channel: not given/);
+  assert.match(h.waitlist.status.textContent, /Send it from your mail app/);
+  assert.match(h.waitlist.status.className, /is-ready/);
+  assert.equal(h.waitlist.fields.email.attributes['aria-invalid'], 'false');
 });

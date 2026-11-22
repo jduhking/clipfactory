@@ -1,4 +1,4 @@
-import { startContours } from './contours.js?v=pearl-streamer-2';
+import { startContours } from './contours.js?v=pearl-streamer-3';
 
 /** Decorative only: one field in the hero, never over controls or content. */
 export function mountTopography({ host, button, start = startContours, media = window.matchMedia.bind(window), lifecycle = window }) {

@@ -63,7 +63,7 @@ No streamer affiliation or endorsement is implied.
 
 Public site: https://clipfactory-landing.vercel.app, Vercel team `jduhkings-projects`,
 project `clipfactory-landing`. Canonical URLs and source links target this site and
-`jduhking/clipfactory`. CSS/JS and brand-image links carry `?v=pearl-streamer-2`; bump that version after
+`jduhking/clipfactory`. CSS/JS and brand-image links carry `?v=pearl-streamer-3`; bump that version after
 future visual changes to avoid stale browser asset caches. Generated HTML is committed.
 Vercel currently receives reviewed static file deployments, not automatic Git deployments.
 
