@@ -63,9 +63,25 @@ No streamer affiliation or endorsement is implied.
 
 Public site: https://clipfactory-landing.vercel.app, Vercel team `jduhkings-projects`,
 project `clipfactory-landing`. Canonical URLs and source links target this site and
-`jduhking/clipfactory`. CSS/JS and brand-image links carry `?v=pearl-streamer-3`; bump that version after
+`jduhking/clipfactory`. CSS/JS and brand-image links carry `?v=pearl-streamer-4`; bump that version after
 future visual changes to avoid stale browser asset caches. Generated HTML is committed.
 Vercel currently receives reviewed static file deployments, not automatic Git deployments.
+
+### Animated illustrations
+
+The hero and the three feature sections each run a canvas scene from `scenes.js`
+(`factory`, `cut`, `post`, `measure`), drawn over the same drifting contour field as the
+hero: `terrain.js` is a direct port of the shader's terrain equation, so both stay in step.
+
+They are labelled illustrations, not product UI. Rules the tests enforce:
+
+- The markup tags every scene `Animated illustration` and gives it `role="img"` with a
+  description, so nothing depends on seeing the animation.
+- No scene draws a number, and the results scene shows an unreported bar as an empty dashed
+  outline marked `—`: unavailable, never zero.
+- Each scene honours 30 fps, a 1.5 device-pixel-ratio cap, sleep while offscreen or in a hidden
+  tab, one still frame under reduced motion, no canvas in forced colours, and a pause control.
+- The only screenshot on the home page is the real app capture in the `#workspace` band.
 
 ### Animated topography
 

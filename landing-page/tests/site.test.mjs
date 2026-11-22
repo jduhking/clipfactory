@@ -24,13 +24,15 @@ test('the website uses the app graphite and violet tokens, not its old orange id
   }
 });
 
-test('the real Pearl Studio screenshot is unchanged, labelled and opens at full size', async () => {
+test('the real Pearl Studio screenshot is unchanged, labelled and kept apart from the illustrations', async () => {
   const source = await readFile(new URL('../../docs/images/pearl-studio.png', import.meta.url));
   const image = await readFile(new URL('assets/pearl-studio.jpg', root));
   assert.deepEqual(image, source);
-  assert.match(html, /href="\/assets\/pearl-studio.jpg"/);
-  assert.match(html, /Actual app interface/);
-  assert.match(html, /Sample brand data, not a customer result/);
+  const band = html.slice(html.indexOf('<section id="workspace"'), html.indexOf('<section id="cut"'));
+  assert.match(band, /href="\/assets\/pearl-studio.jpg"/);
+  assert.match(band, /Actual app interface/);
+  assert.match(band, /Sample brand data, not a customer result/);
+  assert.match(band, /The illustrations on this page are diagrams/);
   assert.doesNotMatch(html, /alpine-story|ring-card|fake-btn/);
 });
 
@@ -45,27 +47,41 @@ test('the primary calls to action lead to the waitlist, with no invented install
 });
 
 test('the page runs hero, three app features, waitlist, then pricing at the bottom', () => {
-  const sections = ['factory','studio','library','waitlist','faq','pricing'];
+  const sections = ['workspace','cut','post','measure','waitlist','faq','pricing'];
   const order = sections.map((id) => html.indexOf(`<section id="${id}"`));
   for (const [i,at] of order.entries()) assert.ok(at > 0, `missing #${sections[i]}`);
   assert.deepEqual([...order].sort((a,b) => a-b), order);
   assert.ok(html.indexOf('streamer-hero') < order[0], 'hero leads the page');
-  assert.ok(order.at(-1) > html.indexOf('<section id="waitlist"'), 'pricing stays below the waitlist');
   assert.equal(html.lastIndexOf('<section'), order.at(-1), 'pricing is the last section');
-  for (const label of ['Feature 01 / Factory','Feature 02 / Studio','Feature 03 / Library']) assert.ok(html.includes(label), label);
+  for (const label of ['Feature 01 / Agents cut the clips','Feature 02 / Posting','Feature 03 / Results']) assert.ok(html.includes(label), label);
 });
 
-test('feature illustrations are labelled as illustrations, not screenshots', () => {
-  const captions = [...html.matchAll(/Illustration of [^<]*/g)].map((m) => m[0]);
-  assert.equal(captions.length, 3);
-  for (const caption of captions) assert.match(caption, /Not a screenshot; sample/);
-  assert.ok([...html.matchAll(/class="panel-tag">Sample</g)].length === 3);
-  assert.match(html, /Actual app interface/);
+test('each stage has an animated scene, labelled as an illustration and describable without sight', () => {
+  const kinds = [...html.matchAll(/data-scene="([a-z]+)"/g)].map((m) => m[1]);
+  assert.deepEqual(kinds, ['factory','cut','post','measure']);
+  const scenes = [...html.matchAll(/<div class="scene[^"]*" data-scene="[a-z]+" role="img" aria-label="([^"]+)"/g)].map((m) => m[1]);
+  assert.equal(scenes.length, 4, 'every scene is an image with a text alternative');
+  for (const description of scenes) assert.match(description, /^Animated illustration: .{40,}\.$/);
+  assert.equal([...html.matchAll(/class="(?:panel-tag|window-tag)">Animated illustration</g)].length, 4, 'each scene carries a visible illustration tag');
+  assert.match(html, /class="screenshot-label">Animated illustration</, 'the hero caption says so too');
+  assert.equal([...html.matchAll(/data-scene-toggle/g)].length, 4, 'each scene can be paused');
+  for (const caption of ['A diagram of the workflow drawn over the app',"Not a screenshot, and not real performance data",'Platform names are labels only, with no logos and no endorsement','Animated illustration with sample shapes and no values']) assert.ok(html.includes(caption), caption);
+  assert.ok(html.includes('<script type="module" src="/scenes.js?v=pearl-streamer-4">'));
+});
+
+test('the three stages describe cutting, posting and results as the code has them', () => {
+  const after = (id) => html.slice(html.indexOf(`<section id="${id}"`), html.indexOf('</section>', html.indexOf(`<section id="${id}"`)));
+  assert.match(after('cut'), /transcript/i);
+  assert.match(after('cut'), /Revisions never overwrite/);
+  assert.match(after('post'), /Approval is the gate/);
+  assert.match(after('post'), /matched by its external id/);
+  assert.match(after('measure'), /never as a zero/);
+  assert.match(after('measure'), /Collection needs the app open/);
 });
 
 test('the page keeps its clipping focus and discloses unverified services', () => {
-  for (const wording of ['Export-first in this beta','not a claim that live billing is launch-verified','needs the app open','Nothing posts itself','a saved recording','does not predict views']) assert.ok(html.includes(wording),wording);
-  assert.ok(html.includes('no signed Mac installer'));
+  for (const wording in {'a saved stream':1,'does not predict views':1,'needs a paid plan, a supported account and live verification':1,'stays export-first':1,'promises no audience growth':1,'not a claim that live billing is launch-verified':1,'no signed Mac installer':1,'demo data stays labelled':1}) assert.ok(html.includes(wording), wording);
+  assert.doesNotMatch(html, /guaranteed|viral|10x|grow your audience by/i);
 });
 
 test('the waitlist form collects beta-screening answers and states where they go', () => {
@@ -139,7 +155,7 @@ test('canonical links use this project and assets are versioned to avoid stale t
   const layout = await readFile(new URL('site/layout.mjs',root),'utf8');
   assert.match(layout,/https:\/\/clipfactory-landing.vercel.app/);
   assert.match(layout,/https:\/\/github.com\/jduhking\/clipfactory/);
-  assert.match(html,/styles.css\?v=pearl-streamer-3/);
+  assert.match(html,/styles.css\?v=pearl-streamer-4/);
   assert.doesNotMatch(html,/fonts.googleapis.com|growth-factory-landing.vercel.app/);
 });
 test('the waitlist form rejects a missing or malformed email without opening a draft', () => {
