@@ -1,75 +1,92 @@
-<!--meta {"title":"Growth Factory: keep the good parts of your stream","description":"Growth Factory turns a saved stream recording into captioned vertical clips on your Mac, with every cut approved by you. Join the waitlist for the Mac-first private beta.","bodyClass":"streamer-home"} -->
-<script type="module" src="/topography.js?v=pearl-streamer-5"></script>
-<script type="module" src="/scenes.js?v=pearl-streamer-5"></script>
-<section class="streamer-hero" aria-labelledby="hero-title">
+<!--meta {"title":"Growth Factory: turn every stream into a growth loop","description":"Growth Factory cuts your stream recordings into vertical clips on your Mac, posts only the ones you approve, and learns from what your channels report to shape the next batch. Join the Mac-first private beta waitlist.","bodyClass":"streamer-home"} -->
+<script type="module" src="/topography.js?v=pearl-streamer-6"></script>
+<script type="module" src="/scenes.js?v=pearl-streamer-6"></script>
+<section class="streamer-hero loop-hero" aria-labelledby="hero-title">
   <div class="topography-field" data-topography aria-hidden="true"></div>
   <div class="topography-controls"><button type="button" data-topography-toggle hidden>Pause background</button></div>
-  <div class="wrap hero-layout">
+  <div class="wrap hero-head">
+    <h1 id="hero-title">Turn every stream into a growth loop.</h1>
     <div class="hero-copy">
-      <h1 id="hero-title">Keep the good parts of your stream.</h1>
-      <p class="hero-lead">A saved recording becomes captioned vertical clips, on your Mac.</p>
-      <div class="hero-actions"><a class="btn btn-primary" href="#waitlist">Join the waitlist</a><a class="text-link" href="#cut">See how the agents work</a></div>
-      <p class="hero-note">You approve every cut. Apple Silicon first, in a small private beta, and your footage stays on your machine.</p>
+      <p class="hero-lead">Your recordings become vertical clips on your Mac. You approve what posts. What comes back shapes the next batch.</p>
+      <div class="hero-actions"><a class="btn btn-primary" href="#waitlist">Join the waitlist</a><a class="text-link" href="#loop">See each station</a></div>
+      <p class="hero-note">Apple Silicon first, in a small private beta. Your footage stays on your machine, and nothing here promises more views.</p>
     </div>
-    <figure class="hero-product">
-      <a href="/assets/pearl-studio.jpg" aria-label="Open the full-size screenshot"><img src="/assets/pearl-studio.jpg" width="1280" height="720" alt="The Growth Factory desktop app on macOS, showing the Factory, Library, Results, Brand profile and Settings navigation beside a sample brand profile" fetchpriority="high" /></a>
-      <figcaption><span class="screenshot-label">The app itself.</span> Sample brand data, not a customer result.</figcaption>
-    </figure>
   </div>
-</section>
-<section id="cut" class="wrap home-section app-feature section-rule" aria-labelledby="cut-title">
-  <div class="feature-copy">
-    <p class="step">Step one</p>
-    <h2 id="cut-title">An agent pulls the clips out.</h2>
-    <p class="feature-lead">Drop in a recording. Local speech to text gives the agents a transcript, and they bring back the moments worth keeping as captioned vertical drafts.</p>
-    <ul class="feature-points">
-      <li><strong>Every suggestion shows its evidence</strong>The transcript lines and timecodes behind a moment, so you can judge it before you watch it.</li>
-      <li><strong>A new cut never replaces the old one</strong>Ask for a different version and both stay in the library.</li>
-    </ul>
-    <p class="feature-note">Ranking decides what you review first, not what will do well. Rendering runs on your Mac, and local models need disk space, time and suitable hardware.</p>
-  </div>
-  <figure class="feature-visual">
-    <div class="scene" data-scene="cut" role="img" aria-label="Animated illustration: an agent travels along a stream recording, stops on a moment, and pulls a captioned vertical clip out of it onto a stack of clips waiting for review."></div>
-    <div class="scene-controls"><button type="button" data-scene-toggle hidden>Pause</button></div>
-    <figcaption>Animated illustration of the agents at work. Not a screenshot, and not real performance data.</figcaption>
+  <figure class="loop-figure" id="watch" aria-describedby="loop-description">
+    <div class="loop-stage" data-scene="loop" data-rail="#loop-rail">
+      <a class="loop-app" data-scene-anchor href="/assets/pearl-studio.jpg" aria-label="Open the full-size screenshot of the app"><img src="/assets/pearl-studio.jpg" width="1280" height="720" alt="The Growth Factory desktop app on macOS, showing the Factory, Library, Results, Brand profile and Settings navigation beside a sample brand profile" fetchpriority="high" /></a>
+    </div>
+    <p class="visually-hidden" id="loop-description">Animated illustration of one loop around the real app: footage goes in, scout agents bring moments back to the Editor, the Critic keeps the best three drafts, they wait until you approve them, go out to cards named TikTok, Reels and Shorts, results come back for the Strategist, and one new Style rule returns to the Editor while a new ring grows around the factory. Shorts has no report yet and stays an empty outline.</p>
+    <div class="loop-rail" id="loop-rail">
+      <p class="loop-now"><span data-loop-count>Loop 1</span> <span data-loop-beat>Footage in</span></p>
+      <div class="scene-controls"><button type="button" data-scene-toggle hidden>Pause</button></div>
+      <ol class="loop-chapters" aria-label="The five stations of the loop">
+        <li data-family="understand" data-current>Understand</li>
+        <li data-family="create">Create</li>
+        <li data-family="judge">Judge</li>
+        <li data-family="ship">Ship</li>
+        <li data-family="learn">Learn</li>
+      </ol>
+    </div>
+    <figcaption><span class="screenshot-label">The app itself, with sample brand data.</span> The orbit around it is an animated illustration of the loop, not real results.</figcaption>
   </figure>
 </section>
-<section class="home-band"><div id="post" class="wrap home-section app-feature reverse" aria-labelledby="post-title">
-  <div class="feature-copy">
-    <p class="step">Step two</p>
-    <h2 id="post-title">Nothing posts until you approve it.</h2>
-    <p class="feature-lead">Approve a revision and the clip is yours to send. Export the file and upload it yourself, or hand it to a connected account.</p>
-    <dl class="feature-defs">
-      <dt>Export</dt><dd>An approved clip becomes a file you can upload anywhere.</dd>
-      <dt>Connected accounts</dt><dd>TikTok, Instagram Reels and YouTube Shorts, with Facebook, LinkedIn, X and Threads in the codebase.</dd>
-      <dt>Unclear outcomes</dt><dd>A post whose result is uncertain is matched by its external id, never blindly retried.</dd>
-    </dl>
-    <p class="feature-note">Connected posting needs a paid plan, a supported account and live verification, so the first beta is export only. This page promises no audience growth.</p>
+<section id="loop" class="wrap home-section stations section-rule" aria-labelledby="loop-title">
+  <div class="section-heading"><h2 id="loop-title">One loop, five stations.</h2><p>Every recording goes round the loop the app draws in its Factory map, and you are the gate before anything ships.</p></div>
+  <div class="stations-layout">
+    <figure class="stations-visual">
+      <div class="scene" data-scene="understand" data-steps=".loop-step" role="img" aria-label="Animated illustration: a diagram of the station described beside it, from reading the stream to learning from results."></div>
+      <div class="scene-controls"><button type="button" data-scene-toggle hidden>Pause</button></div>
+      <figcaption>Animated illustration of each station. Not a screenshot, and not real performance data.</figcaption>
+    </figure>
+    <ol class="stations-steps">
+      <li class="loop-step" data-stage="understand" data-active>
+        <p class="step">Understand</p>
+        <h3>It reads the whole stream first.</h3>
+        <p>Drop in a saved recording. The transcript and scene changes are worked out on your Mac, so every suggestion can point back to the lines it came from.</p>
+      </li>
+      <li class="loop-step" data-stage="cut">
+        <p class="step">Create</p>
+        <h3>Scouts find moments. The Editor cuts them.</h3>
+        <p>Scout agents find moments worth keeping, and the Editor cuts each into a vertical draft: hook first, bold word by word captions, framed on the speaker. A new cut never replaces the old one.</p>
+      </li>
+      <li class="loop-step" data-stage="judge">
+        <p class="step">Judge</p>
+        <h3>The Critic ranks. You decide.</h3>
+        <p>Every draft is scored on an eight part production rubric. Ranking decides what you see first, not what will do well. Nothing moves on until you approve it.</p>
+      </li>
+      <li class="loop-step" data-stage="post">
+        <p class="step">Ship</p>
+        <h3>Approved clips go out to your channels.</h3>
+        <p>Export the file, or post to a connected TikTok, Instagram Reels or YouTube Shorts account. An unclear post is matched by its external id, never blindly retried.</p>
+        <p class="feature-note">Connected posting needs a paid plan, a supported account and live verification, so the first beta is export only.</p>
+      </li>
+      <li class="loop-step" data-stage="learn">
+        <p class="step">Learn</p>
+        <h3>What comes back shapes the next batch.</h3>
+        <p>Whatever each platform reports comes back to the Strategist, which proposes one Style rule at a time for the Editor, like opening on the payoff. You approve a rule before it changes anything.</p>
+        <p class="feature-note">A channel that has not reported stays blank, never zero. Metric refresh and scheduling need Growth Factory running.</p>
+      </li>
+    </ol>
   </div>
-  <figure class="feature-visual">
-    <div class="scene" data-scene="post" role="img" aria-label="Animated illustration: an approved clip waits at a closed gate until you approve it, then travels out to cards named TikTok, Reels and Shorts."></div>
-    <div class="scene-controls"><button type="button" data-scene-toggle hidden>Pause</button></div>
-    <figcaption>Animated illustration. Platform names are labels, with no logos and no endorsement.</figcaption>
+</section>
+<section class="home-band"><div id="grow" class="wrap home-section grow" aria-labelledby="grow-title">
+  <div class="grow-copy">
+    <h2 id="grow-title">Loop after loop, it learns your channel.</h2>
+    <p class="feature-lead">Each loop leaves the factory knowing more about your audience and your taste. That memory lives in four places you can read and change.</p>
+    <dl class="feature-defs">
+      <dt>Your taste</dt><dd>Learned from what you approve. It nudges review order a few points and never overrides the rubric.</dd>
+      <dt>Beliefs</dt><dd>What seems to be working, with the evidence beside it. Observational, not proof.</dd>
+      <dt>Style rules</dt><dd>One approved change at a time, and the next batch is re-cut with it.</dd>
+      <dt>Experiments</dt><dd>Drafts that change one thing, and about one pick in four spent exploring.</dd>
+    </dl>
+    <p class="feature-note">Real and simulated runs are kept apart, and demo data stays labelled. Nothing here guarantees growth.</p>
+  </div>
+  <figure class="grow-shot">
+    <a href="/assets/factory-map.jpg" aria-label="Open the full-size Factory map screenshot"><img src="/assets/factory-map.jpg" width="1398" height="437" loading="lazy" alt="The Factory map in Growth Factory, drawing each station of the loop as a connected map from transcription through the Critic, approval, posting, measurement and the Strategist" /></a>
+    <figcaption><span class="screenshot-label">The real Factory map.</span> Running on labelled preview data with sample counts, not a customer result.</figcaption>
   </figure>
 </div></section>
-<section id="measure" class="wrap home-section app-feature" aria-labelledby="measure-title">
-  <div class="feature-copy">
-    <p class="step">Step three</p>
-    <h2 id="measure-title">See what actually worked.</h2>
-    <p class="feature-lead">Posted clips come back with whatever the platforms report, next to the moment they came from and the revision you approved.</p>
-    <dl class="feature-defs">
-      <dt>Reported</dt><dd>The numbers the platform gave back, beside the clip they belong to.</dd>
-      <dt>No report yet</dt><dd>Left blank. A missing metric is never shown as a zero.</dd>
-      <dt>While the app is open</dt><dd>Scheduling and metric refresh need Growth Factory running. There is no cloud worker.</dd>
-    </dl>
-    <p class="feature-note">Numbers come from the platforms, not from us. Demo data stays labelled and never mixes into real results.</p>
-  </div>
-  <figure class="feature-visual">
-    <div class="scene" data-scene="measure" role="img" aria-label="Animated illustration: sample bars rise while a review cursor inspects them, and the clip with no report stays an empty outline marked unavailable."></div>
-    <div class="scene-controls"><button type="button" data-scene-toggle hidden>Pause</button></div>
-    <figcaption>Animated illustration with sample shapes and no values. Not a screenshot.</figcaption>
-  </figure>
-</section>
 <section id="waitlist" class="wrap home-section waitlist-section section-rule" aria-labelledby="waitlist-title">
   <div class="waitlist-copy">
     <h2 id="waitlist-title">Get on the Mac beta waitlist.</h2>
@@ -86,17 +103,17 @@
     <noscript><p class="form-note">This form needs JavaScript to prepare the draft. <a href="mailto:jamesbodebiyi@gmail.com?subject=Growth%20Factory%20Mac%20streamer%20beta">Email us directly</a> with your Mac model and what you stream.</p></noscript>
   </form>
 </section>
-<section class="home-band"><div id="faq" class="wrap home-section faq-home" aria-labelledby="faq-title">
+<section class="wrap home-section faq-home section-rule" id="faq" aria-labelledby="faq-title">
   <div class="section-heading"><h2 id="faq-title">Questions you should ask first.</h2><p>Early access without the fine-print surprises.</p></div>
   <div class="learning-faq">
-    <details><summary>Who is the first beta for?</summary><p>Streamers on Apple Silicon Macs with recordings to clip. We’re looking for real footage and honest feedback, not a follower count.</p></details>
-    <details><summary>Are the animations on this page the app?</summary><p>No. They are diagrams of the workflow, labelled as animated illustrations. The only screenshot is the app at the top of the page.</p></details>
+    <details><summary>Will it grow my channel?</summary><p>Nothing can promise that. Each loop makes the next batch better informed by what you approved and what came back, and says how sure it is. Growth still depends on your stream.</p></details>
+    <details><summary>Are the animations on this page the app?</summary><p>No. They are diagrams of the loop, labelled as animated illustrations. The two screenshots, the app at the top and the Factory map, are the real interface on sample data.</p></details>
     <details><summary>Is there a signed Mac installer?</summary><p>Not yet. Public downloads wait for a signed, verified release. Developer source setup is documented on the <a href="/download.html">setup page</a>.</p></details>
     <details><summary>Does it clip my stream while I’m live?</summary><p>No. The workflow starts with a saved recording. Live capture, automatic chat-highlight detection and background cloud clipping are not promised.</p></details>
     <details><summary>Does it work without cloud AI keys?</summary><p>Local speech and agents run on your Mac once their models are installed, which needs disk space, time and suitable hardware. Cloud models are optional and use your own keys.</p></details>
     <details><summary>What about Windows, Linux and scheduled posts?</summary><p>The codebase supports Windows and Linux, but the first cohort is Mac only. Scheduling and metric collection need the app open, and there is no shared team workspace.</p></details>
   </div>
-</div></section>
+</section>
 <section id="pricing" class="wrap home-section" aria-labelledby="pricing-title">
   <div class="section-heading"><h2 id="pricing-title">Plans</h2><p>The Free plan is export first. These are the app’s plan limits, not a claim that live billing is launch verified. Beta testers start on Free.</p></div>
   <!-- build:pricing-cards -->

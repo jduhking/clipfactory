@@ -63,27 +63,43 @@ No streamer affiliation or endorsement is implied.
 
 Public site: https://clipfactory-landing.vercel.app, Vercel team `jduhkings-projects`,
 project `clipfactory-landing`. Canonical URLs and source links target this site and
-`jduhking/clipfactory`. CSS/JS and brand-image links carry `?v=pearl-streamer-5`; bump that version after
+`jduhking/clipfactory`. CSS/JS and brand-image links carry `?v=pearl-streamer-6`; bump that version after
 future visual changes to avoid stale browser asset caches. Generated HTML is committed.
 Vercel currently receives reviewed static file deployments, not automatic Git deployments.
 
-### Animated illustrations
+### The growth loop, animated
 
-Three canvas scenes from `scenes.js` sit beside the three steps: `cut` (an agent travels the
-recording, grips a moment and tows a captioned clip onto the review stack), `post` and `measure`.
-They are drawn over the same drifting contour field as the hero, because `terrain.js` is a direct
-port of the shader's terrain equation.
+The home page is built around the app's own loop. Its five stage families (Understand, Create,
+Judge, Ship, Learn) and the order of the hero's beats come from `frontend/src/growth`: the Factory
+map's stage families, `flowEvents`, and the learning-loop demo. The motion thesis is that one clip
+is followed all the way round, and every pass leaves the channel a little more grown.
 
-The agent run uses real motion-design easing: `easeInOutCubic` to travel, `easeOutBack` to settle
-and to land, a comet trail scaled by speed, a tether, extraction sparks, and a tilt-and-squash on
-the card so it has weight. Rules the tests enforce:
-- Every scene caption says `Animated illustration`, and each has `role="img"` with a written
-  description, so nothing depends on seeing the animation.
-- No scene draws a number, and the results scene shows an unreported bar as an empty dashed
-  outline marked `—`: unavailable, never zero.
-- Each scene honours 30 fps, a 1.5 device-pixel-ratio cap, sleep while offscreen or in a hidden
-  tab, one still frame under reduced motion, no canvas in forced colours, and a pause control.
-- The only screenshot on the home page is the real app capture in the hero.
+- **Hero (`loop`).** The real app screenshot sits in the middle of an orbit drawn on two canvases,
+  one behind it and one in front. The agent pulls a moment out of your recording and the Editor
+  cuts a vertical clip with word-by-word captions. The critic scores it, then the loop stops at
+  your approval before the clip flies to text-labelled TikTok, Reels and Shorts portals. Results
+  come back as sample shapes, and the Strategist re-cuts the next clip hook-first. Each loop adds
+  a growth ring. After four loops the rings settle and a new stream starts. A chapter rail under
+  the stage (`railReporter`) shows the same state the painter returns, so words and picture never
+  disagree.
+- **Stations (`understand`, `cut`, `judge`, `post`, `learn`).** One sticky diagram crossfades
+  between stations as each step reaches the middle of the screen (`followSteps`).
+- **Growth.** The real Factory map, captured from the app running on labelled preview data.
+
+The motion uses real easing: `easeInOutCubic` to travel, `easeOutBack` to settle, a comet trail
+scaled by speed, and a tilt-and-squash on landing cards. Rules the tests enforce:
+- Nothing reaches a channel before the approval beat, and the reduced-motion still of the hero is
+  that approval gate.
+- Every animation has a written description, and the station diagram is captioned
+  `Animated illustration`.
+- No scene draws a number. A platform with no report is an empty dashed outline marked
+  `No report yet`: unavailable, never zero. The results bars are labelled as sample shapes.
+- Every colour is from the palette. Each scene honours 30 fps, a 1.5 device-pixel-ratio cap,
+  sleep while offscreen or in a hidden tab, a chosen still under reduced motion, no canvas in
+  forced colours, and a pause control.
+
+The page asks for growth without promising it: the hero note, the growth section and the FAQ all
+say that nothing here guarantees more views.
 
 ### Keeping the design out of generated-default territory
 
