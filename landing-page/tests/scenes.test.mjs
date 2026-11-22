@@ -23,7 +23,7 @@ function fakeContext() {
     save() { calls.push(['save']); }, restore() { calls.push(['restore']); },
     beginPath() { calls.push(['beginPath']); }, closePath() { calls.push(['closePath']); },
     moveTo() { calls.push(['moveTo']); }, lineTo() { calls.push(['lineTo']); },
-    arc(...a) { calls.push(['arc', ...a]); }, quadraticCurveTo() { calls.push(['quadraticCurveTo']); },
+    arc(...a) { calls.push(['arc', ...a]); }, quadraticCurveTo() { calls.push(['quadraticCurveTo']); }, bezierCurveTo() { calls.push(['bezierCurveTo']); },
     fill() { calls.push(['fill']); }, stroke() { calls.push(['stroke']); },
     translate(...a) { calls.push(['translate', ...a]); }, rotate(...a) { calls.push(['rotate', ...a]); }, scale(...a) { calls.push(['scale', ...a]); },
     fillRect() { calls.push(['fillRect']); }, setLineDash() { calls.push(['setLineDash']); },
@@ -36,6 +36,7 @@ function fakeContext() {
       if (key === 'fillStyle' || key === 'strokeStyle' || key === 'shadowColor') {
         if (typeof value === 'string') colors.push(value);
       }
+      if (key === 'globalAlpha') calls.push(['globalAlpha', value]);
       object[key] = value;
       return true;
     },
@@ -44,10 +45,16 @@ function fakeContext() {
 function element(extra = {}) {
   const classes = new Set();
   return {
-    clientWidth: 800, clientHeight: 500, attributes: {}, children: [], classes,
+    clientWidth: 800, clientHeight: 500, attributes: {}, children: [], classes, dataset: {}, style: { props: {}, setProperty(k, v) { this.props[k] = v; } },
     classList: { add: (c) => classes.add(c), remove: (c) => classes.delete(c), contains: (c) => classes.has(c) },
     setAttribute(name, value) { this.attributes[name] = value; },
+    hasAttribute(name) { return name in this.attributes; },
+    toggleAttribute(name, on) { if (on) this.attributes[name] = ''; else delete this.attributes[name]; },
+    get firstChild() { return this.children[0] ?? null; },
     appendChild(child) { this.children.push(child); child.parent = this; },
+    insertBefore(child, before) { this.children.splice(Math.max(0, this.children.indexOf(before)), 0, child); child.parent = this; },
+    querySelector() { return null; },
+    getBoundingClientRect() { return { left: 0, top: 0, width: this.clientWidth, height: this.clientHeight }; },
     ...extra,
   };
 }
@@ -60,7 +67,7 @@ const documentStub = {
   addEventListener(name, fn) { this.listeners[name] = fn; },
   removeEventListener() {},
   createElement: () => {
-    const canvas = element({ width: 0, height: 0, getContext: () => fakeContext(),
+    const canvas = element({ width: 0, height: 0, getContext() { this.ctx ??= fakeContext(); return this.ctx; },
       remove() { this.removed = true; const kids = this.parent?.children; if (kids) kids.splice(kids.indexOf(this), 1); } });
     recorded.push(canvas);
     return canvas;
@@ -74,16 +81,16 @@ globalThis.IntersectionObserver = class { constructor(fn) { this.fn = fn; Inters
 globalThis.ResizeObserver = class { constructor(fn) { this.fn = fn; } observe() {} disconnect() {} };
 globalThis.performance = { now: () => 0 };
 
-const { mountScene, SCENES } = await import('../scenes.js');
+const { mountScene, SCENES, railReporter, followSteps, loopState, LOOP_BEATS, LOOP_PERIOD } = await import('../scenes.js');
 const { terrain, contourSegments, SPAN, STILL_AT } = await import('../terrain.js');
 
-function mount({ kind = 'cut', motion = media(false), forced = media(false), host = element(), clock } = {}) {
+function mount({ kind = 'cut', motion = media(false), forced = media(false), host = element(), clock, report } = {}) {
   frames.length = 0;
   recorded.length = 0;
   const button = element({ hidden: true, events: {}, addEventListener(name, fn) { this.events[name] = fn; }, removeEventListener() {} });
   const lifecycle = { listeners: {}, addEventListener(name, fn) { this.listeners[name] = fn; }, removeEventListener() {} };
   let at = 0;
-  const handle = mountScene({ host, kind, button, lifecycle, clock: clock ?? (() => at),
+  const handle = mountScene({ host, kind, button, lifecycle, report, clock: clock ?? (() => at),
     media: (query) => (query.includes('forced-colors') ? forced : motion) });
   const canvas = () => recorded[recorded.length - 1];
   const context = () => canvas()?.getContextResult;
@@ -118,28 +125,119 @@ test('contour lines are deterministic, scaled like the shader, and every fifth o
 });
 
 test('every scene paints, in the app palette, and never draws a number', () => {
-  assert.deepEqual(Object.keys(SCENES), ['cut', 'post', 'measure']);
+  assert.deepEqual(Object.keys(SCENES), ['loop', 'understand', 'cut', 'judge', 'post', 'learn']);
   const allowed = new Set(['#ececec', '#a75de3', '#af85f3', '#d2acf7', '#2c2c2c', '#191919', '#8a8a8a', '#6fcf97', 'rgba(167,93,227,0)']);
+  const app = { x: 176, y: 30, w: 448, h: 252 };
   for (const kind of Object.keys(SCENES)) {
-    const ctx = fakeContext();
-    SCENES[kind](ctx, { w: 800, h: 500, t: 3.5, contours: contourSegments({ width: 800, height: 500, time: 3.5 }) });
-    assert.ok(ctx.calls.length > 150, `${kind} draws`);
-    for (const color of ctx.colors) assert.ok(allowed.has(color) || typeof color === 'object', `${kind} colour ${color}`);
-    for (const text of ctx.texts) assert.doesNotMatch(text, /[0-9]/, `${kind} label "${text}" has no number`);
+    for (let t = 0; t < 40; t += 0.7) {
+      const ctx = fakeContext();
+      for (const layer of SCENES[kind].layers ?? [undefined]) {
+        SCENES[kind](ctx, { w: 800, h: 500, t, app, layer, contours: contourSegments({ width: 800, height: 500, time: 3.5 }) });
+      }
+      if (Math.abs(t - 3.5) < 0.35) assert.ok(ctx.calls.length > 150, `${kind} draws`);
+      for (const color of ctx.colors) assert.ok(allowed.has(color), `${kind} colour ${color}`);
+      for (const text of ctx.texts) assert.doesNotMatch(text, /[0-9]/, `${kind} label "${text}" has no number`);
+      for (const [name, , , r] of ctx.calls) if (name === 'arc') assert.ok(r >= 0, `${kind} arc radius ${r}`);
+    }
   }
 });
 
-test('the results scene shows an unreported bar as blank, never as zero', () => {
-  const paint = (t) => { const ctx = fakeContext(); SCENES.measure(ctx, { w: 800, h: 500, t, contours: [] }); return ctx; };
-  const checking = paint(6);
-  const gap = paint(7.4);
-  assert.ok(checking.texts.includes('\u2014'), 'an em dash marks the bar nobody reported');
-  assert.ok(gap.texts.includes('\u2014'));
-  assert.ok(checking.texts.some((t) => /Checked by you/.test(t)), 'the cursor inspects a reported bar');
-  assert.ok(gap.texts.some((t) => /No report yet/.test(t)), 'and reports nothing for the gap');
-  assert.ok(gap.texts.some((t) => /Sample/.test(t)));
-  for (const ctx of [checking, gap]) for (const text of ctx.texts) assert.doesNotMatch(text, /zero|[0-9]/);
+const paintAt = (kind, t, extra = {}) => {
+  const ctx = fakeContext();
+  let state;
+  for (const layer of SCENES[kind].layers ?? [undefined]) state = SCENES[kind](ctx, { w: 1200, h: 600, t, contours: [], layer, app: { x: 264, y: 30, w: 672, h: 378 }, ...extra }) ?? state;
+  return { ctx, state };
+};
+
+test('the results stay honest: a platform with no report is an empty outline, never zero', () => {
+  const learn = paintAt('learn', 4).ctx;
+  assert.ok(learn.texts.includes('No report yet'), 'the learn station leaves the unreported bar blank');
+  assert.ok(learn.texts.includes('Sample shapes'), 'and labels the bars as samples');
+  const loop = paintAt('loop', 13).ctx;
+  assert.ok(loop.texts.includes('No report yet'), 'the hero marks Shorts as not reported');
+  assert.ok(loop.texts.includes('Shorts'));
+  for (const ctx of [learn, loop]) for (const text of ctx.texts) assert.doesNotMatch(text, /zero|[0-9]/i);
   assert.match(sceneSource, /unreported is unavailable, never zero/i);
+});
+
+test('the hero loop follows the app: five families in order, and approval comes before posting', () => {
+  const captions = LOOP_BEATS.map((beat) => beat.caption);
+  assert.ok(captions.indexOf('You approve each one') < captions.indexOf('Posted to your channels'), 'nothing posts before approval');
+  assert.deepEqual([...new Set(LOOP_BEATS.map((beat) => beat.family))], [0, 1, 2, 3, 4]);
+  for (let i = 1; i < LOOP_BEATS.length; i += 1) assert.ok(LOOP_BEATS[i].at > LOOP_BEATS[i - 1].at);
+  assert.equal(loopState(0).beat, 0);
+  assert.equal(loopState(LOOP_PERIOD - 0.01).family, 4);
+  assert.equal(loopState(LOOP_PERIOD + 9.5).loop, 2, 'each pass adds a loop');
+  const s = loopState(LOOP_PERIOD * 2 + 9.5);
+  assert.equal(LOOP_BEATS[s.beat].caption, 'You approve each one');
+  assert.ok(s.progress >= 0 && s.progress <= 1);
+  // The painter reports the same state the rail shows, so words and picture never disagree.
+  assert.deepEqual(paintAt('loop', 29.5).state, loopState(29.5));
+  // The reduced-motion still lands on the approval gate, the moment the loop is about.
+  assert.equal(LOOP_BEATS[loopState(SCENES.loop.still).beat].caption, 'You approve each one');
+  for (const kind of ['understand', 'judge', 'learn']) assert.ok(typeof SCENES[kind].still === 'number', `${kind} has a chosen still`);
+});
+
+test('the hero draws behind and in front of the real app, measured from the page', () => {
+  const anchor = { getBoundingClientRect: () => ({ left: 200, top: 40, width: 400, height: 225 }) };
+  const content = { tag: 'app' };
+  const host = element({ querySelector: (sel) => (sel === '[data-scene-anchor]' ? anchor : null) });
+  host.children.push(content);
+  const states = [];
+  const s = mount({ kind: 'loop', host, report: (state) => states.push(state) });
+  assert.deepEqual(host.children.map((c) => c.dataset?.layer ?? c.tag), ['back', 'app', 'front'], 'the orbit sandwiches the screenshot');
+  assert.ok(states.length >= 1 && typeof states[0].beat === 'number', 'the painter reports its beat for the rail');
+  s.handle.dispose();
+  assert.deepEqual(host.children, [content], 'disposal removes both canvases');
+});
+
+test('switching stations crossfades the old scene into the new one', () => {
+  const s = mount({ kind: 'understand' });
+  assert.equal(s.handle.kind, 'understand');
+  assert.equal(s.handle.setKind('nope'), false, 'unknown stations are ignored');
+  assert.equal(s.handle.setKind('understand'), false, 'the current station is not restarted');
+  s.tick(1000);
+  assert.equal(s.handle.setKind('judge'), true);
+  assert.equal(s.handle.kind, 'judge');
+  const ctx = s.canvas().ctx;
+  ctx.calls.length = 0;
+  s.tick(160);
+  // Halfway through the fade both scenes paint, at complementary strength.
+  const layers = ctx.calls.filter(([name, value]) => name === 'globalAlpha' && Math.abs(value - 0.5) < 0.01);
+  assert.ok(layers.length >= 2, `old and new are both drawn mid-fade: ${layers.length}`);
+  assert.ok(ctx.texts.includes('Your stream') && ctx.texts.includes('Critic and ranker'), 'both stations are on screen');
+  ctx.calls.length = 0;
+  ctx.texts.length = 0;
+  s.tick(400);
+  assert.ok(!ctx.texts.includes('Your stream') && ctx.texts.length > 0, 'after the fade only the new station remains');
+  s.handle.dispose();
+});
+
+test('the chapter rail mirrors the loop: current, done, progress, caption and count', () => {
+  const chapters = [0, 1, 2, 3, 4].map(() => element());
+  const beat = element();
+  const count = element();
+  const rail = { querySelectorAll: () => chapters, querySelector: (sel) => (sel === '[data-loop-beat]' ? beat : count) };
+  const report = railReporter(rail);
+  report(loopState(LOOP_PERIOD + 9.5));
+  assert.equal(beat.textContent, 'You approve each one');
+  assert.equal(count.textContent, 'Loop 2');
+  assert.deepEqual(chapters.map((c) => c.hasAttribute('data-current')), [false, false, true, false, false]);
+  assert.deepEqual(chapters.map((c) => c.hasAttribute('data-done')), [true, true, false, false, false]);
+  assert.ok(Number(chapters[2].style.props['--p']) > 0);
+  report(undefined);
+  assert.equal(beat.textContent, 'You approve each one', 'a painter without state leaves the rail alone');
+});
+
+test('scrolling a step to the middle of the screen picks its station', () => {
+  const picked = [];
+  const steps = ['understand', 'cut', 'judge'].map((stage) => { const step = element(); step.dataset.stage = stage; return step; });
+  class Watch { constructor(fn, options) { this.fn = fn; this.options = options; Watch.last = this; } observe() {} }
+  followSteps({ setKind: (kind) => picked.push(kind) }, steps, Watch);
+  assert.equal(Watch.last.options.rootMargin, '-45% 0px -45% 0px');
+  Watch.last.fn([{ isIntersecting: true, target: steps[2] }]);
+  assert.deepEqual(picked, ['judge']);
+  assert.deepEqual(steps.map((step) => step.hasAttribute('data-active')), [false, false, true]);
 });
 
 test('an unknown scene name animates nothing', () => {
@@ -247,7 +345,7 @@ test('the agent scene shows an agent taking clips out of the recording', () => {
   assert.ok(labels.includes('Clips for review'), 'the output is named');
   // Across one run the agent moves and a clip card is carried: both change position over time.
   const times = [0.3, 1.1, 1.9, 2.7, 3.4];
-  const agentX = times.map((t) => Math.round(paint(t).calls.filter(([n]) => n === 'arc')[0]?.[1] ?? -1));
+  const agentX = times.map((t) => Math.round(paint(t).calls.filter(([n]) => n === 'arc').at(-1)?.[1] ?? -1));
   // It travels, then holds still while it works the moment, then tows the clip away.
   assert.ok(new Set(agentX).size >= 3, `the agent travels: ${agentX}`);
   assert.ok(agentX.length - new Set(agentX).size >= 1, `and dwells while extracting: ${agentX}`);
