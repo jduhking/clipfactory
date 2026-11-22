@@ -63,25 +63,41 @@ No streamer affiliation or endorsement is implied.
 
 Public site: https://clipfactory-landing.vercel.app, Vercel team `jduhkings-projects`,
 project `clipfactory-landing`. Canonical URLs and source links target this site and
-`jduhking/clipfactory`. CSS/JS and brand-image links carry `?v=pearl-streamer-4`; bump that version after
+`jduhking/clipfactory`. CSS/JS and brand-image links carry `?v=pearl-streamer-5`; bump that version after
 future visual changes to avoid stale browser asset caches. Generated HTML is committed.
 Vercel currently receives reviewed static file deployments, not automatic Git deployments.
 
 ### Animated illustrations
 
-The hero and the three feature sections each run a canvas scene from `scenes.js`
-(`factory`, `cut`, `post`, `measure`), drawn over the same drifting contour field as the
-hero: `terrain.js` is a direct port of the shader's terrain equation, so both stay in step.
+Three canvas scenes from `scenes.js` sit beside the three steps: `cut` (an agent travels the
+recording, grips a moment and tows a captioned clip onto the review stack), `post` and `measure`.
+They are drawn over the same drifting contour field as the hero, because `terrain.js` is a direct
+port of the shader's terrain equation.
 
-They are labelled illustrations, not product UI. Rules the tests enforce:
-
-- The markup tags every scene `Animated illustration` and gives it `role="img"` with a
+The agent run uses real motion-design easing: `easeInOutCubic` to travel, `easeOutBack` to settle
+and to land, a comet trail scaled by speed, a tether, extraction sparks, and a tilt-and-squash on
+the card so it has weight. Rules the tests enforce:
+- Every scene caption says `Animated illustration`, and each has `role="img"` with a written
   description, so nothing depends on seeing the animation.
 - No scene draws a number, and the results scene shows an unreported bar as an empty dashed
   outline marked `—`: unavailable, never zero.
 - Each scene honours 30 fps, a 1.5 device-pixel-ratio cap, sleep while offscreen or in a hidden
   tab, one still frame under reduced motion, no canvas in forced colours, and a pause control.
-- The only screenshot on the home page is the real app capture in the `#workspace` band.
+- The only screenshot on the home page is the real app capture in the hero.
+
+### Keeping the design out of generated-default territory
+
+The home page is checked against the tells that make a page read as machine-made, and
+`tests/site.test.mjs` keeps them out: no tracked capitals or eyebrow labels, no accent word inside
+a heading, no arrows padding a control label, no middle-dot meta strings, no em dashes in copy, no
+re-drawn browser chrome, no decorative status dots, straight quotes replaced with typographic
+ones, every colour declared in the `:root` token block, and one elevation token on one element
+(the screenshot). Hierarchy comes from size, weight and measure instead.
+
+Hallmark's `sloplint.mjs` (from the design skills in the workspace) was used as an outside check.
+Two warnings are accepted deliberately: the page carries more words than its 450-word target
+because the beta disclosures in AGENTS.md are mandatory, and the plan button label comes from
+`plans.json`, which mirrors the app's plan catalogue.
 
 ### Animated topography
 

@@ -23,8 +23,9 @@ function fakeContext() {
     save() { calls.push(['save']); }, restore() { calls.push(['restore']); },
     beginPath() { calls.push(['beginPath']); }, closePath() { calls.push(['closePath']); },
     moveTo() { calls.push(['moveTo']); }, lineTo() { calls.push(['lineTo']); },
-    arc() { calls.push(['arc']); }, quadraticCurveTo() { calls.push(['quadraticCurveTo']); },
+    arc(...a) { calls.push(['arc', ...a]); }, quadraticCurveTo() { calls.push(['quadraticCurveTo']); },
     fill() { calls.push(['fill']); }, stroke() { calls.push(['stroke']); },
+    translate(...a) { calls.push(['translate', ...a]); }, rotate(...a) { calls.push(['rotate', ...a]); }, scale(...a) { calls.push(['scale', ...a]); },
     fillRect() { calls.push(['fillRect']); }, setLineDash() { calls.push(['setLineDash']); },
     fillText(text) { texts.push(String(text)); calls.push(['fillText', text]); },
     createRadialGradient() { return { addColorStop() {} }; },
@@ -117,7 +118,7 @@ test('contour lines are deterministic, scaled like the shader, and every fifth o
 });
 
 test('every scene paints, in the app palette, and never draws a number', () => {
-  assert.deepEqual(Object.keys(SCENES), ['factory', 'cut', 'post', 'measure']);
+  assert.deepEqual(Object.keys(SCENES), ['cut', 'post', 'measure']);
   const allowed = new Set(['#ececec', '#a75de3', '#af85f3', '#d2acf7', '#2c2c2c', '#191919', '#8a8a8a', '#6fcf97', 'rgba(167,93,227,0)']);
   for (const kind of Object.keys(SCENES)) {
     const ctx = fakeContext();
@@ -148,7 +149,7 @@ test('an unknown scene name animates nothing', () => {
 });
 
 test('a mounted scene caps device pixel ratio and holds 30 fps', () => {
-  const s = mount({ kind: 'factory' });
+  const s = mount({ kind: 'cut' });
   const canvas = s.canvas();
   assert.equal(canvas.width, Math.round(800 * 1.5), 'DPR capped at 1.5 despite a 3x display');
   assert.equal(canvas.height, Math.round(500 * 1.5));
@@ -237,4 +238,24 @@ test('leaving the page disposes the scene unless the page is kept in the back/fo
   const gone = mount();
   gone.lifecycle.listeners.pagehide({ persisted: false });
   assert.equal(gone.host.children.length, 0);
+});
+
+test('the agent scene shows an agent taking clips out of the recording', () => {
+  const paint = (t) => { const ctx = fakeContext(); SCENES.cut(ctx, { w: 820, h: 510, t, contours: [] }); return ctx; };
+  const labels = paint(3.3).texts;
+  assert.ok(labels.includes('Your recording'), 'the source is named');
+  assert.ok(labels.includes('Clips for review'), 'the output is named');
+  // Across one run the agent moves and a clip card is carried: both change position over time.
+  const times = [0.3, 1.1, 1.9, 2.7, 3.4];
+  const agentX = times.map((t) => Math.round(paint(t).calls.filter(([n]) => n === 'arc')[0]?.[1] ?? -1));
+  // It travels, then holds still while it works the moment, then tows the clip away.
+  assert.ok(new Set(agentX).size >= 3, `the agent travels: ${agentX}`);
+  assert.ok(agentX.length - new Set(agentX).size >= 1, `and dwells while extracting: ${agentX}`);
+  const carried = times.map((t) => paint(t).calls.filter(([n]) => n === 'translate').length);
+  assert.ok(Math.max(...carried) > Math.min(...carried), `a clip is picked up and put down: ${carried}`);
+  // The clip card tilts and squashes as it is pulled and lands, so the motion has weight.
+  const moves = times.flatMap((t) => paint(t).calls.filter(([n]) => n === 'rotate' || n === 'scale'));
+  assert.ok(moves.length > 0, 'cards tilt and settle rather than sliding flat');
+  assert.match(sceneSource, /anticipation|overshoot|weight/i);
+  for (const text of labels) assert.doesNotMatch(text, /[0-9]/);
 });

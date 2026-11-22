@@ -6,7 +6,7 @@
 .site-foot-brand p { max-width: 34ch; margin-top: 14px; color: var(--muted); font-size: 14px; line-height: 1.7; }
 .site-foot-brand p a { color: var(--ember); }
 .site-foot nav { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 28px; }
-.site-foot h2 { margin-bottom: 12px; color: var(--ink); font-family: var(--body); font-size: 12px; font-weight: 650; letter-spacing: .08em; text-transform: uppercase; }
+.site-foot h2 { margin-bottom: 12px; color: var(--ink); font-family: var(--body); font-size: 12px; font-weight: 650; letter-spacing: 0; }
 .site-foot li a { display: inline-flex; align-items: center; min-height: 36px; color: var(--muted); font-size: 14px; }
 .site-foot li a:hover, .site-foot li a[aria-current="page"] { color: var(--ember); }
 .site-foot-base { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 24px; padding-block: 18px 32px; border-top: 1px solid var(--line); color: var(--muted-2); font-size: 12px; }
@@ -32,14 +32,14 @@
 .table-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 14px; background: var(--white); }
 .table-scroll table { width: 100%; min-width: 560px; border-collapse: collapse; font-size: 14px; line-height: 1.6; }
 .table-scroll th, .table-scroll td { padding: 12px 16px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; color: var(--muted); }
-.table-scroll thead th { background: var(--surface); color: var(--ink); font-size: 12px; font-weight: 650; letter-spacing: .04em; text-transform: uppercase; }
+.table-scroll thead th { background: var(--surface); color: var(--ink); font-size: 12px; font-weight: 650; letter-spacing: 0; }
 .table-scroll tbody th { color: var(--ink); font-weight: 600; }
 .table-scroll tr:last-child > * { border-bottom: 0; }
 
 /* Docs layout */
 .docs-layout { display: grid; grid-template-columns: 230px minmax(0, 1fr) 200px; gap: 48px; align-items: start; padding-block: 48px 72px; }
 .docs-nav { position: sticky; top: 90px; display: grid; gap: 22px; max-height: calc(100vh - 110px); overflow-y: auto; padding-right: 6px; }
-.docs-nav h2, .docs-toc h2 { margin-bottom: 8px; color: var(--muted-2); font-family: var(--body); font-size: 11px; font-weight: 650; letter-spacing: .09em; text-transform: uppercase; }
+.docs-nav h2, .docs-toc h2 { margin-bottom: 8px; color: var(--muted-2); font-family: var(--body); font-size: 11px; font-weight: 650; letter-spacing: 0; }
 .docs-nav ul, .docs-toc ul { display: grid; gap: 2px; }
 .docs-nav a { display: block; padding: 6px 10px; border-radius: 8px; color: var(--muted); font-size: 14px; line-height: 1.4; }
 .docs-nav a:hover { background: var(--mist); color: var(--ink); }
@@ -105,7 +105,7 @@ section[id] { scroll-margin-top: 80px; }
 .diagram-frame figcaption { margin-top: 12px; color: var(--muted-2); font-size: 12px; line-height: 1.6; }
 .diagram { display: block; width: 100%; height: auto; font-family: var(--body); }
 .diagram .d-group { fill: var(--surface-sunken); stroke: var(--line); stroke-width: 1.5; stroke-dasharray: 6 6; }
-.diagram .d-group-label { fill: var(--muted-2); font-size: 12px; font-weight: 650; letter-spacing: .08em; text-transform: uppercase; }
+.diagram .d-group-label { fill: var(--muted-2); font-size: 12px; font-weight: 650; letter-spacing: 0; }
 .diagram .d-node rect { stroke-width: 1.5; }
 .diagram .d-title { font-family: var(--display); font-size: 15px; font-weight: 700; text-anchor: middle; dominant-baseline: middle; }
 .diagram .d-sub { font-size: 12px; text-anchor: middle; dominant-baseline: middle; }
