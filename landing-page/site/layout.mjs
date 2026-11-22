@@ -24,7 +24,7 @@ const current = (on) => (on ? ' aria-current="page"' : "");
 export function header(path) {
   const links = NAV.map((item) => `<a href="${item.href}"${current(item.current(path))}>${item.label}</a>`).join("");
   return `<header class="site-header"><div class="wrap header-row">
-  <a class="brand header-logo" href="/" aria-label="Growth Factory home"><img src="/assets/icon.svg" alt="" width="36" height="36" /><span class="header-title">Growth Factory</span></a>
+  <a class="brand header-logo" href="/" aria-label="Growth Factory home"><img src="/assets/icon.svg?v=pearl-streamer-1" alt="" width="36" height="36" /><span class="header-title">Growth Factory</span></a>
   <nav class="nav-desktop" aria-label="Main navigation">${links}</nav>
   <a class="btn btn-primary btn-sm header-download" href="mailto:${CONTACT}?subject=Growth%20Factory%20Mac%20streamer%20beta">Join the Mac beta <span aria-hidden="true">↗</span></a>
   <button class="menu-btn" type="button" aria-label="Open menu" aria-controls="mobile-nav" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" /></svg></button>
@@ -40,7 +40,7 @@ export function footer(path) {
     return `<div><h2>${title}</h2><ul>${items}</ul></div>`;
   }).join("");
   return `<footer class="site-foot"><div class="wrap site-foot-grid">
-  <div class="site-foot-brand"><a class="brand sm" href="/" aria-label="Growth Factory home"><img src="/assets/icon.svg" alt="" width="28" height="28" /><span>Growth Factory</span></a><p>Your stream has good moments. Turn them into short clips on your Mac, with the final edit always in your hands.</p><p><a href="mailto:${CONTACT}">${CONTACT}</a></p></div>
+  <div class="site-foot-brand"><a class="brand sm" href="/" aria-label="Growth Factory home"><img src="/assets/icon.svg?v=pearl-streamer-1" alt="" width="28" height="28" /><span>Growth Factory</span></a><p>Your stream has good moments. Turn them into short clips on your Mac, with the final edit always in your hands.</p><p><a href="mailto:${CONTACT}">${CONTACT}</a></p></div>
   <nav aria-label="Footer">${columns}</nav>
 </div><div class="wrap site-foot-base"><span>© 2026 Growth Factory</span><span>Mac-first streamer beta · Built for human review</span></div></footer>`;
 }
@@ -59,8 +59,8 @@ export function head({ title, description, path, noindex = false }) {
   <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><meta name="theme-color" content="#121212" />
   <title>${t}</title><meta name="description" content="${d}" />${robots}
   <link rel="canonical" href="${url}" />
-  <meta property="og:type" content="website" /><meta property="og:site_name" content="Growth Factory" /><meta property="og:title" content="${t}" /><meta property="og:description" content="${d}" /><meta property="og:url" content="${url}" /><meta property="og:image" content="${SITE}/assets/social-card.jpg" /><meta property="og:image:width" content="1280" /><meta property="og:image:height" content="720" /><meta name="twitter:card" content="summary_large_image" />
-  <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg" />
+  <meta property="og:type" content="website" /><meta property="og:site_name" content="Growth Factory" /><meta property="og:title" content="${t}" /><meta property="og:description" content="${d}" /><meta property="og:url" content="${url}" /><meta property="og:image" content="${SITE}/assets/social-card.jpg?v=pearl-streamer-1" /><meta property="og:image:width" content="1280" /><meta property="og:image:height" content="720" /><meta name="twitter:card" content="summary_large_image" />
+  <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg?v=pearl-streamer-1" />
   <link rel="stylesheet" href="/styles.css?v=pearl-streamer-1" /><link rel="stylesheet" href="/pages.css?v=pearl-streamer-1" /><link rel="stylesheet" href="/site.css?v=pearl-streamer-1" /><script src="/app.js?v=pearl-streamer-1" defer></script>
 </head>`;
 }

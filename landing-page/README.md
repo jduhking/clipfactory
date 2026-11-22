@@ -6,7 +6,7 @@ The public website: product pages, pricing, the user guide, architecture, legal 
 
 | Page | Source |
 |---|---|
-| `/` home: the loop, agents, platforms, privacy, pricing, FAQ | `index.html` (hand-written) |
+| `/` home: the loop, agents, platforms, privacy, pricing, FAQ | `site/pages/index.html` (generated homepage) |
 | `/product.html`, `/learning.html` | hand-written |
 | `/pricing.html` plans, monthly and yearly, comparison table | `site/pages/pricing.html` + `plans.json` |
 | `/download.html` setup on Mac, Windows and Linux | `site/pages/download.html` |
@@ -63,6 +63,6 @@ No streamer affiliation or endorsement is implied.
 
 Public site: https://clipfactory-landing.vercel.app, Vercel team `jduhkings-projects`,
 project `clipfactory-landing`. Canonical URLs and source links target this site and
-`jduhking/clipfactory`. CSS/JS links carry `?v=pearl-streamer-1`; bump that version after
+`jduhking/clipfactory`. CSS/JS and brand-image links carry `?v=pearl-streamer-1`; bump that version after
 future visual changes to avoid stale browser asset caches. Generated HTML is committed.
 Vercel currently receives reviewed static file deployments, not automatic Git deployments.
