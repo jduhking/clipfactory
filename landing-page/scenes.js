@@ -1,24 +1,32 @@
 /**
- * Animated illustrations of the app's growth loop, drawn to match what the app does.
+ * Animated illustrations of what Growth Factory does with a stream, told with one streamer's night.
  *
- * The hero (`loop`) follows the app's own learning-loop demo beat for beat (LearningLoopDemo.tsx,
- * flowEvents.ts STATIONS): footage in, listen and watch, the scout swarm, the Editor, the Critic
- * picking the best three, your approval, posting, the measurement window, the Strategist, and a
- * new Style rule that the Editor uses on the next batch. Each finished loop leaves a contour ring
- * behind, so the terrain around the factory visibly grows.
+ * The hero (`story`) is the whole loop in plain words, in the order the app works:
+ *   Find   last night's stream goes in; the intro and dead air are skipped and the moments worth
+ *          sharing are found (scouts.py CRITERIA: a hook, a funny turn, a payoff; no intros,
+ *          sponsor reads or dead air).
+ *   Cut    a vertical crop follows your face (faces.py, craft.py), then a hook title and
+ *          word-by-word captions are added.
+ *   Pick   you keep or skip every clip. Nothing posts without you.
+ *   Post   kept clips go to TikTok, Reels and Shorts.
+ *   Learn  what each platform reports comes back, and one change is suggested for next time
+ *          (growth_loop.py: one variable, hook or duration), which you approve before it is used.
+ * Each stream adds what was learned to a shelf, so the loop visibly builds up over a run.
  *
- * The station scenes (`understand`, `cut`, `judge`, `post`, `learn`) are the app's five stage
- * families: Understand, Create, Judge, Ship and Learn.
+ * The station scenes (`find`, `cut`, `pick`, `post`, `learn`) are the same drawing, windowed to
+ * one stage, so every step on the page shows a piece of the same machine.
  *
- * Honesty rules the tests enforce: these are diagrams, not product UI and not results. No numbers
- * are drawn. An unreported result is unavailable, never zero, so it is drawn as an empty outline.
- * Nothing reaches a channel before the approval gate. Platforms are named in text, with no logos.
+ * Honesty rules the tests enforce: the photos are licensed stock photos of a model, not a customer,
+ * and the results are sample shapes. No numbers are drawn. An unreported result is unavailable,
+ * never zero, so it is an empty outline marked "No report yet". Nothing reaches a platform before
+ * you keep it, and a suggestion changes nothing until you approve it. Platforms are named in text,
+ * with no logos. The bars never grow from one stream to the next: nothing here promises growth.
  *
  * Restraint, same as the WebGL field: 30 fps at most, device pixel ratio capped at 1.5, asleep
  * offscreen or in a hidden tab, a meaningful still frame per scene under reduced motion, no canvas
  * in forced colors, and a manual pause control.
  */
-import { contourSegments, STILL_AT } from './terrain.js?v=pearl-streamer-6';
+import { contourSegments, STILL_AT } from './terrain.js?v=pearl-streamer-7';
 
 const MAX_DPR = 1.5;
 const FRAME_MS = 1000 / 30;
@@ -34,11 +42,10 @@ const LINE = '#2c2c2c';
 const SURFACE = '#191919';
 const MUTED = '#8a8a8a';
 const PINE = '#6fcf97';
-const DEG = Math.PI / 180;
 
 const clamp01 = (v) => (v < 0 ? 0 : v > 1 ? 1 : v);
-const ease = (v) => { const x = clamp01(v); return x * x * (3 - 2 * x); };
-/** Settles into place with a small overshoot: the agent has weight. */
+const clamp = (v, lo, hi) => (v < lo ? lo : v > hi ? hi : v);
+/** Settles into place with a small overshoot, so things that arrive have weight. */
 const easeOutBack = (v, pull = 1.7) => { const x = clamp01(v) - 1; return 1 + (pull + 1) * x * x * x + pull * x * x; };
 const easeOutCubic = (v) => { const x = 1 - clamp01(v); return 1 - x * x * x; };
 const easeInOutCubic = (v) => { const x = clamp01(v); return x < 0.5 ? 4 * x * x * x : 1 - (-2 * x + 2) ** 3 / 2; };
@@ -46,11 +53,10 @@ const mix = (a, b, v) => a + (b - a) * v;
 /** How far a clock is between two moments, 0 before and 1 after. */
 const span = (t, from, to) => clamp01((t - from) / (to - from));
 /** Position in a repeating cycle, so every scene is a pure function of its clock. */
-const cycle = (t, period, offset = 0) => { const v = (t / period + offset) % 1; return v < 0 ? v + 1 : v; };
-/** A deterministic wobble: the scenes never use random numbers, so stills are reproducible. */
-const wobble = (i, t, speed = 1) => Math.sin(i * 1.7 + t * speed) * 0.5 + Math.sin(i * 0.9 - t * speed * 0.6) * 0.5;
+const cycle = (t, period) => { const v = (t / period) % 1; return v < 0 ? v + 1 : v; };
 /** Alpha multiplies whatever is already set, so a crossfade dims a whole scene at once. */
 const baseAlpha = (ctx) => (typeof ctx.globalAlpha === 'number' ? ctx.globalAlpha : 1);
+const lerpRect = (a, b, v) => ({ x: mix(a.x, b.x, v), y: mix(a.y, b.y, v), w: mix(a.w, b.w, v), h: mix(a.h, b.h, v) });
 
 function path(ctx, { stroke, fill, width = 1, alpha = 1, dash, dashOffset = 0, shadow = 0 }, draw) {
   if (alpha <= 0.002) return;
@@ -81,11 +87,12 @@ function box(ctx, x, y, w, h, r) {
   ctx.quadraticCurveTo(x, y, x + radius, y);
 }
 
-/** Small word labels only. Nothing numeric is ever drawn: no invented metrics. */
-function label(ctx, text, x, y, { size = 10, color = MUTED, align = 'left', weight = 500, alpha = 1 } = {}) {
+/** Words only. Nothing numeric is ever drawn: no invented metrics. */
+function label(ctx, text, x, y, { size = 12, color = MUTED, align = 'left', weight = 500, alpha = 1, shadow = 0 } = {}) {
   if (alpha <= 0.002) return;
   ctx.save();
-  ctx.globalAlpha = baseAlpha(ctx) * 0.92 * Math.min(1, alpha);
+  ctx.globalAlpha = baseAlpha(ctx) * Math.min(1, alpha);
+  if (shadow) { ctx.shadowBlur = shadow; ctx.shadowColor = SURFACE; }
   ctx.fillStyle = color;
   ctx.textAlign = align;
   ctx.textBaseline = 'middle';
@@ -93,16 +100,21 @@ function label(ctx, text, x, y, { size = 10, color = MUTED, align = 'left', weig
   ctx.fillText(text, x, y);
   ctx.restore();
 }
+/** A width estimate that needs no measuring, so layout stays a pure function of size. */
+const textWidth = (text, size, weight = 500) => text.length * size * (weight >= 800 ? 0.7 : weight >= 600 ? 0.58 : 0.53);
 
-function backdrop(ctx, s) {
-  for (const line of s.contours) {
-    path(ctx, { stroke: INK, width: line.major ? 1.5 : 1, alpha: line.major ? 0.17 : 0.09 }, () => {
-      for (const [x1, y1, x2, y2] of line.segments) { ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); }
-    });
-  }
+/** A rounded label: the page's vocabulary for a tag, a button or a lesson. */
+function pill(ctx, text, x, y, { size = 12, color = INK, fill = SURFACE, stroke = LINE, alpha = 1, weight = 600, align = 'left', dash, strike = false } = {}) {
+  if (alpha <= 0.002) return null;
+  const w = textWidth(text, size, weight) + size * 1.5;
+  const h = size * 1.9;
+  const left = align === 'center' ? x - w / 2 : align === 'right' ? x - w : x;
+  path(ctx, { fill, stroke, width: 1.2, alpha, dash }, () => box(ctx, left, y - h / 2, w, h, h / 2));
+  label(ctx, text, left + w / 2, y, { size, color, align: 'center', weight, alpha });
+  if (strike) path(ctx, { stroke: color, width: 1.2, alpha: alpha * 0.8 }, () => { ctx.moveTo(left + size * 0.6, y); ctx.lineTo(left + w - size * 0.6, y); });
+  return { x: left, y: y - h / 2, w, h };
 }
 
-/** A violet glow, used where a stage is doing work. */
 function glow(ctx, x, y, r, alpha = 0.5) {
   if (alpha <= 0.002 || !(r > 0)) return;
   const gradient = ctx.createRadialGradient(x, y, 0, x, y, r);
@@ -115,821 +127,532 @@ function glow(ctx, x, y, r, alpha = 0.5) {
   ctx.restore();
 }
 
-/**
- * A 9:16 clip card, styled like a streamer's short: the speaker in frame, bold word-by-word
- * captions with the spoken word lit, and, once a Style rule asks for it, a hook title up top.
- */
-function clipTile(ctx, x, y, h, { alpha = 1, lit = false, done = false, tilt = 0, squash = 1, hook = false, t = 0 } = {}) {
-  if (alpha <= 0.002) return;
-  const w = h * 0.5625;
-  ctx.save();
-  ctx.translate(x, y);
-  if (tilt) ctx.rotate(tilt);
-  if (squash !== 1) ctx.scale(1 / squash, squash);
-  path(ctx, { fill: SURFACE, stroke: lit ? VIOLET : LINE, width: 1.2, alpha, shadow: lit ? 10 : 0 }, () => box(ctx, -w / 2, -h / 2, w, h, h * 0.07));
-  // The speaker, framed.
-  path(ctx, { fill: MUTED, alpha: alpha * 0.16 }, () => ctx.arc(0, -h * 0.08, w * 0.22, 0, Math.PI * 2));
-  path(ctx, { fill: MUTED, alpha: alpha * 0.1 }, () => box(ctx, -w * 0.34, h * 0.06, w * 0.68, h * 0.2, w * 0.3));
-  // Bold captions, word by word: one word is lit as it is spoken.
-  const word = Math.floor(cycle(t, 1.2) * 3);
-  [-0.3, -0.04, 0.2].forEach((at, i) => {
-    const on = lit && i === word;
-    path(ctx, { fill: on ? ACCENT : INK, alpha: alpha * (on ? 0.95 : 0.55) }, () => box(ctx, w * at, h * 0.3, w * 0.22, h * 0.05, h * 0.02));
-  });
-  if (hook) path(ctx, { fill: ACCENT, alpha: alpha * 0.9 }, () => box(ctx, -w * 0.34, -h * 0.4, w * 0.68, h * 0.07, h * 0.025));
-  if (done) {
-    path(ctx, { stroke: PINE, width: 1.8, alpha, shadow: 6 }, () => {
-      ctx.moveTo(-w * 0.12, -h * 0.08);
-      ctx.lineTo(-w * 0.02, h * 0.02);
-      ctx.lineTo(w * 0.16, -h * 0.2);
-    });
-  }
-  ctx.restore();
-}
-
-/**
- * The agent: a bright core with a soft shell, a comet trail behind it, and a tether it drops
- * into the recording when it takes a clip out.
- */
-function agent(ctx, x, y, r, { alpha = 1, heading = 0, speed = 0, working = false, t = 0 } = {}) {
-  for (let i = 6; i >= 1; i -= 1) {
-    const back = i * r * 0.9 * Math.min(1, speed);
-    if (back < 0.5) continue;
-    path(ctx, { fill: VIOLET, alpha: alpha * 0.07 * (1 - i / 7) * Math.min(1, speed) }, () =>
-      ctx.arc(x - Math.cos(heading) * back, y - Math.sin(heading) * back, r * (1 - i * 0.08), 0, Math.PI * 2));
-  }
-  glow(ctx, x, y, r * 4.5, alpha * (working ? 0.5 : 0.32));
-  path(ctx, { stroke: VIOLET_SOFT, width: 1.3, alpha: alpha * 0.8, dash: [3, 4], dashOffset: -t * 20 }, () => ctx.arc(x, y, r * 1.9, 0, Math.PI * 2));
-  path(ctx, { fill: SURFACE, stroke: ACCENT, width: 1.4, alpha }, () => ctx.arc(x, y, r, 0, Math.PI * 2));
-  path(ctx, { fill: ACCENT, alpha: alpha * (working ? 1 : 0.75), shadow: 12 }, () => ctx.arc(x, y, r * 0.42, 0, Math.PI * 2));
-}
-
-/** A tick, drawn when you approve something. */
+/** A tick, drawn when you keep or approve something. */
 function tick(ctx, x, y, r, alpha = 1) {
-  path(ctx, { stroke: PINE, width: Math.max(1.6, r * 0.28), alpha, shadow: 8 }, () => {
+  path(ctx, { stroke: PINE, width: Math.max(1.8, r * 0.3), alpha, shadow: 8 }, () => {
     ctx.moveTo(x - r * 0.55, y);
     ctx.lineTo(x - r * 0.12, y + r * 0.42);
     ctx.lineTo(x + r * 0.62, y - r * 0.5);
   });
 }
 
-/** A stream recording: a waveform in a rounded strip, with a playhead. */
-function recording(ctx, x, y, w, h, { alpha = 1, head = -1, bars = 44, seed = 0 } = {}) {
-  path(ctx, { fill: SURFACE, stroke: LINE, width: 1.2, alpha: alpha * 0.96 }, () => box(ctx, x, y, w, h, Math.min(8, h * 0.3)));
-  for (let i = 0; i < bars; i += 1) {
-    const at = i / (bars - 1);
-    const bx = x + w * (0.03 + at * 0.94);
-    const amp = 0.2 + 0.8 * Math.abs(wobble(i * 0.55 + seed, 0, 1));
-    const played = head >= 0 && at <= head;
-    path(ctx, { stroke: played ? VIOLET_SOFT : INK, width: 1.6, alpha: alpha * (played ? 0.75 : 0.32) }, () => {
-      ctx.moveTo(bx, y + h / 2 - h * 0.36 * amp);
-      ctx.lineTo(bx, y + h / 2 + h * 0.36 * amp);
-    });
-  }
-  if (head >= 0 && head <= 1) {
-    const hx = x + w * (0.03 + head * 0.94);
-    path(ctx, { stroke: ACCENT, width: 1.6, alpha, shadow: 10 }, () => { ctx.moveTo(hx, y - h * 0.18); ctx.lineTo(hx, y + h * 1.18); });
-  }
+/** A tap: a ring that opens out where a button is pressed. */
+function tap(ctx, x, y, r, v) {
+  if (v <= 0 || v >= 1) return;
+  path(ctx, { stroke: ACCENT, width: 2, alpha: 1 - v }, () => ctx.arc(x, y, r * (0.4 + v * 1.4), 0, Math.PI * 2));
 }
 
 /* ---------------------------------------------------------------------------------------------
- * The hero: one loop of the factory, orbiting the real app screenshot.
+ * Photos. One streamer's night, from a licensed stock series (see ASSETS.md), so the story reads
+ * as a real stream: hours of play, a pizza break, and one moment worth sharing.
  * ------------------------------------------------------------------------------------------- */
 
-/** One loop, in seconds. Beats copy the app's learning-loop demo, in order. */
-export const LOOP_PERIOD = 20;
-/** Loops before the growth rings settle back and the run starts again. */
-export const LOOP_RUN = 4;
-export const FAMILIES = ['Understand', 'Create', 'Judge', 'Ship', 'Learn'];
-export const LOOP_BEATS = [
-  { at: 0, family: 0, caption: 'Footage in' },
-  { at: 1.6, family: 0, caption: 'Listening and watching' },
-  { at: 3.4, family: 1, caption: 'Scout swarm finds moments' },
-  { at: 5.2, family: 1, caption: 'Editor cuts every clip' },
-  { at: 7.0, family: 2, caption: 'Critic picks the best three' },
-  { at: 9.0, family: 2, caption: 'You approve each one' },
-  { at: 10.6, family: 3, caption: 'Posted to your channels' },
-  { at: 12.4, family: 3, caption: 'Results come back' },
-  { at: 14.4, family: 4, caption: 'The Strategist learns' },
-  { at: 16.4, family: 4, caption: 'A new Style rule for the next batch' },
-  { at: 18.2, family: 4, caption: 'The next loop starts' },
-];
-const FAMILY_AT = [0, 3.4, 7.0, 10.6, 14.4, LOOP_PERIOD];
-
-/** Stations on the orbit, in the order the app wires them: Critic, post, measure, Strategist, Editor. */
-const STATION = {
-  editor: { angle: 160 * DEG, name: 'Editor', family: 1 },
-  critic: { angle: 117 * DEG, name: 'Critic', family: 2 },
-  approve: { angle: 72 * DEG, name: 'You approve', family: 2 },
-  post: { angle: 24 * DEG, name: 'Post', family: 3 },
-  measure: { angle: -32 * DEG, name: 'Measure', family: 3 },
-  strategist: { angle: -148 * DEG, name: 'Strategist', family: 4 },
+const V = '?v=pearl-streamer-7';
+export const PHOTOS = {
+  talk: `/assets/streamers/stream-talk.webp${V}`,
+  play: `/assets/streamers/stream-play.webp${V}`,
+  pizza: `/assets/streamers/stream-pizza.webp${V}`,
+  moment: `/assets/streamers/stream-moment.webp${V}`,
+  clip: `/assets/streamers/clip-moment.webp${V}`,
+  clipTalk: `/assets/streamers/clip-talk.webp${V}`,
+  clipPlay: `/assets/streamers/clip-play.webp${V}`,
 };
-const PORTALS = [
-  { name: 'TikTok', angle: 40 * DEG, reports: true },
-  { name: 'Reels', angle: 12 * DEG, reports: true },
-  { name: 'Shorts', angle: -16 * DEG, reports: false },
+
+/** Draw a photo cover-cropped into a rounded box. Until it loads, a plain surface stands in. */
+function photo(ctx, s, name, x, y, w, h, { alpha = 1, r = 0, fx = 0.5, fy = 0.5, zoom = 1, region, dim = 0 } = {}) {
+  if (alpha <= 0.002 || !(w >= 1) || !(h >= 1)) return;
+  const img = s.photos?.[name];
+  const ready = !!img && img.complete !== false && img.naturalWidth > 0;
+  ctx.save();
+  const a = baseAlpha(ctx) * Math.min(1, alpha);
+  ctx.globalAlpha = a;
+  ctx.beginPath();
+  box(ctx, x, y, w, h, r);
+  ctx.clip();
+  if (ready) {
+    const iw = img.naturalWidth;
+    const ih = img.naturalHeight;
+    const x0 = (region?.x0 ?? 0) * iw;
+    const y0 = (region?.y0 ?? 0) * ih;
+    const rw = ((region?.x1 ?? 1) - (region?.x0 ?? 0)) * iw;
+    const rh = ((region?.y1 ?? 1) - (region?.y0 ?? 0)) * ih;
+    const scale = Math.max(w / rw, h / rh) * Math.max(1, zoom);
+    const sw = w / scale;
+    const sh = h / scale;
+    const sx = x0 + clamp(fx * rw - sw / 2, 0, Math.max(0, rw - sw));
+    const sy = y0 + clamp(fy * rh - sh / 2, 0, Math.max(0, rh - sh));
+    ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
+  } else {
+    ctx.fillStyle = SURFACE;
+    ctx.fillRect(x, y, w, h);
+  }
+  if (dim > 0) {
+    ctx.globalAlpha = a * Math.min(1, dim);
+    ctx.fillStyle = SURFACE;
+    ctx.fillRect(x, y, w, h);
+  }
+  ctx.restore();
+}
+
+/* ---------------------------------------------------------------------------------------------
+ * The story: one stream, all the way round.
+ * ------------------------------------------------------------------------------------------- */
+
+/** One stream, in seconds. */
+export const STORY_PERIOD = 24;
+/** Streams before the shelf of lessons clears and the run starts again. */
+export const STORY_RUN = 3;
+export const FAMILIES = ['Find', 'Cut', 'Pick', 'Post', 'Learn'];
+export const STORY_BEATS = [
+  { at: 0, family: 0, caption: 'Last night\u2019s stream goes in' },
+  { at: 3.6, family: 0, caption: 'It skips the intro and the dead air' },
+  { at: 5.6, family: 0, caption: 'and finds the moments worth sharing' },
+  { at: 8.0, family: 1, caption: 'Cut vertical, following your face' },
+  { at: 10.4, family: 1, caption: 'A hook up top, captions word by word' },
+  { at: 12.6, family: 2, caption: 'You keep it or skip it' },
+  { at: 15.2, family: 3, caption: 'Posted to TikTok, Reels and Shorts' },
+  { at: 17.6, family: 4, caption: 'It sees what people watched' },
+  { at: 19.9, family: 4, caption: 'and suggests one change for next time' },
+  { at: 22.4, family: 4, caption: 'Next stream, a better informed batch' },
 ];
-/** Five clips are cut; the Critic keeps the best three. */
-const KEPT = [0, 2, 4];
+const FAMILY_AT = [0, 8.0, 12.6, 15.2, 17.6, STORY_PERIOD];
+/** What a stream teaches, in the order a run learns it: hook, length, then your taste. */
+export const LESSONS = ['Open on the big moment', 'Keep it short', 'More like your picks'];
+/** The timeline of the stream: what each stretch of the night looks like. */
+const SEGMENTS = ['talk', 'talk', 'play', 'play', 'pizza', 'play', 'talk', 'play', 'moment', 'play'];
+const SKIPPED = [{ at: 0, text: 'Intro' }, { at: 4, text: 'Dead air' }];
+const FOUND = [{ at: 6, text: 'Funny story' }, { at: 8, text: 'Big reaction' }];
+const PLATFORMS = ['TikTok', 'Reels', 'Shorts'];
+/** Sample shapes for "watched to the end". Shorts has not reported, so it has no shape at all. */
+const SAMPLE = [0.74, 0.52, null];
+const CAPTION = ['I', 'CAN\u2019T', 'BELIEVE', 'THAT', 'WORKED'];
+const CAPTION_GROUP = [0, 0, 1, 1, 2];
+const HOOK = ['The comeback', 'nobody saw coming'];
+/** Where the streamer's face is in the moment frame, and the vertical crop that follows it. */
+const FACE = { x: 0.567, y: 0.4 };
+const CROP_CENTRE = 0.6;
 
-export function loopState(t) {
-  const lt = ((t % LOOP_PERIOD) + LOOP_PERIOD) % LOOP_PERIOD;
-  const n = Math.floor(t / LOOP_PERIOD);
+export function storyState(t) {
+  const pass = Math.floor(t / STORY_PERIOD);
+  const local = t - pass * STORY_PERIOD;
   let beat = 0;
-  for (let i = 0; i < LOOP_BEATS.length; i += 1) if (lt >= LOOP_BEATS[i].at) beat = i;
-  const family = LOOP_BEATS[beat].family;
-  const progress = span(lt, FAMILY_AT[family], FAMILY_AT[family + 1]);
-  return { lt, n, beat, family, progress, loop: (((n % LOOP_RUN) + LOOP_RUN) % LOOP_RUN) + 1 };
+  for (let i = 0; i < STORY_BEATS.length; i += 1) if (local >= STORY_BEATS[i].at) beat = i;
+  const family = STORY_BEATS[beat].family;
+  const progress = clamp01((local - FAMILY_AT[family]) / (FAMILY_AT[family + 1] - FAMILY_AT[family]));
+  return { beat, family, progress, loop: (((pass % STORY_RUN) + STORY_RUN) % STORY_RUN) + 1 };
 }
 
-function loopGeometry(s) {
-  const { w, h } = s;
-  const app = s.app && s.app.w > 0 ? s.app : { x: w * 0.22, y: h * 0.1, w: w * 0.56, h: w * 0.56 * 0.5625 };
-  // On a phone the app fills the width, so the orbit hangs below it instead of around it.
-  const narrow = app.w > w * 0.75;
-  const cx = app.x + app.w / 2;
-  const rx = narrow ? w * 0.4 : Math.min(w * 0.4, Math.max(app.w * 0.7, w * 0.3));
-  const ry = narrow ? Math.max(rx * 0.3, h * 0.1) : Math.max(rx * 0.24, h * 0.1);
-  const cy = narrow ? app.y + app.h + ry * 1.15 : app.y + app.h * 0.72;
-  return { w, h, app, cx, cy, rx, ry, narrow, unit: Math.max(6, Math.min(w, h * 1.6) * 0.012) };
+/** One layout for every size: the clip on the right, the stream and what happens to it on the left. */
+export function storyLayout(w, h) {
+  const narrow = w < 560;
+  const U = Math.max(6, Math.min(w / 60, h / 30));
+  const fs = Math.min(14, Math.max(10, U * 0.8));
+  const M = Math.max(10, U * 1.6);
+  const btnH = Math.max(22, U * 2.2);
+  let ph = Math.max(40, h - 2 * M - btnH - U);
+  let pw = (ph * 9) / 16;
+  // On a narrow screen the clip may not crowd out the stream it comes from.
+  if (narrow && pw > w * 0.42) { pw = w * 0.42; ph = (pw * 16) / 9; }
+  const phone = { x: w - M - pw, y: M, w: pw, h: ph };
+  const lw = Math.max(40, phone.x - M - U * 2.4);
+  const shelfH = narrow ? 0 : fs * 2.2;
+  let fw = lw;
+  let fh = (fw * 9) / 16;
+  const rowH = Math.max(22, U * 2.2);
+  const rowGap = Math.max(5, U * 0.55);
+  const top = M + (narrow ? 0 : shelfH + U * 0.6);
+  // Below the frame: the timeline, then three platform rows (and, when narrow, the shelf).
+  const below = U * 1.1 + Math.max(14, U * 1.8) + fs * 1.5 + 3 * (rowH + rowGap) + M + (narrow ? U * 2 + fs * 4 : 0);
+  const fhMax = Math.max(40, Math.min(narrow ? h * 0.42 : h * 0.56, h - top - below));
+  if (fh > fhMax) { fh = fhMax; fw = (fh * 16) / 9; }
+  const frame = { x: M + (lw - fw) / 2, y: top, w: fw, h: fh };
+  const track = { x: frame.x, y: frame.y + fh + U * 1.1, w: fw, h: Math.max(14, U * 1.8) };
+  const rowsY = track.y + fs * 1.5;
+  const rows = PLATFORMS.map((_, i) => ({ x: frame.x, y: rowsY + i * (rowH + rowGap), w: fw, h: rowH }));
+  const shelf = narrow
+    ? { x: frame.x, y: rows[2].y + rowH + U * 2 + fs, w: fw }
+    : { x: frame.x, y: M + shelfH / 2, w: fw };
+  const bw = (fh * 9) / 16;
+  const crop = { x: clamp(frame.x + fw * CROP_CENTRE - bw / 2, frame.x, frame.x + fw - bw), y: frame.y, w: bw, h: fh };
+  return { w, h, U, fs, M, btnH, narrow, phone, frame, track, rows, shelf, crop, stack: narrow ? 0.3 : 0.55 };
 }
 
-/** A point on the orbit, or on a wider ring around it. Front means nearer than the app. */
-function onOrbit(g, angle, grow = 1) {
-  const sin = Math.sin(angle);
-  return { x: g.cx + g.rx * grow * Math.cos(angle), y: g.cy + g.ry * grow * sin, front: sin >= 0, scale: mix(0.72, 1.12, (sin + 1) / 2) };
-}
-
-function portalAt(g, portal) {
-  if (g.narrow) {
-    const i = PORTALS.indexOf(portal);
-    return { x: g.cx + (i - 1) * g.w * 0.28, y: g.cy + g.ry * 1.7, front: true, scale: 1 };
-  }
-  const p = onOrbit(g, portal.angle, 1.3);
-  return { ...p, x: Math.min(p.x, g.w - g.unit * 4.5) };
-}
-
-/** Growth rings: wobbly survey contours laid around the factory, one per finished loop. */
-function growthRing(ctx, g, grow, t, i, alpha, fresh) {
-  path(ctx, { stroke: fresh ? VIOLET_SOFT : INK, width: fresh ? 1.6 : 1.1, alpha, shadow: fresh ? 12 : 0 }, () => {
-    for (let k = 0; k <= 96; k += 1) {
-      const a = (k / 96) * Math.PI * 2;
-      const r = grow * (1 + 0.03 * Math.sin(a * 5 + i * 1.3 + t * 0.25) + 0.018 * Math.sin(a * 9 - i - t * 0.18));
-      const x = g.cx + g.rx * r * Math.cos(a);
-      const y = g.cy + g.ry * r * Math.sin(a);
-      if (k) ctx.lineTo(x, y); else ctx.moveTo(x, y);
+function drawShelf(ctx, L, lessons, alpha) {
+  const { fs, shelf, narrow } = L;
+  const heading = 'What it has learned';
+  label(ctx, heading, shelf.x, shelf.y, { size: fs * 0.9, color: MUTED, alpha });
+  const slots = [];
+  let x = shelf.x + textWidth(heading, fs * 0.9) + fs;
+  let y = shelf.y;
+  for (let i = 0; i < STORY_RUN; i += 1) {
+    if (narrow) { x = shelf.x; y = shelf.y + (i + 1) * fs * 2.3; }
+    slots.push({ x, y });
+    if (i < lessons) {
+      const r = pill(ctx, LESSONS[i], x, y, { size: fs * 0.85, color: ACCENT, stroke: VIOLET, alpha });
+      if (!narrow && r) x += r.w + fs * 0.6;
     }
+  }
+  if (lessons === 0) pill(ctx, 'Nothing yet', slots[0].x, slots[0].y, { size: fs * 0.85, color: MUTED, fill: SURFACE, dash: [3, 4], weight: 500, alpha: alpha * 0.8 });
+  return slots;
+}
+
+function drawFrame(ctx, s, L, t) {
+  const { frame: f, fs } = L;
+  const N = SEGMENTS.length;
+  let name = 'moment';
+  let prev = null;
+  let blend = 1;
+  let dim = 0;
+  let zoom = 1;
+  let alpha = 1;
+  if (t < 3.6) {
+    const p = (t / 3.6) * 0.999;
+    const seg = Math.floor(p * N);
+    name = SEGMENTS[seg];
+    prev = seg > 0 ? SEGMENTS[seg - 1] : null;
+    blend = prev && prev !== name ? span(p * N - seg, 0, 0.35) : 1;
+  } else if (t < 5.6) {
+    name = 'pizza';
+    prev = 'play';
+    blend = span(t, 3.6, 3.9);
+    dim = 0.55 * span(t, 3.9, 4.3);
+  } else if (t < 8.0) {
+    name = 'moment';
+    prev = 'pizza';
+    blend = span(t, 5.6, 5.95);
+    zoom = 1 + 0.05 * Math.sin(Math.PI * span(t, 5.6, 7.8));
+  } else if (t < 12.6) {
+    dim = 0.4 * span(t, 9.6, 10.4);
+  } else if (t < 22.4) {
+    alpha = mix(1, 0.22, span(t, 12.6, 13.0));
+    dim = 0.4;
+  } else {
+    name = 'talk';
+    prev = 'moment';
+    blend = span(t, 22.6, 23.6);
+    alpha = mix(0.22, 1, span(t, 22.4, 23.4));
+    dim = 0.4 * (1 - span(t, 22.6, 23.6));
+  }
+  const r = Math.max(6, L.U * 0.7);
+  path(ctx, { fill: SURFACE, stroke: LINE, width: 1.2, alpha }, () => box(ctx, f.x, f.y, f.w, f.h, r));
+  if (prev && blend < 1) photo(ctx, s, prev, f.x, f.y, f.w, f.h, { r, alpha, dim });
+  photo(ctx, s, name, f.x, f.y, f.w, f.h, { r, alpha: alpha * blend, zoom, fx: FACE.x, fy: FACE.y, dim });
+  if (t >= 5.6 && t < 8.6) {
+    const on = span(t, 5.6, 6.0) * (1 - span(t, 8.2, 8.6));
+    path(ctx, { stroke: VIOLET, width: 2, alpha: on, shadow: 14 }, () => box(ctx, f.x, f.y, f.w, f.h, r));
+  }
+  const named = t < 22.4 ? 1 - span(t, 12.6, 12.9) : span(t, 23.0, 23.6);
+  pill(ctx, 'Last night\u2019s stream', f.x + fs * 0.7, f.y + fs * 1.5, { size: fs * 0.85, color: INK, alpha: alpha * 0.95 * named });
+  if (t >= 3.6 && t < 5.6) {
+    const v = span(t, 3.9, 4.3) * (1 - span(t, 5.3, 5.6));
+    pill(ctx, 'Skipped', f.x + f.w / 2, f.y + f.h / 2, { size: fs * 1.1, color: MUTED, alpha: v, align: 'center', strike: true });
+  }
+  return { r };
+}
+
+function drawTrack(ctx, s, L, t) {
+  const { track: k, fs } = L;
+  const alpha = 1 - span(t, 12.6, 13.1);
+  if (alpha <= 0.002) return;
+  const N = SEGMENTS.length;
+  const gap = Math.max(2, k.w * 0.006);
+  const sw = (k.w - gap * (N - 1)) / N;
+  const head = t < 3.6 ? (t / 3.6) * 0.999 : t < 5.6 ? 0.45 : 0.85;
+  const skipOn = span(t, 3.9, 4.4);
+  const findOn = span(t, 5.8, 6.3);
+  for (let i = 0; i < N; i += 1) {
+    const x = k.x + i * (sw + gap);
+    const played = t >= 3.6 || i / N <= head;
+    const skipped = (i === 0 || i === 4) ? skipOn : 0;
+    photo(ctx, s, SEGMENTS[i], x, k.y, sw, k.h, { r: 3, alpha, dim: played ? 0.35 + skipped * 0.5 : 0.75 });
+    if (skipped > 0) path(ctx, { stroke: MUTED, width: 1.2, alpha: alpha * skipped }, () => { ctx.moveTo(x + 2, k.y + k.h / 2); ctx.lineTo(x + sw - 2, k.y + k.h / 2); });
+    const found = (i === 6 || i === 8) ? findOn : 0;
+    if (found > 0) path(ctx, { stroke: VIOLET, width: 2, alpha: alpha * found, shadow: 10 }, () => box(ctx, x - 1, k.y - 1, sw + 2, k.h + 2, 4));
+  }
+  if (t < 5.6) {
+    const hx = k.x + head * k.w;
+    path(ctx, { stroke: ACCENT, width: 2, alpha, shadow: 8 }, () => { ctx.moveTo(hx, k.y - 4); ctx.lineTo(hx, k.y + k.h + 4); });
+  }
+  const tagY = k.y + k.h + fs * 1.25;
+  const centre = (i) => clamp(k.x + i * (sw + gap) + sw / 2, k.x + fs * 2.5, k.x + k.w - fs * 2.5);
+  const skipTags = skipOn * (1 - span(t, 5.4, 5.8)) * alpha;
+  for (const tag of SKIPPED) pill(ctx, tag.text, centre(tag.at), tagY, { size: fs * 0.85, color: MUTED, alpha: skipTags, align: 'center', strike: true, weight: 500 });
+  FOUND.forEach((tag, i) => pill(ctx, tag.text, centre(tag.at), tagY + i * fs * 2.1, { size: fs * 0.85, color: ACCENT, stroke: VIOLET, alpha: findOn * alpha * (1 - span(t, 9.6, 10.2)), align: 'center' }));
+}
+
+function drawPhoneShell(ctx, rect, alpha, lit = false) {
+  const r = rect.w * 0.09;
+  path(ctx, { fill: SURFACE, stroke: lit ? VIOLET : LINE, width: 1.5, alpha, shadow: lit ? 16 : 0 }, () => box(ctx, rect.x, rect.y, rect.w, rect.h, r));
+  return r;
+}
+
+function drawCaptions(ctx, rect, t, fs, alpha) {
+  if (alpha <= 0.002) return;
+  const word = Math.floor(Math.max(0, t - 10.6) / 0.38) % CAPTION.length;
+  const group = CAPTION_GROUP[word];
+  const words = CAPTION.map((text, i) => ({ text, i })).filter((w) => CAPTION_GROUP[w.i] === group);
+  const size = Math.max(9, rect.w * 0.095);
+  const widths = words.map((w) => textWidth(w.text, size, 800));
+  const total = widths.reduce((a, b) => a + b, 0) + size * 0.35 * (words.length - 1);
+  let x = rect.x + rect.w / 2 - total / 2;
+  const y = rect.y + rect.h * 0.72;
+  words.forEach((w, i) => {
+    const on = w.i === word;
+    const pop = on ? easeOutBack(span((Math.max(0, t - 10.6) % 0.38), 0, 0.16)) : 1;
+    label(ctx, w.text, x + widths[i] / 2, y - (on ? (pop - 1) * size * 0.4 : 0), { size: size * (on ? 1.06 : 1), color: on ? ACCENT : INK, align: 'center', weight: 800, alpha, shadow: 6 });
+    x += widths[i] + size * 0.35;
   });
 }
 
-function orbitArc(ctx, g, front, t, alpha) {
-  const from = front ? 0 : Math.PI;
-  path(ctx, { stroke: INK, width: 1.1, alpha: alpha * (front ? 0.34 : 0.2), dash: [2, 7], dashOffset: t * 9 }, () => {
-    for (let k = 0; k <= 48; k += 1) {
-      const a = from + (k / 48) * Math.PI;
-      const x = g.cx + g.rx * Math.cos(a);
-      const y = g.cy + g.ry * Math.sin(a);
-      if (k) ctx.lineTo(x, y); else ctx.moveTo(x, y);
-    }
+function drawHook(ctx, rect, t, alpha) {
+  const v = easeOutBack(span(t, 10.4, 10.8));
+  if (v <= 0.01 || alpha <= 0.002) return;
+  const size = Math.max(7, rect.w * 0.066);
+  const w = rect.w * 0.86;
+  const h = size * 3.4;
+  const x = rect.x + (rect.w - w) / 2;
+  const y = rect.y + rect.h * 0.08 - (1 - v) * size;
+  path(ctx, { fill: INK, alpha: alpha * clamp01(v) }, () => box(ctx, x, y, w, h, size * 0.5));
+  HOOK.forEach((line, i) => label(ctx, line, rect.x + rect.w / 2, y + size * (1.05 + i * 1.3), { size, color: SURFACE, align: 'center', weight: 700, alpha: alpha * clamp01(v) }));
+}
+
+/** Keep or skip, under a clip. `at` is when the choice is tapped; `keep` says which. */
+function drawChoice(ctx, rect, t, { at, keep, fs, h, alpha }) {
+  if (alpha <= 0.002) return;
+  const gap = Math.max(4, rect.w * 0.05);
+  const bw = (rect.w - gap) / 2;
+  const y = rect.y + rect.h + Math.max(4, h * 0.25);
+  const done = span(t, at, at + 0.2);
+  const size = Math.min(fs, h * 0.45);
+  [['Skip', false], ['Keep', true]].forEach(([text, isKeep], i) => {
+    const x = rect.x + i * (bw + gap);
+    const chosen = isKeep === keep ? done : 0;
+    const colour = isKeep ? PINE : MUTED;
+    path(ctx, { fill: SURFACE, stroke: chosen > 0.5 ? colour : LINE, width: 1.3, alpha }, () => box(ctx, x, y, bw, h, h / 2));
+    if (chosen > 0) path(ctx, { fill: colour, alpha: alpha * 0.22 * chosen }, () => box(ctx, x, y, bw, h, h / 2));
+    label(ctx, text, x + bw / 2, y + h / 2, { size, color: chosen > 0.5 ? colour : INK, align: 'center', weight: 600, alpha });
+    if (isKeep === keep) tap(ctx, x + bw / 2, y + h / 2, h * 0.7, span(t, at - 0.05, at + 0.5));
   });
 }
 
-function stationNode(ctx, g, station, active, t) {
-  const p = onOrbit(g, station.angle);
-  const r = g.unit * 1.05 * p.scale;
-  if (active > 0) glow(ctx, p.x, p.y, r * 6, 0.45 * active);
-  path(ctx, { fill: SURFACE, stroke: active > 0.3 ? ACCENT : LINE, width: 1.4, alpha: 0.98 }, () => ctx.arc(p.x, p.y, r, 0, Math.PI * 2));
-  path(ctx, { fill: active > 0.3 ? ACCENT : MUTED, alpha: 0.45 + 0.55 * active, shadow: active > 0.3 ? 10 : 0 }, () => ctx.arc(p.x, p.y, r * 0.38, 0, Math.PI * 2));
-  if (active > 0.3) path(ctx, { stroke: VIOLET_SOFT, width: 1.2, alpha: 0.7 * active, dash: [3, 4], dashOffset: -t * 18 }, () => ctx.arc(p.x, p.y, r * 2, 0, Math.PI * 2));
-  const below = p.front || Math.abs(Math.cos(station.angle)) > 0.6;
-  label(ctx, station.name, p.x, p.y + (below ? r * 2.6 : -r * 2.6), { align: 'center', size: Math.max(10, g.unit * 1.15), color: active > 0.3 ? INK : MUTED, weight: active > 0.3 ? 600 : 500 });
-}
-
-function loop(ctx, s) {
-  const g = loopGeometry(s);
-  const { t } = s;
-  const state = loopState(t);
-  const { lt, n } = state;
-  const run = ((n % LOOP_RUN) + LOOP_RUN) % LOOP_RUN;
-  const back = s.layer !== 'front';
-  const front = s.layer !== 'back';
-  const U = g.unit;
-  const at = (a, b) => span(lt, a, b);
-  const activeFor = (from, to) => Math.min(ease((lt - from) / 0.35), 1 - ease((lt - to) / 0.35));
-  const layerOf = (p) => (p.front ? front : back);
-  // The Style rule changes the next batch: from the second loop on, clips open on a hook title.
-  const hook = run > 0;
-
-  if (back) {
-    // The ground: rings from every finished loop, and the one this loop is about to add.
-    for (let i = 0; i < LOOP_RUN; i += 1) {
-      const grow = 1.2 + 0.17 * i;
-      let alpha = 0;
-      let size = grow;
-      if (i < run) alpha = 0.2;
-      if (i === run) { const birth = easeOutCubic(at(18.2, 19.8)); alpha = 0.34 * birth; size = mix(1, grow, birth); }
-      // A new run: last run's rings melt back into the terrain while the footage comes in.
-      if (run === 0 && n > 0 && i > 0) alpha = Math.max(alpha, 0.2 * (1 - ease(lt / 2.4)));
-      if (alpha > 0) growthRing(ctx, g, size, t, i, alpha, i === run && lt > 18.2);
+function drawRows(ctx, s, L, t, run) {
+  const { rows, fs } = L;
+  const on = span(t, 15.2, 15.7) * (1 - span(t, 22.6, 23.4));
+  if (on <= 0.002) return;
+  const results = span(t, 17.6, 19.4);
+  label(ctx, results > 0 ? 'Watched to the end, sample shapes' : 'Posted', rows[0].x, rows[0].y - fs * 0.95, { size: fs * 0.85, color: MUTED, alpha: on });
+  rows.forEach((row, i) => {
+    const rowOn = on * span(t, 15.2 + i * 0.12, 15.6 + i * 0.12);
+    path(ctx, { fill: SURFACE, stroke: LINE, width: 1.2, alpha: rowOn }, () => box(ctx, row.x, row.y, row.w, row.h, row.h * 0.3));
+    label(ctx, PLATFORMS[i], row.x + fs * 0.8, row.y + row.h / 2, { size: fs, color: INK, weight: 600, alpha: rowOn });
+    // Posted clips pile up stream after stream: more clips out, never a promised number.
+    const th = row.h * 0.74;
+    const tw = (th * 9) / 16;
+    const arrive = 15.4 + i * 0.35 + 0.8;
+    const count = run - 1 + (t >= arrive ? 1 : 0);
+    for (let k = 0; k < count; k += 1) {
+      const x = row.x + row.w - fs * 0.6 - tw - k * (tw * L.stack);
+      photo(ctx, s, 'clip', x, row.y + (row.h - th) / 2, tw, th, { r: 2, alpha: rowOn * (k === 0 ? 1 : 0.7), fy: 0.35 });
     }
-    glow(ctx, g.cx, g.cy, g.rx * 0.9, 0.12);
-    orbitArc(ctx, g, false, t, 1);
-    // Footage in: the stream recording slides into the factory, behind the app.
-    const feed = at(0, 2.2);
-    const fade = Math.min(ease(lt / 0.4), 1 - ease((lt - 2.4) / 0.6));
-    if (fade > 0) {
-      const sw = Math.min(g.w * 0.34, Math.max(g.app.x + g.app.w * 0.3, g.w * 0.2));
-      const sh = Math.max(U * 3.4, g.app.h * 0.13);
-      // On a phone the app covers the width, so the footage slides in under it rather than behind.
-      const sx = mix(-sw * 0.9, g.narrow ? g.cx - sw / 2 : g.app.x + g.app.w * 0.32 - sw, easeInOutCubic(feed));
-      const sy = g.narrow ? g.app.y + g.app.h + U * 2.6 : g.app.y + g.app.h * 0.3;
-      recording(ctx, sx, sy, sw, sh, { alpha: fade, head: feed, seed: run });
-      label(ctx, 'Your stream', Math.max(U, sx + U * 0.4), sy - U * 1.4, { size: Math.max(10, U * 1.15), color: INK, alpha: fade });
-    }
-  }
-  if (front) orbitArc(ctx, g, true, t, 1);
-
-  // Stations, each lit while it works.
-  const lit = {
-    editor: Math.max(activeFor(4.6, 7.0), activeFor(17.6, 18.6)),
-    critic: activeFor(7.0, 9.0),
-    approve: activeFor(9.0, 10.8),
-    post: activeFor(10.6, 12.2),
-    measure: activeFor(12.4, 14.6),
-    strategist: activeFor(14.2, 16.8),
-  };
-  for (const [id, station] of Object.entries(STATION)) {
-    const p = onOrbit(g, station.angle);
-    if (layerOf(p)) stationNode(ctx, g, station, lit[id], t);
-  }
-
-  // Listening and watching: a scan passes over the real app.
-  if (front) {
-    const scan = at(1.6, 3.4);
-    if (scan > 0 && scan < 1) {
-      const y = g.app.y + g.app.h * easeInOutCubic(scan);
-      const a = Math.sin(Math.PI * scan);
-      path(ctx, { fill: VIOLET, alpha: 0.1 * a }, () => box(ctx, g.app.x, g.app.y, g.app.w, y - g.app.y, 6));
-      path(ctx, { stroke: ACCENT, width: 1.5, alpha: 0.75 * a, shadow: 14 }, () => { ctx.moveTo(g.app.x, y); ctx.lineTo(g.app.x + g.app.w, y); });
-    }
-  }
-
-  // The scout swarm flies out of the factory, finds moments, and brings them to the Editor.
-  const swarm = at(3.4, 5.4);
-  if (swarm > 0 && swarm < 1) {
-    const origin = { x: g.cx, y: g.app.y + g.app.h * 0.55 };
-    const ed = onOrbit(g, STATION.editor.angle);
-    for (let k = 0; k < 6; k += 1) {
-      const spot = onOrbit(g, (196 - k * 34) * DEG, 1.08);
-      const out = easeOutCubic(span(swarm, k * 0.03, 0.42 + k * 0.03));
-      const home = easeInOutCubic(span(swarm, 0.62, 0.95));
-      const hover = swarm > 0.42 && swarm < 0.66 ? wobble(k, t * 3, 2) * U * 0.5 : 0;
-      const x = mix(mix(origin.x, spot.x, out), ed.x, home);
-      const y = mix(mix(origin.y, spot.y, out), ed.y, home) + hover;
-      const p = { front: y >= g.cy - g.ry * 0.2 };
-      if (!layerOf(p)) continue;
-      const alpha = Math.min(ease(swarm / 0.08), 1 - ease((swarm - 0.9) / 0.1));
-      if (out > 0.95 && home < 0.05) glow(ctx, spot.x, spot.y, U * 3, 0.4 * alpha);
-      agent(ctx, x, y, U * 0.55, { alpha, heading: Math.atan2(y - origin.y, x - origin.x), speed: out < 1 || home > 0 ? 0.9 : 0, working: home < 0.05 && out > 0.9, t });
-    }
-  }
-
-  // The batch: five clips cut by the Editor, judged by the Critic, approved by you, then posted.
-  const ed = STATION.editor.angle;
-  for (let k = 0; k < 5; k += 1) {
-    const kept = KEPT.indexOf(k);
-    const born = 5.2 + k * 0.28;
-    if (lt < born) continue;
-    let angle = mix(ed, (150 - k * 8) * DEG, easeOutCubic(at(born, born + 0.9)));
-    let alpha = ease(at(born, born + 0.3));
-    let lift = 0;
-    let done = false;
-    let size = 1;
-    let litCard = false;
-    // The Critic's beam passes each clip; two are left behind.
-    const judged = at(7.4 + k * 0.22, 7.7 + k * 0.22);
-    if (kept < 0) {
-      const drop = ease(at(8.5, 9.3));
-      lift = drop * U * 3;
-      alpha *= 1 - drop;
-      if (alpha <= 0.01) continue;
+    if (t >= arrive) tick(ctx, row.x + row.w - fs * 0.6 - tw - Math.max(0, count - 1) * tw * L.stack - fs * 1.1, row.y + row.h / 2, fs * 0.5, rowOn * span(t, arrive, arrive + 0.25));
+    if (results <= 0) return;
+    const bx = row.x + fs * (L.narrow ? 4.4 : 5.4);
+    const bwMax = Math.max(10, row.x + row.w - bx - fs * 2.6 - tw - (STORY_RUN - 1) * tw * L.stack);
+    const bh = row.h * 0.36;
+    const by = row.y + (row.h - bh) / 2;
+    const sample = SAMPLE[i];
+    if (sample === null && L.narrow) {
+      // Too small for an outline with words inside it: the words alone say it.
+      label(ctx, 'No report yet', bx, row.y + row.h / 2, { size: fs * 0.8, color: MUTED, alpha: rowOn * results });
+    } else if (sample === null) {
+      path(ctx, { stroke: MUTED, width: 1.2, alpha: rowOn * results, dash: [3, 4] }, () => box(ctx, bx, by, bwMax, bh, bh / 2));
+      label(ctx, 'No report yet', bx + bwMax / 2, row.y + row.h / 2, { size: fs * 0.8, color: MUTED, align: 'center', alpha: rowOn * results });
     } else {
-      litCard = judged > 0.5;
-      const slot = [86, 72, 58][kept] * DEG;
-      angle = mix(angle, slot, easeInOutCubic(at(9.0, 9.8)));
-      done = lt > 9.9 + kept * 0.28;
-      const go = 10.6 + kept * 0.22;
-      angle = mix(angle, STATION.post.angle, easeInOutCubic(at(go, go + 0.6)));
-      const portal = portalAt(g, PORTALS[kept]);
-      const fly = easeInOutCubic(at(go + 0.6, go + 1.2));
-      if (fly >= 1) continue;
-      if (fly > 0) {
-        const from = onOrbit(g, STATION.post.angle);
-        const x = mix(from.x, portal.x, fly);
-        const y = mix(from.y, portal.y, fly) - Math.sin(Math.PI * fly) * U * 3;
-        if (front) clipTile(ctx, x, y, U * 7 * mix(1, 0.35, fly), { alpha, lit: true, done: true, hook, t, tilt: (portal.y - from.y) * 0.002 * fly });
-        continue;
-      }
+      path(ctx, { fill: LINE, alpha: rowOn * results }, () => box(ctx, bx, by, bwMax, bh, bh / 2));
+      const fill = easeOutCubic(span(t, 17.8 + i * 0.25, 19.0 + i * 0.25));
+      path(ctx, { fill: VIOLET_SOFT, alpha: rowOn * results, shadow: 6 }, () => box(ctx, bx, by, Math.max(bh, bwMax * sample * fill), bh, bh / 2));
     }
-    const p = onOrbit(g, angle);
-    if (!layerOf(p)) continue;
-    const pop = easeOutBack(at(born, born + 0.45));
-    size = p.scale * mix(0.4, 1, pop);
-    if (judged > 0 && judged < 1) glow(ctx, p.x, p.y - U * 3.5, U * 5, 0.35 * Math.sin(Math.PI * judged));
-    clipTile(ctx, p.x, p.y - U * 3.6 + lift, U * 7 * size, { alpha, lit: litCard, done, hook, t, tilt: kept < 0 ? lift * 0.01 : 0 });
+  });
+}
+
+/** The kept clip travels to each platform row. */
+function drawFlights(ctx, s, L, t) {
+  const { phone, rows } = L;
+  rows.forEach((row, i) => {
+    const v = span(t, 15.4 + i * 0.35, 16.2 + i * 0.35);
+    if (v <= 0 || v >= 1) return;
+    const e = easeInOutCubic(v);
+    const th = row.h * 0.74;
+    const tw = (th * 9) / 16;
+    const x0 = phone.x + phone.w * 0.3;
+    const y0 = phone.y + phone.h * 0.5;
+    const x1 = row.x + row.w - L.fs * 0.6 - tw;
+    const y1 = row.y + (row.h - th) / 2;
+    const cx = mix(x0, x1, 0.5);
+    const cy = Math.min(y0, y1) - L.U * 4;
+    const x = (1 - e) * (1 - e) * x0 + 2 * (1 - e) * e * cx + e * e * x1;
+    const y = (1 - e) * (1 - e) * y0 + 2 * (1 - e) * e * cy + e * e * y1;
+    const grow = mix(2.2, 1, e);
+    glow(ctx, x + tw / 2, y + th / 2, th * 1.2, 0.35 * (1 - e));
+    photo(ctx, s, 'clip', x, y, tw * grow, th * grow, { r: 3, fy: 0.35 });
+  });
+}
+
+function drawCard(ctx, L, t, lesson, slot) {
+  const { frame: f, fs } = L;
+  const on = span(t, 19.9, 20.3) * (1 - span(t, 21.5, 21.8));
+  if (on > 0.002) {
+    const note = 'Nothing changes until you do';
+    const w = Math.min(f.w * 0.94, Math.max(textWidth(lesson, fs * 1.15, 700), textWidth(note, fs * 0.75)) + fs * 2);
+    const lessonSize = Math.min(fs * 1.15, (w - fs * 2) / textWidth(lesson, 1, 700));
+    const h = fs * 8.2;
+    const x = f.x + (f.w - w) / 2;
+    const y = f.y + Math.max(0, (f.h - h) / 2) + (1 - easeOutBack(span(t, 19.9, 20.4))) * fs;
+    path(ctx, { fill: SURFACE, stroke: VIOLET, width: 1.4, alpha: on, shadow: 14 }, () => box(ctx, x, y, w, h, fs * 0.7));
+    label(ctx, 'Try next', x + fs, y + fs * 1.3, { size: fs * 0.85, color: MUTED, alpha: on });
+    label(ctx, lesson, x + fs, y + fs * 2.9, { size: lessonSize, color: INK, weight: 700, alpha: on });
+    label(ctx, note, x + fs, y + fs * 4.5, { size: fs * 0.75, color: MUTED, alpha: on });
+    const bw = fs * 6;
+    const bh = fs * 1.9;
+    const bx = x + fs;
+    const by = y + fs * 5.5;
+    const done = span(t, 20.9, 21.1);
+    path(ctx, { fill: SURFACE, stroke: PINE, width: 1.3, alpha: on }, () => box(ctx, bx, by, bw, bh, bh / 2));
+    if (done > 0) path(ctx, { fill: PINE, alpha: on * 0.22 * done }, () => box(ctx, bx, by, bw, bh, bh / 2));
+    label(ctx, 'Approve', bx + bw / 2, by + bh / 2, { size: fs * 0.9, color: PINE, align: 'center', weight: 600, alpha: on });
+    tap(ctx, bx + bw / 2, by + bh / 2, bh * 0.7, span(t, 20.85, 21.4));
+    if (done > 0) tick(ctx, bx + bw + fs * 1.1, by + bh / 2, fs * 0.6, on * done);
+  }
+  // The approved lesson flies up to the shelf.
+  const fly = span(t, 21.4, 22.2);
+  if (fly > 0 && fly < 1 && slot) {
+    const e = easeInOutCubic(fly);
+    const x = mix(f.x + f.w * 0.3, slot.x, e);
+    const y = mix(f.y + f.h * 0.5, slot.y, e);
+    glow(ctx, x + fs * 3, y, fs * 3, 0.3 * (1 - e));
+    pill(ctx, lesson, x, y, { size: fs * 0.85, color: ACCENT, stroke: VIOLET });
+  }
+}
+
+function story(ctx, s) {
+  const L = storyLayout(s.w, s.h);
+  const state = storyState(s.t);
+  const pass = Math.floor(s.t / STORY_PERIOD);
+  const t = s.t - pass * STORY_PERIOD;
+  const run = state.loop;
+  const { phone, fs, crop } = L;
+
+  // What it has learned so far this run. It clears only when a new run starts.
+  const lessons = run - 1 + (t >= 22.2 ? 1 : 0);
+  const slots = drawShelf(ctx, L, lessons, run === STORY_RUN ? 1 - span(t, 23.2, 24) : 1);
+
+  const { r: frameR } = drawFrame(ctx, s, L, t);
+  drawTrack(ctx, s, L, t);
+
+  // The empty clip waits on the right until a moment is found.
+  const waiting = 1 - span(t, 8.8, 9.2);
+  const back = span(t, 22.6, 23.4);
+  const empty = Math.max(t < 9.2 ? waiting : 0, back);
+  if (empty > 0.002) {
+    const pr = phone.w * 0.09;
+    path(ctx, { fill: SURFACE, stroke: MUTED, width: 1.2, alpha: empty * 0.7, dash: [4, 6] }, () => box(ctx, phone.x, phone.y, phone.w, phone.h, pr));
+    label(ctx, 'Your clip', phone.x + phone.w / 2, phone.y + phone.h / 2, { size: fs, color: MUTED, align: 'center', alpha: empty * 0.8 });
   }
 
-  // The Critic's beam, sweeping the queue.
-  if (front) {
-    const sweep = at(7.3, 8.6);
-    if (sweep > 0 && sweep < 1) {
-      const c = onOrbit(g, STATION.critic.angle);
-      const target = onOrbit(g, mix(150, 118, sweep) * DEG);
-      path(ctx, { fill: VIOLET, alpha: 0.14 * Math.sin(Math.PI * sweep) }, () => {
-        ctx.moveTo(c.x, c.y);
-        ctx.lineTo(target.x - U * 2.6, target.y - U * 7.6);
-        ctx.lineTo(target.x + U * 2.6, target.y - U * 7.6);
-        ctx.closePath();
-      });
-    }
-    // The approval gate: it pulses until all three are yours, then it opens.
-    const gate = onOrbit(g, STATION.approve.angle);
-    const waiting = at(9.0, 10.6);
-    if (waiting > 0 && waiting < 1) {
-      const all = lt > 10.5;
-      const pulse = Math.sin(Math.PI * cycle(t, 1.1)) ** 2;
-      path(ctx, { stroke: all ? PINE : VIOLET_SOFT, width: 1.6, alpha: 0.8 * Math.sin(Math.PI * waiting) + 0.2, shadow: 10 * pulse }, () =>
-        ctx.arc(gate.x, gate.y, U * (2.2 + 0.4 * pulse), 0, Math.PI * 2));
-      if (all) tick(ctx, gate.x, gate.y, U * 1.1);
-    }
-    // Channels: names only, no logos. A clip arriving makes the channel ripple.
-    PORTALS.forEach((portal, i) => {
-      const p = portalAt(g, portal);
-      const arrive = 10.6 + i * 0.22 + 1.2;
-      const shown = Math.min(ease(at(10.2, 10.8)), 1 - ease(at(14.4, 15.2)));
-      if (shown <= 0) return;
-      const r = U * 1.6;
-      const hit = at(arrive, arrive + 1.4);
-      path(ctx, { fill: SURFACE, stroke: hit > 0 ? VIOLET_SOFT : LINE, width: 1.4, alpha: shown }, () => ctx.arc(p.x, p.y, r, 0, Math.PI * 2));
-      if (hit > 0 && hit < 1) {
-        for (const lag of [0, 0.25]) {
-          const ripple = easeOutCubic(clamp01((hit - lag) / (1 - lag)));
-          path(ctx, { stroke: ACCENT, width: 1.3, alpha: shown * 0.8 * (1 - ripple) }, () => ctx.arc(p.x, p.y, r * (1 + ripple * 2.6), 0, Math.PI * 2));
-        }
+  // Cut: a vertical crop locks on to the face, lifts out of the stream and becomes the clip.
+  if (t >= 8 && t < 8.9) {
+    const draw = easeOutCubic(span(t, 8.0, 8.5));
+    path(ctx, { stroke: ACCENT, width: 2, alpha: draw, dash: [6, 5], dashOffset: -t * 30, shadow: 10 }, () => box(ctx, crop.x, crop.y, crop.w, crop.h, frameR * 0.6));
+    const fx = L.frame.x + L.frame.w * FACE.x;
+    const fy = L.frame.y + L.frame.h * FACE.y;
+    const b = L.frame.w * mix(0.12, 0.07, easeOutBack(span(t, 8.15, 8.6)));
+    const on = span(t, 8.15, 8.35);
+    path(ctx, { stroke: PINE, width: 2, alpha: on }, () => {
+      const q = b * 0.35;
+      for (const [sx, sy] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) {
+        ctx.moveTo(fx + sx * b, fy + sy * b - sy * q);
+        ctx.lineTo(fx + sx * b, fy + sy * b);
+        ctx.lineTo(fx + sx * b - sx * q, fy + sy * b);
       }
-      label(ctx, portal.name, p.x, p.y + r + U * 1.5, { align: 'center', size: Math.max(10, U * 1.15), color: hit > 0 ? INK : MUTED, weight: 600, alpha: shown });
-      // Results: a channel that has not reported stays an empty dashed outline, never a zero.
-      const measuring = at(12.4, 14.4);
-      if (!portal.reports && measuring > 0) {
-        path(ctx, { stroke: MUTED, width: 1.2, alpha: shown * 0.8, dash: [3, 4] }, () => ctx.arc(p.x, p.y, r * 1.9, 0, Math.PI * 2));
-        label(ctx, 'No report yet', p.x, p.y + r + U * 3.1, { align: 'center', size: Math.max(9, U), color: MUTED, alpha: shown * ease(measuring * 4) });
-      }
+    });
+    pill(ctx, 'Follows your face', crop.x + crop.w / 2, crop.y + crop.h - fs * 1.4, { size: fs * 0.8, color: PINE, stroke: PINE, alpha: on, align: 'center' });
+  }
+  if (t >= 8.8 && t < 23.4) {
+    const lift = easeInOutCubic(span(t, 8.8, 9.9));
+    const rect = lerpRect(crop, phone, lift);
+    const landed = span(t, 9.8, 10.3);
+    const out = 1 - span(t, 22.6, 23.4);
+    const lit = t >= 9.9 && t < 12.6;
+    glow(ctx, rect.x + rect.w / 2, rect.y + rect.h / 2, rect.h * 0.7, 0.18 * (1 - landed) * out);
+    const pr = drawPhoneShell(ctx, rect, out, lit);
+    const region = { x0: (crop.x - L.frame.x) / L.frame.w, x1: (crop.x + crop.w - L.frame.x) / L.frame.w, y0: 0, y1: 1 };
+    if (landed < 1) photo(ctx, s, 'moment', rect.x, rect.y, rect.w, rect.h, { r: pr, region, alpha: out });
+    if (landed > 0) photo(ctx, s, 'clip', rect.x, rect.y, rect.w, rect.h, { r: pr, alpha: out * landed, fy: 0.4 });
+    if (lift > 0.98) {
+      drawHook(ctx, rect, t, out);
+      drawCaptions(ctx, rect, t, fs, out * span(t, 10.6, 10.8));
+    }
+    if (lift < 1) path(ctx, { stroke: ACCENT, width: 2, alpha: (1 - lift) * out, shadow: 10 }, () => box(ctx, rect.x, rect.y, rect.w, rect.h, pr));
+    // Pick: you keep it.
+    const choice = span(t, 12.6, 12.9) * (1 - span(t, 15.0, 15.4));
+    drawChoice(ctx, phone, t, { at: 13.3, keep: true, fs, h: L.btnH, alpha: choice * out });
+    if (t >= 13.4) tick(ctx, phone.x + phone.w - fs * 1.4, phone.y + fs * 1.4, fs * 0.8, span(t, 13.4, 13.7) * out);
+  }
+
+  // Pick: the other moments it found wait for you too. One is kept, one is skipped.
+  if (t >= 12.6 && t < 15.4) {
+    const { frame: f } = L;
+    const gap = Math.max(8, L.U);
+    const avail = (L.narrow ? L.shelf.y - fs * 2 : L.track.y + L.track.h) - f.y - L.btnH - gap;
+    const mh = Math.max(20, Math.min(avail, (((f.w - gap) / 2) * 16) / 9));
+    const mw = (mh * 9) / 16;
+    const left = f.x + (f.w - (mw * 2 + gap)) / 2;
+    [['clipTalk', true, 13.9], ['clipPlay', false, 14.5]].forEach(([name, keep, at], i) => {
+      const pop = easeOutBack(span(t, 12.7 + i * 0.15, 13.15 + i * 0.15));
+      const gone = keep ? span(t, 15.0, 15.4) : span(t, at + 0.25, at + 0.7);
+      const alpha = clamp01(pop) * (1 - gone);
+      if (alpha <= 0.002) return;
+      const drop = keep ? 0 : easeOutCubic(gone) * L.U * 3;
+      const rect = { x: left + i * (mw + gap), y: f.y + drop, w: mw, h: mh * clamp(pop, 0.6, 1.1) };
+      const pr = drawPhoneShell(ctx, rect, alpha);
+      photo(ctx, s, name, rect.x, rect.y, rect.w, rect.h, { r: pr, alpha, dim: keep ? 0 : 0.5 * span(t, at, at + 0.3), fy: 0.35 });
+      drawChoice(ctx, rect, t, { at, keep, fs: fs * 0.9, h: L.btnH * 0.86, alpha });
+      if (keep && t >= at + 0.1) tick(ctx, rect.x + rect.w - fs * 1.1, rect.y + fs * 1.1, fs * 0.6, span(t, at + 0.1, at + 0.4) * alpha);
     });
   }
 
-  // Results come back from the channels that reported, through Measure to the Strategist.
-  const m = onOrbit(g, STATION.measure.angle);
-  for (const [i, portal] of PORTALS.entries()) {
-    if (!portal.reports) continue;
-    const p = portalAt(g, portal);
-    for (let k = 0; k < 4; k += 1) {
-      const start = 12.5 + i * 0.3 + k * 0.14;
-      const home = easeInOutCubic(at(start, start + 0.9));
-      const along = easeInOutCubic(at(start + 1.0, start + 2.4));
-      if (home <= 0 || along >= 1) continue;
-      let x;
-      let y;
-      let near;
-      if (along <= 0) {
-        x = mix(p.x, m.x, home);
-        y = mix(p.y, m.y, home) - Math.sin(Math.PI * home) * U * 2;
-        near = true;
-      } else {
-        const q = onOrbit(g, mix(STATION.measure.angle, STATION.strategist.angle, along));
-        x = q.x; y = q.y; near = q.front || Math.abs(x - g.cx) > g.app.w / 2;
-      }
-      if (near ? !front : !back) continue;
-      glow(ctx, x, y, U * 2.2, 0.35);
-      path(ctx, { fill: ACCENT, alpha: 0.95, shadow: 10 }, () => ctx.arc(x, y, U * 0.32, 0, Math.PI * 2));
-    }
-  }
-
-  // The Strategist forms a belief, then sends a Style rule round to the Editor.
-  const st = onOrbit(g, STATION.strategist.angle);
-  const belief = Math.min(easeOutBack(at(14.8, 15.4)), 1 - ease(at(16.6, 17.0)));
-  if (front && belief > 0.01) {
-    const bw = U * 9;
-    const bh = U * 4.6;
-    // The card never covers the screenshot: beside the app on wide stages, under the node on a phone.
-    const bx = g.narrow ? Math.max(U, st.x - bw * 0.5) : Math.max(U, Math.min(st.x - bw * 0.5, g.app.x - bw - U));
-    const by = g.narrow ? st.y + U * 4.4 : st.y - U * 3 - bh * belief;
-    path(ctx, { fill: SURFACE, stroke: VIOLET_SOFT, width: 1.2, alpha: belief, shadow: 10 }, () => box(ctx, bx, by, bw, bh, U * 0.7));
-    label(ctx, 'Belief', bx + U, by + U * 1.2, { size: Math.max(10, U * 1.1), color: INK, weight: 600, alpha: belief });
-    [0.78, 0.52, 0.3].forEach((len, i) => path(ctx, { fill: i ? MUTED : ACCENT, alpha: belief * (i ? 0.4 : 0.9) }, () => box(ctx, bx + U, by + U * (2.3 + i * 0.75), (bw - U * 2) * len * ease(at(15.0 + i * 0.15, 15.6 + i * 0.15)), U * 0.36, U * 0.18)));
-  }
-  const ruleRun = easeInOutCubic(at(16.6, 17.8));
-  if (ruleRun > 0 && lt < 18.2) {
-    const angle = mix(STATION.strategist.angle + Math.PI * 2, STATION.editor.angle, ruleRun);
-    const q = onOrbit(g, angle);
-    if (layerOf(q)) {
-      const pw = U * 7;
-      const ph = U * 2;
-      const alpha = 1 - ease(at(17.9, 18.2));
-      glow(ctx, q.x, q.y, U * 4, 0.4 * alpha);
-      path(ctx, { fill: SURFACE, stroke: ACCENT, width: 1.3, alpha, shadow: 12 }, () => box(ctx, q.x - pw / 2, q.y - ph / 2 - U * 2, pw, ph, ph / 2));
-      label(ctx, 'Style rule', q.x, q.y - U * 2, { align: 'center', size: Math.max(10, U * 1.05), color: INK, weight: 600, alpha });
-    }
-  }
-  // The Editor takes the rule: the factory lights up, and the next loop begins.
-  if (front) {
-    const take = Math.sin(Math.PI * at(17.8, 18.9));
-    if (take > 0) path(ctx, { stroke: VIOLET_SOFT, width: 2, alpha: 0.8 * take, shadow: 22 * take }, () => box(ctx, g.app.x - 3, g.app.y - 3, g.app.w + 6, g.app.h + 6, 12));
-  }
+  drawRows(ctx, s, L, t, run);
+  drawFlights(ctx, s, L, t);
+  drawCard(ctx, L, t, LESSONS[run - 1], slots[run - 1]);
   return state;
 }
-loop.layers = ['back', 'front'];
-loop.contours = false;
-/** Still frame: the second loop, all three clips approved and the gate about to open. */
-loop.still = LOOP_PERIOD + 10.45;
+story.contours = false;
+story.still = 14.05;
 
-/* ---------------------------------------------------------------------------------------------
- * Station scenes, one per stage family. Each is a pure function of its clock.
- * ------------------------------------------------------------------------------------------- */
-
-/** Understand: the recording is transcribed and split into scenes, on your Mac. */
-function understand(ctx, s) {
-  const { w, h, t } = s;
-  backdrop(ctx, s);
-  const phase = cycle(t, 6.4);
-  const fade = Math.min(ease(phase / 0.06), 1 - ease((phase - 0.9) / 0.1));
-  const head = ease(span(phase, 0.06, 0.8));
-  const sx = w * 0.06;
-  const sw = w * 0.38;
-  const sh = Math.max(26, h * 0.15);
-  const sy = h * 0.5 - sh / 2;
-  recording(ctx, sx, sy, sw, sh, { alpha: fade, head, seed: 2 });
-  label(ctx, 'Your stream', sx, sy - 16, { size: 11, color: INK, alpha: fade });
-  const hx = sx + sw * (0.03 + head * 0.94);
-  agent(ctx, hx, sy - sh * 0.5, Math.max(3, h * 0.02), { alpha: fade, heading: 0, speed: head > 0 && head < 1 ? 0.7 : 0, working: true, t });
-
-  const px = w * 0.56;
-  const pw = w * 0.38;
-  const panels = [
-    { name: 'Transcript', y: h * 0.12, h: h * 0.34 },
-    { name: 'Scenes', y: h * 0.56, h: h * 0.3 },
-  ];
-  for (const panel of panels) {
-    const ly = panel.y + panel.h / 2;
-    path(ctx, { stroke: VIOLET_SOFT, width: 1.2, alpha: fade * 0.55, dash: [3, 5], dashOffset: -t * 24 }, () => {
-      ctx.moveTo(sx + sw, h * 0.5);
-      ctx.bezierCurveTo(mix(sx + sw, px, 0.5), h * 0.5, mix(sx + sw, px, 0.5), ly, px, ly);
-    });
-    path(ctx, { fill: SURFACE, stroke: LINE, width: 1.2, alpha: fade }, () => box(ctx, px, panel.y, pw, panel.h, 8));
-    label(ctx, panel.name, px + 12, panel.y + 14, { size: 11, color: INK, weight: 600, alpha: fade });
-  }
-  // The transcript fills in as the recording is heard; one line is a moment worth cutting.
-  const lines = [0.82, 0.64, 0.9, 0.5, 0.72];
-  lines.forEach((len, i) => {
-    const shown = ease(span(head, i * 0.17, i * 0.17 + 0.15));
-    const moment = i === 2;
-    const y = panels[0].y + 30 + i * ((panels[0].h - 40) / lines.length);
-    if (moment && shown > 0.9) glow(ctx, px + pw * 0.4, y, pw * 0.3, 0.25 * fade);
-    path(ctx, { fill: moment ? ACCENT : INK, alpha: fade * shown * (moment ? 0.9 : 0.4) }, () => box(ctx, px + 12, y - 2, (pw - 24) * len * shown, 4.5, 2));
-  });
-  // Scene changes are found from the picture, one thumbnail each.
-  const tw = (pw - 24 - 18) / 4;
-  for (let i = 0; i < 4; i += 1) {
-    const pop = easeOutBack(span(head, 0.12 + i * 0.2, 0.26 + i * 0.2));
-    if (pop <= 0.01) continue;
-    const th = tw * 0.5625;
-    const cx = px + 12 + i * (tw + 6) + tw / 2;
-    const cy = panels[1].y + panels[1].h * 0.6;
-    ctx.save();
-    ctx.translate(cx, cy);
-    ctx.scale(pop, pop);
-    path(ctx, { fill: SURFACE, stroke: i === 2 ? VIOLET : LINE, width: 1.2, alpha: fade }, () => box(ctx, -tw / 2, -th / 2, tw, th, 4));
-    path(ctx, { fill: MUTED, alpha: fade * 0.2 }, () => ctx.arc(-tw * 0.1 + i * tw * 0.06, 0, th * 0.24, 0, Math.PI * 2));
-    ctx.restore();
-  }
-}
-understand.still = 4.2;
-
-/** Judge: the Critic scores every clip on the production rubric, ranks them, and waits for you. */
-const RUBRIC = [0.82, 0.44, 0.9, 0.52, 0.74];
-function judge(ctx, s) {
-  const { w, h, t } = s;
-  backdrop(ctx, s);
-  const phase = cycle(t, 7.5);
-  const fade = Math.min(ease(phase / 0.06), 1 - ease((phase - 0.86) / 0.14));
-  const ch = Math.min(h * 0.4, w * 0.24);
-  const cy = h * 0.44;
-  const xs = RUBRIC.map((_, k) => w * (0.14 + k * 0.18));
-  const sweep = span(phase, 0.08, 0.36);
-  const bx = mix(xs[0] - ch * 0.5, xs[4] + ch * 0.5, easeInOutCubic(sweep));
-  if (sweep > 0 && sweep < 1) {
-    glow(ctx, bx, cy, ch * 0.9, 0.3 * fade);
-    path(ctx, { stroke: ACCENT, width: 1.5, alpha: fade * 0.8, shadow: 14 }, () => { ctx.moveTo(bx, cy - ch * 0.7); ctx.lineTo(bx, cy + ch * 0.85); });
-  }
-  label(ctx, 'Critic and ranker', w * 0.06, h * 0.08, { size: 11, color: INK, weight: 600, alpha: fade });
-  const rank = ease(span(phase, 0.38, 0.5));
-  let approved = 0;
-  RUBRIC.forEach((score, k) => {
-    const kept = KEPT.includes(k);
-    const seen = ease((bx - xs[k]) / (ch * 0.4));
-    const lift = kept ? -easeOutBack(rank) * h * 0.05 : rank * h * 0.03;
-    const alpha = fade * (kept ? 1 : mix(1, 0.28, rank));
-    const ok = kept && phase > 0.55 + KEPT.indexOf(k) * 0.08;
-    if (ok) approved += 1;
-    clipTile(ctx, xs[k], cy + lift, ch, { alpha, lit: kept && rank > 0.5, done: ok, hook: false, t });
-    const bw = ch * 0.5625;
-    const by = cy + ch * 0.62;
-    path(ctx, { fill: LINE, alpha: alpha * 0.9 }, () => box(ctx, xs[k] - bw / 2, by, bw, 4, 2));
-    path(ctx, { fill: kept ? VIOLET_SOFT : MUTED, alpha: alpha * 0.9 }, () => box(ctx, xs[k] - bw / 2, by, bw * score * seen, 4, 2));
-  });
-  const waiting = phase > 0.5;
-  if (waiting) {
-    const all = approved === KEPT.length;
-    label(ctx, all ? 'You approved these' : 'Waiting for you', w * 0.5, h * 0.9, { size: 12, align: 'center', color: all ? PINE : INK, weight: 600, alpha: fade * ease(span(phase, 0.5, 0.56)) });
-  } else {
-    label(ctx, 'Production rubric', w * 0.5, h * 0.9, { size: 11, align: 'center', color: MUTED, alpha: fade * ease(sweep * 3) });
-  }
-}
-judge.still = 5.85;
-
-/** Learn: reported results become a belief, and a belief becomes one Style rule for the next batch. */
-function learn(ctx, s) {
-  const { w, h, t } = s;
-  backdrop(ctx, s);
-  const phase = cycle(t, 9);
-  const fade = Math.min(ease(phase / 0.05), 1 - ease((phase - 0.9) / 0.1));
-  // Results, as sample shapes. One channel has not reported yet:
-  // unreported is unavailable, never zero, so its bar is an empty outline.
-  const rx = w * 0.06;
-  const rw = w * 0.26;
-  const base = h * 0.7;
-  const top = h * 0.24;
-  label(ctx, 'Results', rx, top - 14, { size: 11, color: INK, weight: 600, alpha: fade });
-  const heights = [0.7, 0.42];
-  const bw = rw / 4;
-  [0, 1, 2].forEach((i) => {
-    const x = rx + i * (bw * 1.4);
-    if (i < 2) {
-      const grow = easeOutCubic(span(phase, 0.04 + i * 0.05, 0.2 + i * 0.05));
-      const bh = (base - top) * heights[i] * grow;
-      path(ctx, { fill: i ? VIOLET_SOFT : ACCENT, alpha: fade * 0.85 }, () => box(ctx, x, base - bh, bw, bh, 4));
-    } else {
-      path(ctx, { stroke: MUTED, width: 1.2, alpha: fade * 0.8, dash: [3, 4] }, () => box(ctx, x, top + (base - top) * 0.3, bw, (base - top) * 0.7, 4));
-      label(ctx, 'No report yet', x + bw / 2, base + 14, { size: 10, align: 'center', alpha: fade });
-    }
-  });
-  path(ctx, { stroke: LINE, width: 1.2, alpha: fade }, () => { ctx.moveTo(rx - 4, base); ctx.lineTo(rx + rw + bw, base); });
-  label(ctx, 'Sample shapes', rx, base + 32, { size: 10, alpha: fade * 0.8 });
-
-  // The Strategist reads them and forms a belief: observational, not proof.
-  const sx = w * 0.5;
-  const sy = h * 0.34;
-  const think = span(phase, 0.2, 0.42);
-  for (let k = 0; k < 6; k += 1) {
-    const v = easeInOutCubic(span(think, k * 0.08, 0.5 + k * 0.08));
-    if (v <= 0 || v >= 1) continue;
-    const fromX = rx + (k % 2) * bw * 1.4 + bw / 2;
-    const fromY = base - (base - top) * heights[k % 2];
-    const x = mix(fromX, sx, v);
-    const y = mix(fromY, sy, v) - Math.sin(Math.PI * v) * h * 0.08;
-    glow(ctx, x, y, 10, 0.35 * fade);
-    path(ctx, { fill: ACCENT, alpha: fade, shadow: 8 }, () => ctx.arc(x, y, 2.6, 0, Math.PI * 2));
-  }
-  const awake = ease(span(phase, 0.3, 0.42));
-  glow(ctx, sx, sy, 40, 0.3 * awake * fade);
-  path(ctx, { fill: SURFACE, stroke: awake > 0.5 ? ACCENT : LINE, width: 1.4, alpha: fade }, () => ctx.arc(sx, sy, 11, 0, Math.PI * 2));
-  path(ctx, { fill: ACCENT, alpha: fade * mix(0.4, 1, awake), shadow: 10 }, () => ctx.arc(sx, sy, 4, 0, Math.PI * 2));
-  label(ctx, 'Strategist', sx, sy - 22, { size: 11, align: 'center', color: INK, weight: 600, alpha: fade });
-  const belief = easeOutBack(span(phase, 0.4, 0.5));
-  if (belief > 0.01) {
-    const cw = Math.min(w * 0.2, 150);
-    const cardY = sy + 26;
-    path(ctx, { fill: SURFACE, stroke: VIOLET_SOFT, width: 1.2, alpha: fade * clamp01(belief), shadow: 10 }, () => box(ctx, sx - cw / 2, cardY, cw, 50 * belief, 8));
-    label(ctx, 'Belief', sx - cw / 2 + 10, cardY + 13, { size: 11, color: INK, weight: 600, alpha: fade * clamp01(belief) });
-    path(ctx, { fill: ACCENT, alpha: fade * 0.85 * clamp01(belief) }, () => box(ctx, sx - cw / 2 + 10, cardY + 28, (cw - 20) * 0.7 * clamp01(belief), 4, 2));
-    path(ctx, { fill: MUTED, alpha: fade * 0.4 * clamp01(belief) }, () => box(ctx, sx - cw / 2 + 10, cardY + 37, (cw - 20) * 0.45 * clamp01(belief), 4, 2));
-  }
-
-  // One approved Style rule re-cuts the next batch: the payoff moves to the front.
-  const tx = w * 0.66;
-  const tw = w * 0.28;
-  const ty = h * 0.5;
-  const th = Math.max(18, h * 0.08);
-  const send = easeInOutCubic(span(phase, 0.52, 0.62));
-  if (send > 0 && send < 1) {
-    const x = mix(sx, tx + tw * 0.5, send);
-    const y = mix(sy + 50, ty - th * 1.6, send) - Math.sin(Math.PI * send) * h * 0.06;
-    path(ctx, { fill: SURFACE, stroke: ACCENT, width: 1.2, alpha: fade, shadow: 12 }, () => box(ctx, x - 36, y - 10, 72, 20, 10));
-    label(ctx, 'Style rule', x, y, { size: 10, align: 'center', color: INK, weight: 600, alpha: fade });
-  }
-  const recut = easeInOutCubic(span(phase, 0.62, 0.76));
-  label(ctx, recut > 0.5 ? 'Re-cut: hook first' : 'Before', tx, ty - th - 12, { size: 11, color: recut > 0.5 ? ACCENT : INK, weight: 600, alpha: fade });
-  const setupW = tw * 0.62;
-  const payoffW = tw * 0.34;
-  const gap = tw * 0.04;
-  const payoffX = mix(tx + setupW + gap, tx, recut);
-  const setupX = mix(tx, tx + payoffW + gap, recut);
-  const liftY = -Math.sin(Math.PI * recut) * th * 1.2;
-  path(ctx, { fill: SURFACE, stroke: LINE, width: 1.2, alpha: fade }, () => box(ctx, setupX, ty, setupW, th, 5));
-  label(ctx, 'Setup', setupX + 8, ty + th / 2, { size: 10, alpha: fade });
-  if (recut > 0 && recut < 1) glow(ctx, payoffX + payoffW / 2, ty + liftY + th / 2, payoffW, 0.3 * fade);
-  path(ctx, { fill: VIOLET, stroke: ACCENT, width: 1.2, alpha: fade * 0.9 }, () => box(ctx, payoffX, ty + liftY, payoffW, th, 5));
-  label(ctx, 'Payoff', payoffX + 8, ty + liftY + th / 2, { size: 10, color: INK, weight: 600, alpha: fade });
-  label(ctx, 'Next batch', tx, ty + th + 16, { size: 10, alpha: fade * ease(span(phase, 0.74, 0.8)) });
-}
-learn.still = 7.0;
-
-/**
- * Feature one: an agent reads the recording, drops onto a moment, and pulls a captioned vertical
- * clip out of the strip. Two agents work a different moment each, out of phase.
- */
-function cut(ctx, s) {
-  backdrop(ctx, s);
-  const { w, h, t } = s;
-  const strip = { x: w * 0.06, y: h * 0.63, w: w * 0.62, h: h * 0.19 };
-  const stack = { x: w * 0.85, y: h * 0.42 };
-  const moments = [0.18, 0.46, 0.74];
-  const PERIOD = 7.2;
-  // Which moment each agent is on, and how far through its run it is.
-  const runs = [0, 1].map((lane) => {
-    const raw = t / PERIOD + lane * 0.5;
-    const phase = ((raw % 1) + 1) % 1;
-    const index = Math.floor(raw + (lane ? 0.5 : 0)) % moments.length;
-    return { lane, phase, at: moments[(index + lane) % moments.length] };
-  });
-  // The recording: the material the clips come out of.
-  path(ctx, { fill: SURFACE, stroke: LINE, width: 1.2, alpha: 0.95 }, () => box(ctx, strip.x, strip.y, strip.w, strip.h, 6));
-  const taken = runs.filter((run) => run.phase > 0.42).map((run) => run.at);
-  const bars = 52;
-  for (let i = 0; i < bars; i += 1) {
-    const span = i / (bars - 1);
-    const bx = strip.x + strip.w * (0.025 + span * 0.95);
-    const amp = 0.22 + 0.78 * Math.abs(wobble(i * 0.55, 0, 1));
-    // Where a clip has been lifted out, the strip is visibly missing that stretch.
-    const gap = taken.some((at) => Math.abs(span - at) < 0.055) ? 0.25 : 1;
-    const bh = strip.h * 0.4 * amp * gap;
-    path(ctx, { stroke: INK, width: 1.7, alpha: 0.34 * (gap < 1 ? 0.5 : 1) }, () => {
-      ctx.moveTo(bx, strip.y + strip.h / 2 - bh);
-      ctx.lineTo(bx, strip.y + strip.h / 2 + bh);
-    });
-  }
-  label(ctx, 'Your recording', strip.x, strip.y + strip.h + h * 0.08, { color: MUTED });
-  // Clips already taken out, waiting for review.
-  const landed = runs.map((run) => easeOutCubic((run.phase - 0.84) / 0.1)).reduce((a, b) => a + b, 0);
-  for (let i = 2; i >= 0; i -= 1) {
-    const lift = Math.min(1, landed + i * 0.45);
-    if (lift <= 0.02) continue;
-    clipTile(ctx, stack.x - i * w * 0.012, stack.y + i * h * 0.05, h * 0.3, { alpha: 0.35 + 0.2 * (2 - i), done: true, tilt: (i - 1) * 0.05 });
-  }
-  label(ctx, 'Clips for review', stack.x, stack.y + h * 0.26, { align: 'center', color: MUTED });
-  for (const run of runs) {
-    const { phase, at } = run;
-    const targetX = strip.x + strip.w * (0.025 + at * 0.95);
-    const targetY = strip.y - h * 0.08;
-    const entryX = mix(strip.x, strip.x + strip.w, at) - w * 0.3;
-    const entryY = h * 0.12;
-    const fade = Math.min(1, ease(phase / 0.05), 1 - ease((phase - 0.94) / 0.06));
-    // 1. travel in, 2. settle, 3. drop a tether, 4. pull the clip out, 5. tow it to the stack
-    const travel = easeInOutCubic(phase / 0.24);
-    const settle = easeOutBack(clamp01((phase - 0.2) / 0.12));
-    const tether = ease((phase - 0.3) / 0.1);
-    const pull = easeOutCubic((phase - 0.42) / 0.18);
-    const tow = easeInOutCubic((phase - 0.6) / 0.24);
-    const ax = mix(mix(entryX, targetX, travel), stack.x, tow);
-    const ay = mix(mix(entryY, targetY, travel) - Math.sin(Math.PI * travel) * h * 0.06, stack.y - h * 0.16, tow);
-    const speed = (travel < 1 ? 1 - travel * 0.3 : 0) + (tow > 0 && tow < 1 ? 0.8 : 0);
-    const heading = tow > 0 ? 0 : Math.atan2(targetY - entryY, targetX - entryX);
-    const working = tether > 0.2 && pull < 1;
-    // The scan beam while it reads the moment under it.
-    if (travel > 0.75 && pull < 0.8) {
-      const open = ease((travel - 0.75) / 0.25) * (1 - clamp01(pull));
-      path(ctx, { fill: VIOLET, alpha: 0.1 * open }, () => {
-        ctx.moveTo(ax, ay);
-        ctx.lineTo(targetX - strip.w * 0.055, strip.y + strip.h * 0.5);
-        ctx.lineTo(targetX + strip.w * 0.055, strip.y + strip.h * 0.5);
-        ctx.closePath();
-      });
-    }
-    // The cut brackets snap around the moment it chose.
-    if (settle > 0.1 && pull < 1) {
-      const snap = Math.min(settle, 1) * (1 - clamp01((pull - 0.8) / 0.2));
-      const x1 = targetX - strip.w * 0.055;
-      const x2 = targetX + strip.w * 0.055;
-      const inset = mix(strip.h * 0.3, 0, snap);
-      path(ctx, { stroke: VIOLET_SOFT, width: 1.6, alpha: 0.9 * snap, shadow: 8 }, () => {
-        ctx.moveTo(x1, strip.y + inset); ctx.lineTo(x1, strip.y + strip.h - inset);
-        ctx.moveTo(x2, strip.y + inset); ctx.lineTo(x2, strip.y + strip.h - inset);
-      });
-    }
-    // The tether, and the clip travelling up it.
-    if (tether > 0 && tow < 1) {
-      const grip = { x: targetX, y: strip.y + strip.h * 0.5 };
-      const clipX = mix(grip.x, ax, pull);
-      const clipY = mix(grip.y, ay + h * 0.12, pull);
-      path(ctx, { stroke: ACCENT, width: 1.2, alpha: 0.5 * tether * (1 - clamp01(tow)), dash: [3, 5], dashOffset: -t * 24 }, () => {
-        ctx.moveTo(ax, ay);
-        ctx.lineTo(mix(ax, clipX, 0.5), mix(ay, clipY, 0.5) + h * 0.02);
-        ctx.lineTo(clipX, clipY);
-      });
-      if (pull > 0.02) {
-        // Sparks at the point the clip came away from the strip.
-        const spark = 1 - clamp01(pull * 2.4);
-        for (let k = 0; k < 4 && spark > 0; k += 1) {
-          const a = (k / 4) * Math.PI * 2 + t;
-          path(ctx, { fill: ACCENT, alpha: spark * 0.8 }, () =>
-            ctx.arc(grip.x + Math.cos(a) * strip.h * 0.5 * (1 - spark), grip.y + Math.sin(a) * strip.h * 0.4 * (1 - spark), 1.6, 0, Math.PI * 2));
-        }
-        const swing = Math.sin(phase * 22) * 0.06 * (1 - ease((phase - 0.6) / 0.3));
-        clipTile(ctx, clipX, clipY, h * 0.26 * mix(0.55, 1, pull), { alpha: fade, lit: true, tilt: swing, squash: mix(1.06, 1, easeOutCubic(pull)) });
-      }
-    }
-    // The clip lands on the stack, squashing a little as it settles.
-    const drop = easeOutBack((phase - 0.8) / 0.12, 2.4);
-    if (phase > 0.8 && phase < 0.95) {
-      clipTile(ctx, mix(ax, stack.x, clamp01(drop)), mix(ay + h * 0.12, stack.y, clamp01(drop)), h * 0.28,
-        { alpha: fade, lit: true, done: drop > 0.9, squash: mix(0.9, 1, clamp01(drop)) });
-    }
-    agent(ctx, ax, ay, Math.max(3, h * 0.022), { alpha: fade, heading, speed, working, t });
-  }
+/** A station is the story windowed to one stage, held for a moment at the end, then repeated. */
+function station(family, hold = 1.4) {
+  const from = FAMILY_AT[family];
+  const to = family === 4 ? 22.3 : FAMILY_AT[family + 1];
+  const len = to - from;
+  const paint = (ctx, s) => {
+    const local = cycle(s.t, len + hold) * (len + hold);
+    story(ctx, { ...s, t: from + Math.min(local, len - 0.05) });
+  };
+  paint.contours = false;
+  paint.still = len - 0.05;
+  paint.window = [from, to];
+  return paint;
 }
 
-/** Feature two: nothing leaves until you approve it, then it goes out to the platforms. */
-function post(ctx, s) {
-  backdrop(ctx, s);
-  const { w, h, t } = s;
-  const mid = h * 0.5;
-  const loop = cycle(t, 9);
-  const approach = ease(loop / 0.3);
-  const approved = loop > 0.36;
-  const send = ease((loop - 0.42) / 0.42);
-  const gateX = w * 0.44;
-  const tileX = mix(w * 0.12, gateX - w * 0.1, approach);
-  // The loop fades at both ends, so starting the next clip never looks like a glitch.
-  const fade = Math.min(1, ease(loop / 0.05), 1 - ease((loop - 0.95) / 0.05));
-  clipTile(ctx, tileX, mid, h * 0.4, { alpha: fade, lit: approved, done: approved });
-  label(ctx, 'Approved clip', w * 0.12, mid + h * 0.26, { align: 'center' });
-  // The approval gate: shut, pulsing, until you open it.
-  const open = approved ? ease((loop - 0.36) / 0.08) : 0;
-  const gap = h * 0.11 * open;
-  for (const dir of [-1, 1]) {
-    path(ctx, { fill: SURFACE, stroke: approved ? PINE : LINE, width: 1.4, alpha: 0.96 }, () => box(ctx, gateX - w * 0.022, mid + dir * (gap + h * 0.02) - (dir < 0 ? h * 0.14 : 0), w * 0.044, h * 0.14, 6));
-  }
-  if (!approved) {
-    const pulse = Math.sin(Math.PI * cycle(t, 1.6)) ** 2;
-    path(ctx, { stroke: VIOLET_SOFT, width: 1.6, alpha: 0.3 + 0.5 * pulse, shadow: 10 * pulse }, () => ctx.arc(gateX, mid, h * 0.075 + h * 0.02 * pulse, 0, Math.PI * 2));
-    label(ctx, 'Waiting for you', gateX, mid + h * 0.3, { align: 'center' });
-  } else {
-    glow(ctx, gateX, mid, h * 0.2, 0.3);
-    path(ctx, { stroke: PINE, width: 2.2, alpha: 1, shadow: 8 }, () => {
-      ctx.moveTo(gateX - h * 0.035, mid - h * 0.005);
-      ctx.lineTo(gateX - h * 0.008, mid + h * 0.028);
-      ctx.lineTo(gateX + h * 0.042, mid - h * 0.045);
-    });
-    label(ctx, 'You approved it', gateX, mid + h * 0.3, { align: 'center', color: PINE });
-  }
-  // The destinations. Names only, drawn as plain cards: no platform logos or marks.
-  const cards = [{ name: 'TikTok', y: mid - h * 0.27 }, { name: 'Reels', y: mid }, { name: 'Shorts', y: mid + h * 0.27 }];
-  cards.forEach((card, i) => {
-    const arrive = ease((send - i * 0.12) / 0.5);
-    const cardX = w * 0.74;
-    const cw = w * 0.2;
-    const chh = h * 0.16;
-    path(ctx, { stroke: VIOLET, width: 1.2, alpha: 0.1 + 0.35 * arrive, dash: [4, 5], dashOffset: -t * 14 }, () => {
-      ctx.moveTo(gateX + w * 0.04, mid);
-      ctx.quadraticCurveTo(mix(gateX, cardX, 0.55), mix(mid, card.y, 0.75), cardX - cw * 0.08, card.y);
-    });
-    path(ctx, { fill: SURFACE, stroke: arrive > 0.92 ? PINE : arrive > 0.05 ? VIOLET : LINE, width: 1.3, alpha: mix(0.5, 0.96, fade), shadow: arrive > 0.05 && arrive < 0.95 ? 10 : 0 }, () => box(ctx, cardX, card.y - chh / 2, cw, chh, 8));
-    label(ctx, card.name, cardX + cw * 0.12, card.y, { color: arrive > 0.92 ? INK : MUTED, size: 11, weight: 600 });
-    if (arrive > 0.92) {
-      path(ctx, { stroke: PINE, width: 1.8, alpha: 1 }, () => {
-        ctx.moveTo(cardX + cw * 0.72, card.y - h * 0.004);
-        ctx.lineTo(cardX + cw * 0.79, card.y + h * 0.022);
-        ctx.lineTo(cardX + cw * 0.9, card.y - h * 0.03);
-      });
-    }
-    if (arrive > 0.02 && arrive < 0.98) {
-      const px = mix(gateX + w * 0.04, cardX, arrive);
-      const py = mix(mid, card.y, ease(arrive));
-      path(ctx, { fill: ACCENT, alpha: 1, shadow: 12 }, () => ctx.arc(px, py, 3, 0, Math.PI * 2));
-    }
-  });
-}
-
-
-export const SCENES = { loop, understand, cut, judge, post, learn };
+export const SCENES = { story, find: station(0), cut: station(1), pick: station(2), post: station(3), learn: station(4) };
 
 /**
  * Mount one scene on a host element. Returns null when the scene name is unknown, so markup can
  * never animate something this module does not actually draw.
  *
  * A painter can ask for two canvases (`layers: ['back', 'front']`): the back one goes under the
- * host's content and the front one over it, so the hero's orbit can pass behind the real app
- * screenshot and come round in front of it. An element marked `data-scene-anchor` is measured
+ * host's content and the front one over it, so a scene can pass behind real page content and come
+ * round in front of it. An element marked `data-scene-anchor` is measured
  * each frame and handed to the painter as `s.app`.
  */
 export function mountScene({
@@ -941,6 +664,7 @@ export function mountScene({
   lifecycle = window,
   clock = () => performance.now(),
   report,
+  photos = {},
 }) {
   let paint = scenes[kind];
   if (!paint) return null;
@@ -1011,7 +735,7 @@ export function mountScene({
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, width, height);
       ctx.globalAlpha = 1;
-      const base = { w: width, h: height, contours, app: anchorBox, layer: layers.length > 1 ? layer.name : undefined };
+      const base = { w: width, h: height, contours, photos, app: anchorBox, layer: layers.length > 1 ? layer.name : undefined };
       if (fade) {
         ctx.save();
         ctx.globalAlpha = 1 - blend;
@@ -1153,11 +877,13 @@ export function mountScene({
   sized?.observe(host);
   updateButton();
   wake();
-  return { dispose, setKind, get kind() { return Object.keys(scenes).find((name) => scenes[name] === paint); } };
+  /** Redraw now, for when something the painter uses (a photo) has just arrived. */
+  const refresh = () => { if (!disposed) draw(); };
+  return { dispose, setKind, refresh, get kind() { return Object.keys(scenes).find((name) => scenes[name] === paint); } };
 }
 
 /**
- * The hero's chapter rail, like the chapters on a VOD scrubber: it follows the loop's beats, so
+ * The hero's chapter rail, like the chapters on a VOD scrubber: it follows the story's beats, so
  * the words always describe what the picture is doing.
  */
 export function railReporter(rail) {
@@ -1180,11 +906,11 @@ export function railReporter(rail) {
     }
     if (state.beat !== beat) {
       beat = state.beat;
-      if (beatText) beatText.textContent = LOOP_BEATS[beat].caption;
+      if (beatText) beatText.textContent = STORY_BEATS[beat].caption;
     }
     if (state.loop !== count) {
       count = state.loop;
-      if (loopText) loopText.textContent = `Loop ${count}`;
+      if (loopText) loopText.textContent = `Stream ${count}`;
     }
   };
 }
@@ -1202,16 +928,37 @@ export function followSteps(handle, steps, Observer = IntersectionObserver) {
   return watcher;
 }
 
+/** Start every photo loading once, shared by all scenes; `onLoad` fires as each one arrives. */
+export function loadPhotos(sources, onLoad, make = () => new Image()) {
+  const photos = {};
+  for (const [name, src] of Object.entries(sources)) {
+    const img = make();
+    img.decoding = 'async';
+    img.addEventListener('load', onLoad);
+    img.src = src;
+    photos[name] = img;
+  }
+  return photos;
+}
+
 if (typeof document !== 'undefined' && typeof document.querySelectorAll === 'function') {
-  for (const host of document.querySelectorAll('[data-scene]')) {
+  const hosts = [...document.querySelectorAll('[data-scene]')];
+  const handles = [];
+  const photos = hosts.length && typeof Image === 'function'
+    ? loadPhotos(PHOTOS, () => handles.forEach((handle) => handle.refresh()))
+    : {};
+  for (const host of hosts) {
     const rail = host.dataset.rail ? document.querySelector(host.dataset.rail) : null;
     const handle = mountScene({
       host,
       kind: host.dataset.scene,
       button: host.parentElement?.querySelector('[data-scene-toggle]'),
       report: rail ? railReporter(rail) : undefined,
+      photos,
     });
+    if (!handle) continue;
+    handles.push(handle);
     const steps = host.dataset.steps ? [...document.querySelectorAll(host.dataset.steps)] : [];
-    if (handle && steps.length && typeof IntersectionObserver === 'function') followSteps(handle, steps);
+    if (steps.length && typeof IntersectionObserver === 'function') followSteps(handle, steps);
   }
 }
