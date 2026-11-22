@@ -1,7 +1,7 @@
 import { startContours } from './contours.js?v=pearl-streamer-2';
 
 /** Decorative only: one field in the hero, never over controls or content. */
-export function mountTopography({ hero, host, button, start = startContours, media = window.matchMedia.bind(window), lifecycle = window }) {
+export function mountTopography({ host, button, start = startContours, media = window.matchMedia.bind(window), lifecycle = window }) {
   const forced = media('(forced-colors: active)');
   const motion = media('(prefers-reduced-motion: reduce)');
   let field = null;
@@ -31,6 +31,11 @@ export function mountTopography({ hero, host, button, start = startContours, med
     field?.setPaused(paused);
     updateButton();
   };
+  const onContextLost = () => {
+    field?.stop(); field = null;
+    host.classList.remove('has-contours');
+    updateButton();
+  };
   const onHide = (event) => {
     // A bfcache page resumes its existing renderer via visibilitychange/pageshow.
     if (!event.persisted) dispose();
@@ -42,6 +47,7 @@ export function mountTopography({ hero, host, button, start = startContours, med
     field?.stop(); field = null;
     host.classList.remove('has-contours');
     button?.removeEventListener('click', toggle);
+    host.removeEventListener('webglcontextlost', onContextLost, true);
     forced.removeEventListener('change', sync);
     motion.removeEventListener('change', updateButton);
     lifecycle.removeEventListener('pagehide', onHide);
@@ -49,6 +55,7 @@ export function mountTopography({ hero, host, button, start = startContours, med
     updateButton();
   };
   button?.addEventListener('click', toggle);
+  host.addEventListener('webglcontextlost', onContextLost, true);
   forced.addEventListener('change', sync);
   motion.addEventListener('change', updateButton);
   lifecycle.addEventListener('pagehide', onHide);
@@ -60,5 +67,5 @@ export function mountTopography({ hero, host, button, start = startContours, med
 if (typeof document !== 'undefined') {
   const hero = document.querySelector('.streamer-hero');
   const host = hero?.querySelector('[data-topography]');
-  if (host) mountTopography({ hero, host, button: hero.querySelector('[data-topography-toggle]') });
+  if (host) mountTopography({ host, button: hero.querySelector('[data-topography-toggle]') });
 }

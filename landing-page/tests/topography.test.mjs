@@ -88,7 +88,7 @@ test('changing reduced motion stops drift and never overrides a manual pause', (
 });
 function controllerHarness({reduced=false,forced=false,supported=true}={}) {
   const calls={start:0,stop:0,pulse:0,paused:[]}, motion=events({matches:reduced}), contrast=events({matches:forced}), lifecycle=events();
-  const classes=new Set();const host={classList:{remove:name=>classes.delete(name),toggle(name,on){if(on)classes.add(name);else classes.delete(name);}}};
+  const classes=new Set();const host=events({classList:{remove:name=>classes.delete(name),toggle(name,on){if(on)classes.add(name);else classes.delete(name);}}});
   const button=events({hidden:true,attributes:{},setAttribute(name,value){this.attributes[name]=value;}});
   const mount=mountTopography({host,button,lifecycle,media:q=>q.includes('forced-colors')?contrast:motion,start(){calls.start++;return supported?{stop(){calls.stop++;},pulse(){calls.pulse++;},setPaused(value){calls.paused.push(value);}}:null;}});
   return {mount,calls,motion,contrast,lifecycle,host,classes,button};
@@ -112,4 +112,10 @@ test('fallback has no useless pause control and page lifecycle disposal is idemp
   h.lifecycle.events.get('pagehide')({persisted:true});assert.equal(h.lifecycle.events.size,2);
   h.lifecycle.events.get('pagehide')({persisted:false});assert.equal(h.lifecycle.events.size,0);h.mount.dispose();assert.equal(h.calls.stop,0);
   const forced=controllerHarness({forced:true});assert.equal(forced.calls.start,0);forced.mount.dispose();
+});
+
+test('lost WebGL context restores the static fallback and hides animation controls', () => {
+  const h=controllerHarness();h.host.events.get('webglcontextlost')();
+  assert.equal(h.calls.stop,1);assert.equal(h.button.hidden,true);assert.equal(h.classes.size,0);
+  h.mount.dispose();assert.equal(h.host.events.size,0);
 });
