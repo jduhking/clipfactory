@@ -100,6 +100,6 @@ test('canonical links use this project and assets are versioned to avoid stale t
   const layout = await readFile(new URL('site/layout.mjs',root),'utf8');
   assert.match(layout,/https:\/\/clipfactory-landing.vercel.app/);
   assert.match(layout,/https:\/\/github.com\/jduhking\/clipfactory/);
-  assert.match(html,/styles.css\?v=pearl-streamer-1/);
+  assert.match(html,/styles.css\?v=pearl-streamer-2/);
   assert.doesNotMatch(html,/fonts.googleapis.com|growth-factory-landing.vercel.app/);
 });

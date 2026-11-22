@@ -63,6 +63,16 @@ No streamer affiliation or endorsement is implied.
 
 Public site: https://clipfactory-landing.vercel.app, Vercel team `jduhkings-projects`,
 project `clipfactory-landing`. Canonical URLs and source links target this site and
-`jduhking/clipfactory`. CSS/JS and brand-image links carry `?v=pearl-streamer-1`; bump that version after
+`jduhking/clipfactory`. CSS/JS and brand-image links carry `?v=pearl-streamer-2`; bump that version after
 future visual changes to avoid stale browser asset caches. Generated HTML is committed.
 Vercel currently receives reviewed static file deployments, not automatic Git deployments.
+
+### Animated topography
+
+The hero reuses the app's contour shader (`frontend/src/growth/contours.ts`) in
+`contours.js`, with a manual pause adapter in `topography.js`. It is decorative,
+non-interactive, behind the content, capped at 30fps and DPR 1.5, and sleeps while
+offscreen or the tab is hidden. Reduced motion draws one still frame. Unsupported
+WebGL retains `assets/topography.svg`, a static contour field derived from the same
+terrain equation at t=41. Forced colors hides the decoration. Shader parity and
+lifecycle behavior are covered by the site tests. No runtime dependencies added.

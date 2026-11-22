@@ -55,7 +55,15 @@ button,a,summary { -webkit-tap-highlight-color: transparent; }
 .eyebrow { display: flex; align-items: center; gap: 9px; color: var(--muted); font-size: 11px; font-weight: 600; line-height: 1.6; letter-spacing: .1em; text-transform: uppercase; }
 .status-dot { width: 6px; height: 6px; flex: 0 0 auto; border-radius: 50%; background: var(--action); }
 .streamer-home main { overflow: clip; }
-.streamer-hero { padding: 94px 0 72px; }
+.streamer-hero { position: relative; isolation: isolate; padding: 94px 0 72px; }
+.topography-field { position: absolute; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; background: url("/assets/topography.svg") center / cover no-repeat; }
+.topography-field.has-contours { background-image: none; }
+.topography-field canvas { display: block; width: 100%; height: 100%; }
+.topography-controls { position: absolute; right: 20px; bottom: 12px; }
+.topography-controls button { min-height: 32px; padding: 6px 10px; font-size: 11px; color: var(--muted); background: var(--background); border: 1px solid var(--line); border-radius: 6px; cursor: pointer; }
+.topography-controls button:hover { color: var(--foreground); border-color: #424242; }
+@media (prefers-reduced-motion: reduce) { .topography-controls { display: none; } }
+@media (forced-colors: active) { .topography-field, .topography-controls { display: none; } }
 .hero-layout { display: grid; grid-template-columns: .93fr 1.07fr; gap: 56px; align-items: center; }
 .hero-copy h1 { margin-top: 24px; font-size: clamp(48px,5vw,68px); font-weight: 600; line-height: 1.05; letter-spacing: -.055em; }
 .hero-lead { max-width: 470px; margin-top: 24px; color: var(--muted); font-size: 17px; line-height: 1.75; }

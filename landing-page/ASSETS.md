@@ -9,3 +9,7 @@
 ## Image prompt
 
 Use case: photorealistic-natural. Asset type: cinematic sample footage still for a premium creative software landing page, landscape 1536x1024. Create one beautiful editorial adventure photograph: a lone small hiker wearing a vivid burnt-orange technical jacket and a pale cap, seen from behind standing on a rocky ridge in the lower right third, looking into a dramatic layered alpine valley in the Italian Dolomites. Craggy limestone peaks, deep pine-green valleys, atmospheric muted sage and grey-green distant mountains, pale creamy sky, soft warm late-afternoon light and very subtle analog 35mm grain. Premium independent outdoor film, real natural texture, considered quiet composition, art directed yet believable. Strong silhouette and terracotta color accent against the rugged olive landscape. Camera perspective from a few meters behind the hiker. Wide generous valley in the center and left, hiker about one fifth of image height. No letters, no logos, no watermarks, no UI, no borders, no extra panels. The output is a single photographic scene.
+
+- `assets/topography.svg` is a static fallback derived from the terrain equation in
+  `frontend/src/growth/contours.ts` at t=41, using marching-squares contours. The
+  animated hero uses the original app shader, not generated video or sample results.
