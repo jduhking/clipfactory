@@ -10,7 +10,7 @@
  * 1.5, asleep while offscreen or in a hidden tab, one still frame under reduced motion, no canvas
  * at all in forced colors, and a manual pause control.
  */
-import { contourSegments, STILL_AT } from './terrain.js?v=pearl-streamer-4';
+import { contourSegments, STILL_AT } from './terrain.js?v=pearl-streamer-5';
 
 const MAX_DPR = 1.5;
 const FRAME_MS = 1000 / 30;
@@ -27,6 +27,10 @@ const PINE = '#6fcf97';
 
 const clamp01 = (v) => (v < 0 ? 0 : v > 1 ? 1 : v);
 const ease = (v) => { const x = clamp01(v); return x * x * (3 - 2 * x); };
+/** Settles into place with a small overshoot: the agent has weight. */
+const easeOutBack = (v, pull = 1.7) => { const x = clamp01(v) - 1; return 1 + (pull + 1) * x * x * x + pull * x * x; };
+const easeOutCubic = (v) => { const x = 1 - clamp01(v); return 1 - x * x * x; };
+const easeInOutCubic = (v) => { const x = clamp01(v); return x < 0.5 ? 4 * x * x * x : 1 - (-2 * x + 2) ** 3 / 2; };
 const mix = (a, b, v) => a + (b - a) * v;
 /** Position in a repeating cycle, so every scene is a pure function of its clock. */
 const cycle = (t, period, offset = 0) => { const v = (t / period + offset) % 1; return v < 0 ? v + 1 : v; };
@@ -94,151 +98,154 @@ function glow(ctx, x, y, r, alpha = 0.5) {
 }
 
 /** A 9:16 clip card with caption bars: the thing the whole site is about. */
-function clipTile(ctx, x, y, h, { alpha = 1, lit = false, done = false } = {}) {
+function clipTile(ctx, x, y, h, { alpha = 1, lit = false, done = false, tilt = 0, squash = 1 } = {}) {
   const w = h * 0.5625;
-  path(ctx, { fill: SURFACE, stroke: lit ? VIOLET : LINE, width: 1.2, alpha }, () => box(ctx, x - w / 2, y - h / 2, w, h, h * 0.07));
-  path(ctx, { fill: lit ? VIOLET : MUTED, alpha: alpha * (lit ? 0.9 : 0.45) }, () => box(ctx, x - w * 0.3, y + h * 0.18, w * 0.6, h * 0.045, h * 0.02));
-  path(ctx, { fill: MUTED, alpha: alpha * 0.3 }, () => box(ctx, x - w * 0.3, y + h * 0.27, w * 0.38, h * 0.04, h * 0.02));
+  ctx.save();
+  ctx.translate(x, y);
+  if (tilt) ctx.rotate(tilt);
+  if (squash !== 1) ctx.scale(1 / squash, squash);
+  path(ctx, { fill: SURFACE, stroke: lit ? VIOLET : LINE, width: 1.2, alpha }, () => box(ctx, -w / 2, -h / 2, w, h, h * 0.07));
+  path(ctx, { fill: lit ? VIOLET : MUTED, alpha: alpha * (lit ? 0.9 : 0.45) }, () => box(ctx, -w * 0.3, h * 0.18, w * 0.6, h * 0.045, h * 0.02));
+  path(ctx, { fill: MUTED, alpha: alpha * 0.3 }, () => box(ctx, -w * 0.3, h * 0.27, w * 0.38, h * 0.04, h * 0.02));
   if (done) {
     path(ctx, { stroke: PINE, width: 1.8, alpha, shadow: 6 }, () => {
-      ctx.moveTo(x - w * 0.12, y - h * 0.08);
-      ctx.lineTo(x - w * 0.02, y + h * 0.02);
-      ctx.lineTo(x + w * 0.16, y - h * 0.2);
+      ctx.moveTo(-w * 0.12, -h * 0.08);
+      ctx.lineTo(-w * 0.02, h * 0.02);
+      ctx.lineTo(w * 0.16, -h * 0.2);
     });
   }
+  ctx.restore();
 }
 
-/** Stage 1 → stage 2 connector: marching dashes with a travelling light. */
-function feed(ctx, x1, x2, y, t, { offset = 0 } = {}) {
-  path(ctx, { stroke: LINE, width: 1.4, alpha: 0.9, dash: [5, 7], dashOffset: -t * 26 }, () => { ctx.moveTo(x1, y); ctx.lineTo(x2, y); });
-  const p = cycle(t, 2.6, offset);
-  const x = mix(x1, x2, p);
-  const fade = Math.sin(Math.PI * p);
-  glow(ctx, x, y, (x2 - x1) * 0.14, 0.5 * fade);
-  path(ctx, { fill: ACCENT, alpha: fade, shadow: 10 }, () => ctx.arc(x, y, 2.6, 0, Math.PI * 2));
+/**
+ * The agent: a bright core with a soft shell, a comet trail behind it, and a tether it drops
+ * into the recording when it takes a clip out.
+ */
+function agent(ctx, x, y, r, { alpha = 1, heading = 0, speed = 0, working = false, t = 0 } = {}) {
+  for (let i = 6; i >= 1; i -= 1) {
+    const back = i * r * 0.9 * Math.min(1, speed);
+    if (back < 0.5) continue;
+    path(ctx, { fill: VIOLET, alpha: alpha * 0.07 * (1 - i / 7) * Math.min(1, speed) }, () =>
+      ctx.arc(x - Math.cos(heading) * back, y - Math.sin(heading) * back, r * (1 - i * 0.08), 0, Math.PI * 2));
+  }
+  glow(ctx, x, y, r * 4.5, alpha * (working ? 0.5 : 0.32));
+  path(ctx, { stroke: VIOLET_SOFT, width: 1.3, alpha: alpha * 0.8, dash: [3, 4], dashOffset: -t * 20 }, () => ctx.arc(x, y, r * 1.9, 0, Math.PI * 2));
+  path(ctx, { fill: SURFACE, stroke: ACCENT, width: 1.4, alpha }, () => ctx.arc(x, y, r, 0, Math.PI * 2));
+  path(ctx, { fill: ACCENT, alpha: alpha * (working ? 1 : 0.75), shadow: 12 }, () => ctx.arc(x, y, r * 0.42, 0, Math.PI * 2));
 }
 
-/** Hero: a recording goes in, the factory runs, captioned vertical clips come out. */
-function factory(ctx, s) {
-  backdrop(ctx, s);
-  const { w, h, t } = s;
-  const mid = h * 0.52;
-  // The source recording: a level meter that keeps moving.
-  const panel = { x: w * 0.05, y: mid - h * 0.17, w: w * 0.2, h: h * 0.34 };
-  path(ctx, { fill: SURFACE, stroke: LINE, width: 1.2, alpha: 0.96 }, () => box(ctx, panel.x, panel.y, panel.w, panel.h, 10));
-  const bars = 11;
-  for (let i = 0; i < bars; i += 1) {
-    const bx = panel.x + panel.w * (0.12 + (i * 0.76) / (bars - 1));
-    const amp = 0.18 + 0.72 * Math.abs(wobble(i, t, 2.2));
-    const bh = panel.h * 0.5 * amp;
-    path(ctx, { stroke: i % 4 === 0 ? ACCENT : INK, width: 2.4, alpha: i % 4 === 0 ? 0.85 : 0.5 }, () => {
-      ctx.moveTo(bx, mid - bh);
-      ctx.lineTo(bx, mid + bh);
-    });
-  }
-  label(ctx, 'Recording', panel.x + panel.w / 2, panel.y + panel.h + 14, { align: 'center' });
-  feed(ctx, panel.x + panel.w + 8, w * 0.4, mid, t);
-  // The factory itself: rings that turn, a core that pulses as each clip is built.
-  const cx = w * 0.5;
-  const r = Math.min(w, h) * 0.13;
-  const beat = cycle(t, 2.6);
-  glow(ctx, cx, mid, r * 2.6, 0.26 + 0.1 * Math.sin(t * 2));
-  path(ctx, { stroke: LINE, width: 1.4, alpha: 0.9, dash: [9, 9], dashOffset: t * 30 }, () => ctx.arc(cx, mid, r * 1.5, 0, Math.PI * 2));
-  path(ctx, { stroke: VIOLET, width: 2, alpha: 0.8, shadow: 14 }, () => ctx.arc(cx, mid, r * 1.5, t * 1.1, t * 1.1 + 1.1));
-  path(ctx, { stroke: LINE, width: 1.2, alpha: 0.8, dash: [4, 6], dashOffset: -t * 18 }, () => ctx.arc(cx, mid, r * 1.12, 0, Math.PI * 2));
-  for (let i = 0; i < 6; i += 1) {
-    const a = (i / 6) * Math.PI * 2 + t * 0.35;
-    path(ctx, { stroke: INK, width: 1.2, alpha: 0.22 }, () => {
-      ctx.moveTo(cx + Math.cos(a) * r * 0.5, mid + Math.sin(a) * r * 0.5);
-      ctx.lineTo(cx + Math.cos(a) * r * 1.05, mid + Math.sin(a) * r * 1.05);
-    });
-  }
-  path(ctx, { fill: SURFACE, stroke: VIOLET_SOFT, width: 1.6, alpha: 0.95, shadow: 10 }, () => {
-    for (let i = 0; i <= 6; i += 1) {
-      const a = (i / 6) * Math.PI * 2 - Math.PI / 2 + t * 0.2;
-      const px = cx + Math.cos(a) * r * 0.62;
-      const py = mid + Math.sin(a) * r * 0.62;
-      if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
-    }
-    ctx.closePath();
-  });
-  path(ctx, { fill: VIOLET, alpha: 0.35 + 0.45 * Math.sin(Math.PI * beat) ** 2, shadow: 18 }, () => ctx.arc(cx, mid, r * 0.26, 0, Math.PI * 2));
-  label(ctx, 'Factory', cx, mid + r * 2.05, { align: 'center', color: ACCENT });
-  feed(ctx, w * 0.6, w * 0.69, mid, t, { offset: 0.5 });
-  // Finished clips leaving the line, the front one approved.
-  const tileH = h * 0.44;
-  for (let i = 2; i >= 0; i -= 1) {
-    const p = cycle(t, 5.4, -i * 0.26);
-    const x = mix(w * 0.72, w * 0.95, ease(p));
-    const y = mid + mix(h * 0.06, -h * 0.05, ease(p));
-    const fade = Math.min(1, Math.sin(Math.PI * clamp01(p * 1.08)) * 2.1);
-    clipTile(ctx, x, y, tileH * mix(0.86, 1, ease(p)), { alpha: fade * 0.96, lit: p > 0.45, done: p > 0.72 });
-  }
-  label(ctx, 'Clips', w * 0.86, mid + tileH * 0.62, { align: 'center' });
-}
-
-/** Feature one: the playhead sweeps, agents mark the keepers, each cut lifts out vertical. */
+/**
+ * Feature one: an agent reads the recording, drops onto a moment, and pulls a captioned vertical
+ * clip out of the strip. Two agents work a different moment each, out of phase.
+ */
 function cut(ctx, s) {
   backdrop(ctx, s);
   const { w, h, t } = s;
-  const track = { x: w * 0.07, y: h * 0.62, w: w * 0.86, h: h * 0.2 };
-  // Transcript lines the agents read, abstracted to dashes.
-  for (let i = 0; i < 3; i += 1) {
-    const y = h * 0.14 + i * h * 0.075;
-    const width = track.w * (0.52 - i * 0.1);
-    path(ctx, { stroke: INK, width: 3, alpha: 0.1 + 0.06 * i, dash: [mix(16, 34, cycle(t, 9, i * 0.2)), 9] }, () => {
-      ctx.moveTo(track.x, y);
-      ctx.lineTo(track.x + width, y);
-    });
-  }
-  label(ctx, 'Transcript', track.x, h * 0.075, { color: MUTED });
-  path(ctx, { fill: SURFACE, stroke: LINE, width: 1.2, alpha: 0.95 }, () => box(ctx, track.x, track.y, track.w, track.h, 8));
-  const bars = 46;
+  const strip = { x: w * 0.06, y: h * 0.63, w: w * 0.62, h: h * 0.19 };
+  const stack = { x: w * 0.85, y: h * 0.42 };
+  const moments = [0.18, 0.46, 0.74];
+  const PERIOD = 7.2;
+  // Which moment each agent is on, and how far through its run it is.
+  const runs = [0, 1].map((lane) => {
+    const raw = t / PERIOD + lane * 0.5;
+    const phase = ((raw % 1) + 1) % 1;
+    const index = Math.floor(raw + (lane ? 0.5 : 0)) % moments.length;
+    return { lane, phase, at: moments[(index + lane) % moments.length] };
+  });
+  // The recording: the material the clips come out of.
+  path(ctx, { fill: SURFACE, stroke: LINE, width: 1.2, alpha: 0.95 }, () => box(ctx, strip.x, strip.y, strip.w, strip.h, 6));
+  const taken = runs.filter((run) => run.phase > 0.42).map((run) => run.at);
+  const bars = 52;
   for (let i = 0; i < bars; i += 1) {
-    const bx = track.x + track.w * (0.02 + (i * 0.96) / (bars - 1));
-    const amp = 0.2 + 0.8 * Math.abs(wobble(i * 0.6, 0, 1));
-    const bh = track.h * 0.38 * amp;
-    path(ctx, { stroke: INK, width: 1.8, alpha: 0.3 }, () => {
-      ctx.moveTo(bx, track.y + track.h / 2 - bh);
-      ctx.lineTo(bx, track.y + track.h / 2 + bh);
+    const span = i / (bars - 1);
+    const bx = strip.x + strip.w * (0.025 + span * 0.95);
+    const amp = 0.22 + 0.78 * Math.abs(wobble(i * 0.55, 0, 1));
+    // Where a clip has been lifted out, the strip is visibly missing that stretch.
+    const gap = taken.some((at) => Math.abs(span - at) < 0.055) ? 0.25 : 1;
+    const bh = strip.h * 0.4 * amp * gap;
+    path(ctx, { stroke: INK, width: 1.7, alpha: 0.34 * (gap < 1 ? 0.5 : 1) }, () => {
+      ctx.moveTo(bx, strip.y + strip.h / 2 - bh);
+      ctx.lineTo(bx, strip.y + strip.h / 2 + bh);
     });
   }
-  const head = ease(cycle(t, 7.5));
-  const windows = [{ from: 0.12, to: 0.24 }, { from: 0.42, to: 0.55 }, { from: 0.72, to: 0.86 }];
-  windows.forEach((win, i) => {
-    const x1 = track.x + track.w * win.from;
-    const x2 = track.x + track.w * win.to;
-    const snap = ease((head - win.from) * 14);
-    if (snap <= 0) return;
-    const inset = mix(track.h * 0.3, 0, snap);
-    path(ctx, { fill: VIOLET, alpha: 0.12 * snap }, () => box(ctx, x1, track.y + inset, x2 - x1, track.h - inset * 2, 6));
-    path(ctx, { stroke: VIOLET_SOFT, width: 1.6, alpha: 0.85 * snap, shadow: 8 }, () => {
-      ctx.moveTo(x1, track.y + inset);
-      ctx.lineTo(x1, track.y + track.h - inset);
-      ctx.moveTo(x2, track.y + inset);
-      ctx.lineTo(x2, track.y + track.h - inset);
-    });
-    // The cut lifts out of the timeline as a captioned vertical draft.
-    const lift = ease((head - win.to) * 6);
-    if (lift <= 0) return;
-    const cx = (x1 + x2) / 2;
-    const y = mix(track.y + track.h / 2, h * 0.42, lift);
-    const fade = Math.min(1, lift * 2) * (1 - clamp01((head - win.to - 0.3) * 3));
-    if (fade <= 0) return;
-    path(ctx, { stroke: VIOLET, width: 1, alpha: 0.3 * fade, dash: [3, 4] }, () => {
-      ctx.moveTo(cx, track.y);
-      ctx.lineTo(cx, y + h * 0.1);
-    });
-    clipTile(ctx, cx, y, h * 0.3 * mix(0.7, 1, lift), { alpha: fade, lit: true, done: lift > 0.85 });
-  });
-  const hx = track.x + track.w * head;
-  glow(ctx, hx, track.y + track.h / 2, track.h * 1.1, 0.4);
-  path(ctx, { stroke: ACCENT, width: 1.8, alpha: 0.95, shadow: 12 }, () => {
-    ctx.moveTo(hx, track.y - h * 0.045);
-    ctx.lineTo(hx, track.y + track.h + h * 0.045);
-  });
-  path(ctx, { fill: ACCENT, alpha: 1, shadow: 10 }, () => ctx.arc(hx, track.y - h * 0.045, 3, 0, Math.PI * 2));
-  label(ctx, 'Cut points', track.x, track.y + track.h + h * 0.1, { color: ACCENT });
+  label(ctx, 'Your recording', strip.x, strip.y + strip.h + h * 0.08, { color: MUTED });
+  // Clips already taken out, waiting for review.
+  const landed = runs.map((run) => easeOutCubic((run.phase - 0.84) / 0.1)).reduce((a, b) => a + b, 0);
+  for (let i = 2; i >= 0; i -= 1) {
+    const lift = Math.min(1, landed + i * 0.45);
+    if (lift <= 0.02) continue;
+    clipTile(ctx, stack.x - i * w * 0.012, stack.y + i * h * 0.05, h * 0.3, { alpha: 0.35 + 0.2 * (2 - i), done: true, tilt: (i - 1) * 0.05 });
+  }
+  label(ctx, 'Clips for review', stack.x, stack.y + h * 0.26, { align: 'center', color: MUTED });
+  for (const run of runs) {
+    const { phase, at } = run;
+    const targetX = strip.x + strip.w * (0.025 + at * 0.95);
+    const targetY = strip.y - h * 0.08;
+    const entryX = mix(strip.x, strip.x + strip.w, at) - w * 0.3;
+    const entryY = h * 0.12;
+    const fade = Math.min(1, ease(phase / 0.05), 1 - ease((phase - 0.94) / 0.06));
+    // 1. travel in, 2. settle, 3. drop a tether, 4. pull the clip out, 5. tow it to the stack
+    const travel = easeInOutCubic(phase / 0.24);
+    const settle = easeOutBack(clamp01((phase - 0.2) / 0.12));
+    const tether = ease((phase - 0.3) / 0.1);
+    const pull = easeOutCubic((phase - 0.42) / 0.18);
+    const tow = easeInOutCubic((phase - 0.6) / 0.24);
+    const ax = mix(mix(entryX, targetX, travel), stack.x, tow);
+    const ay = mix(mix(entryY, targetY, travel) - Math.sin(Math.PI * travel) * h * 0.06, stack.y - h * 0.16, tow);
+    const speed = (travel < 1 ? 1 - travel * 0.3 : 0) + (tow > 0 && tow < 1 ? 0.8 : 0);
+    const heading = tow > 0 ? 0 : Math.atan2(targetY - entryY, targetX - entryX);
+    const working = tether > 0.2 && pull < 1;
+    // The scan beam while it reads the moment under it.
+    if (travel > 0.75 && pull < 0.8) {
+      const open = ease((travel - 0.75) / 0.25) * (1 - clamp01(pull));
+      path(ctx, { fill: VIOLET, alpha: 0.1 * open }, () => {
+        ctx.moveTo(ax, ay);
+        ctx.lineTo(targetX - strip.w * 0.055, strip.y + strip.h * 0.5);
+        ctx.lineTo(targetX + strip.w * 0.055, strip.y + strip.h * 0.5);
+        ctx.closePath();
+      });
+    }
+    // The cut brackets snap around the moment it chose.
+    if (settle > 0.1 && pull < 1) {
+      const snap = Math.min(settle, 1) * (1 - clamp01((pull - 0.8) / 0.2));
+      const x1 = targetX - strip.w * 0.055;
+      const x2 = targetX + strip.w * 0.055;
+      const inset = mix(strip.h * 0.3, 0, snap);
+      path(ctx, { stroke: VIOLET_SOFT, width: 1.6, alpha: 0.9 * snap, shadow: 8 }, () => {
+        ctx.moveTo(x1, strip.y + inset); ctx.lineTo(x1, strip.y + strip.h - inset);
+        ctx.moveTo(x2, strip.y + inset); ctx.lineTo(x2, strip.y + strip.h - inset);
+      });
+    }
+    // The tether, and the clip travelling up it.
+    if (tether > 0 && tow < 1) {
+      const grip = { x: targetX, y: strip.y + strip.h * 0.5 };
+      const clipX = mix(grip.x, ax, pull);
+      const clipY = mix(grip.y, ay + h * 0.12, pull);
+      path(ctx, { stroke: ACCENT, width: 1.2, alpha: 0.5 * tether * (1 - clamp01(tow)), dash: [3, 5], dashOffset: -t * 24 }, () => {
+        ctx.moveTo(ax, ay);
+        ctx.lineTo(mix(ax, clipX, 0.5), mix(ay, clipY, 0.5) + h * 0.02);
+        ctx.lineTo(clipX, clipY);
+      });
+      if (pull > 0.02) {
+        // Sparks at the point the clip came away from the strip.
+        const spark = 1 - clamp01(pull * 2.4);
+        for (let k = 0; k < 4 && spark > 0; k += 1) {
+          const a = (k / 4) * Math.PI * 2 + t;
+          path(ctx, { fill: ACCENT, alpha: spark * 0.8 }, () =>
+            ctx.arc(grip.x + Math.cos(a) * strip.h * 0.5 * (1 - spark), grip.y + Math.sin(a) * strip.h * 0.4 * (1 - spark), 1.6, 0, Math.PI * 2));
+        }
+        const swing = Math.sin(phase * 22) * 0.06 * (1 - ease((phase - 0.6) / 0.3));
+        clipTile(ctx, clipX, clipY, h * 0.26 * mix(0.55, 1, pull), { alpha: fade, lit: true, tilt: swing, squash: mix(1.06, 1, easeOutCubic(pull)) });
+      }
+    }
+    // The clip lands on the stack, squashing a little as it settles.
+    const drop = easeOutBack((phase - 0.8) / 0.12, 2.4);
+    if (phase > 0.8 && phase < 0.95) {
+      clipTile(ctx, mix(ax, stack.x, clamp01(drop)), mix(ay + h * 0.12, stack.y, clamp01(drop)), h * 0.28,
+        { alpha: fade, lit: true, done: drop > 0.9, squash: mix(0.9, 1, clamp01(drop)) });
+    }
+    agent(ctx, ax, ay, Math.max(3, h * 0.022), { alpha: fade, heading, speed, working, t });
+  }
 }
 
 /** Feature two: nothing leaves until you approve it, then it goes out to the platforms. */
@@ -370,7 +377,7 @@ function measure(ctx, s) {
   label(ctx, 'Sample shapes', chart.x + chart.w - 10, chart.y + chart.h + h * 0.1, { align: 'right', color: MUTED });
 }
 
-export const SCENES = { factory, cut, post, measure };
+export const SCENES = { cut, post, measure };
 
 /**
  * Mount one scene on a host element. Returns null when the scene name is unknown, so markup can
