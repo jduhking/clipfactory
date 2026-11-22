@@ -1,10 +1,10 @@
 # Assets
 
 - The alpine photograph was generated with the built-in image-generation tool for this landing page. It is illustrative and does not represent customer footage, real campaign output, or an endorsement. The original is retained as `assets/alpine-story-original.png` (excluded from deployment); `assets/alpine-story.webp` is the optimized full frame.
-- `assets/peaks.webp`, `valley.webp`, `hiker.webp`, `hiker-close.webp`, `towers.webp` and `summit.webp` are crops of that same photograph, used as sample 9:16 clips and scene thumbnails.
-- `assets/growth-factory-logo.png` is an unchanged copy of the user-supplied Mac app logo in `frontend/src/growth/assets/growth-factory-logo.png`. `icon.svg`, `mark.svg`, `mark-white.svg`, and `favicon.svg` embed that artwork, framed identically to the Mac app and displayed in white on a Signal-orange rounded square with an SVG color filter. No raster artwork was edited.
-- `assets/social-card.jpg` is a capture of the updated opening screen, used for link previews.
-- Type is Manrope (headings) and Inter (body), loaded from Google Fonts. Both use the SIL Open Font License.
+- `assets/peaks.webp`, `valley.webp`, `hiker.webp`, `hiker-close.webp`, `towers.webp` and `summit.webp` are crops of that same photograph, retained as historical assets; the streamer homepage no longer uses them.
+- `assets/growth-factory-logo.png` is an unchanged copy of the user-supplied Mac app logo in `frontend/src/growth/assets/growth-factory-logo.png`. `icon.svg`, `mark.svg`, `mark-white.svg`, and `favicon.svg` embed that artwork, framed identically to the Mac app and displayed in white on a Pearl Studio violet (#a75de3) rounded square with an SVG color filter. No raster artwork was edited.
+- `assets/pearl-studio.jpg` and `assets/social-card.jpg` are unchanged copies of the real app screenshot in `docs/images/pearl-studio.png` (the source is JPEG despite its historical extension). The screenshot shows illustrative brand data, not customer results, and is labelled on the homepage. It is also used for link previews.
+- Type is Instrument Sans Variable, matching the desktop app. The Latin variable WOFF2 is self-hosted from `@fontsource-variable/instrument-sans` 5.3.0. Its SIL Open Font License is included at `assets/fonts/instrument-sans-LICENSE.txt`. No remote font request is needed.
 
 ## Image prompt
 

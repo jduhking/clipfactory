@@ -47,3 +47,22 @@ Set the billing function's `BILLING_RETURN_URL` to the site origin (for example 
 The privacy and terms pages are drafts for the owner to review before launch.
 
 Asset provenance and font licenses: [ASSETS.md](ASSETS.md).
+
+## Mac-first streamer landing page
+
+The homepage source is `site/pages/index.html`; `build.mjs` generates `index.html`.
+It uses the Pearl Studio graphite/violet material from `frontend/src/growth/tokens.css`,
+self-hosted Instrument Sans, and an unchanged, labelled app screenshot. Shared styles
+in `styles.css`, `pages.css` and `site.css` keep the guide, pricing and setup pages dark too.
+
+Initial audience: small streamers on Apple Silicon Macs. The primary CTA opens an email
+to request beta access; it is not a signup service, guaranteed invitation, or installer.
+The initial workflow is saved recording → draft → human review → export. Live capture,
+chat-highlight detection, verified audience growth and launched billing are not claimed.
+No streamer affiliation or endorsement is implied.
+
+Public site: https://clipfactory-landing.vercel.app, Vercel team `jduhkings-projects`,
+project `clipfactory-landing`. Canonical URLs and source links target this site and
+`jduhking/clipfactory`. CSS/JS links carry `?v=pearl-streamer-1`; bump that version after
+future visual changes to avoid stale browser asset caches. Generated HTML is committed.
+Vercel currently receives reviewed static file deployments, not automatic Git deployments.
