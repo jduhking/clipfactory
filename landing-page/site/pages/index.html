@@ -1,5 +1,6 @@
 <!--meta {"title":"Growth Factory — Keep the good parts of your stream","description":"Turn your stream recordings into captioned vertical clips on your Mac, then join the waitlist for the Mac-first beta. Local-first clipping for small streamers, with every edit reviewed by you.","bodyClass":"streamer-home"} -->
-<script type="module" src="/topography.js?v=pearl-streamer-3"></script>
+<script type="module" src="/topography.js?v=pearl-streamer-4"></script>
+<script type="module" src="/scenes.js?v=pearl-streamer-4"></script>
 <section class="streamer-hero" aria-labelledby="hero-title">
   <div class="topography-field" data-topography aria-hidden="true"></div>
   <div class="topography-controls"><button type="button" data-topography-toggle hidden>Pause background</button></div>
@@ -8,85 +9,88 @@
       <p class="eyebrow"><span class="status-dot" aria-hidden="true"></span> Mac-first beta / small streamers</p>
       <h1 id="hero-title">You stream.<br />Keep the <span class="accent">good parts.</span></h1>
       <p class="hero-lead">The funny bit. The unexpected take. The moment chat won't let go of. Turn your recordings into captioned clips without making editing your second job.</p>
-      <div class="hero-actions"><a class="btn btn-primary" href="#waitlist">Get on the waitlist <span aria-hidden="true">↓</span></a><a class="btn btn-dark" href="#factory">See the three steps <span aria-hidden="true">↓</span></a></div>
+      <div class="hero-actions"><a class="btn btn-primary" href="#waitlist">Get on the waitlist <span aria-hidden="true">↓</span></a><a class="btn btn-dark" href="#cut">See it in motion <span aria-hidden="true">↓</span></a></div>
       <p class="hero-note">Apple Silicon first. Your footage stays local unless you choose to share it.</p>
       <div class="hero-foot"><span>Local-first</span><span>Vertical clips + captions</span><span>You make the final call</span></div>
     </div>
-    <figure class="hero-product" id="workspace">
-      <div class="window-chrome"><span class="window-dots" aria-hidden="true"><i></i><i></i><i></i></span><span>Growth Factory / Pearl Studio</span><span class="window-tag">On your Mac</span></div>
-      <a href="/assets/pearl-studio.jpg" aria-label="Open the full-size Pearl Studio screenshot"><img src="/assets/pearl-studio.jpg" width="1280" height="720" alt="Pearl Studio desktop app with the Factory, Library, Results, Brand profile and Settings navigation, showing a sample brand profile" fetchpriority="high" /></a>
-      <figcaption><span class="screenshot-label">Actual app interface</span> Sample brand data, not a customer result.</figcaption>
+    <figure class="hero-product hero-scene">
+      <div class="window-chrome"><span class="window-dots" aria-hidden="true"><i></i><i></i><i></i></span><span>Recording → factory → clips</span><span class="window-tag">Animated illustration</span></div>
+      <div class="scene scene-hero" data-scene="factory" role="img" aria-label="Animated illustration: a stream recording feeds a running factory, which turns out captioned vertical clips, each one approved before it leaves."></div>
+      <div class="scene-controls"><button type="button" data-scene-toggle hidden>Pause</button></div>
+      <figcaption><span class="screenshot-label">Animated illustration</span> A diagram of the workflow drawn over the app's topographic field — not app footage.</figcaption>
       <div class="product-strip"><span class="strip-step">01 Import</span><span aria-hidden="true">→</span><span class="strip-step">02 Find moments</span><span aria-hidden="true">→</span><span class="strip-step">03 Review + export</span></div>
     </figure>
   </div>
 </section>
 <section class="audience-band"><div class="wrap audience-row"><p>For the streamer doing it all.</p><span>Gaming</span><span>Just chatting</span><span>Interviews</span><span>IRL recordings</span></div></section>
-<section id="factory" class="wrap home-section app-feature" aria-labelledby="factory-title">
-  <div class="feature-copy">
-    <p class="eyebrow">Feature 01 / Factory</p>
-    <h2 id="factory-title">Find the moment<br />worth clipping.</h2>
-    <p class="feature-lead">Drop in a saved stream. Local speech-to-text turns hours of footage into a transcript the factory can actually read, so candidate moments arrive with the words that made them good.</p>
-    <ul class="feature-points">
-      <li><strong>Start from a recording you already have.</strong> Set your voice, topics and caption style once in a brand profile.</li>
-      <li><strong>Read the evidence before you watch.</strong> Each suggested moment shows its transcript lines and timecodes.</li>
-      <li><strong>Review in a sensible order.</strong> A ranking decides what you look at first.</li>
-    </ul>
-    <p class="feature-note">Ranking orders your review queue. It does not predict views, and scores are not a promise about performance.</p>
-  </div>
-  <figure class="feature-visual">
-    <div class="panel-head"><span>Candidate moments</span><span class="panel-tag">Sample</span></div>
-    <ul class="transcript-rows">
-      <li><span class="row-time">00:41:12</span><span class="row-text">“wait, wait — read that message again”</span><span class="row-rank">01</span></li>
-      <li><span class="row-time">01:12:48</span><span class="row-text">“okay that is the worst advice I have ever taken”</span><span class="row-rank">02</span></li>
-      <li><span class="row-time">02:03:05</span><span class="row-text">“nobody told me the boss had a second phase”</span><span class="row-rank">03</span></li>
-    </ul>
-    <div class="panel-foot"><span class="chip">Transcript-backed</span><span class="chip">Timecoded</span><span class="chip">Local speech</span></div>
-    <figcaption>Illustration of the review queue. Not a screenshot; sample transcript text.</figcaption>
+<section id="workspace" class="wrap home-section workspace-band" aria-labelledby="workspace-title">
+  <div class="section-heading"><div><p class="eyebrow">The actual app.</p><h2 id="workspace-title">Behind the animation,<br />a real workspace.</h2></div><p>The illustrations on this page are diagrams. This is the desktop app itself, running on a Mac, with sample brand data filled in.</p></div>
+  <figure class="workspace-shot">
+    <a href="/assets/pearl-studio.jpg" aria-label="Open the full-size Pearl Studio screenshot"><img src="/assets/pearl-studio.jpg" width="1280" height="720" alt="Pearl Studio desktop app with the Factory, Library, Results, Brand profile and Settings navigation, showing a sample brand profile" loading="lazy" /></a>
+    <figcaption><span class="screenshot-label">Actual app interface</span> Sample brand data, not a customer result.</figcaption>
   </figure>
 </section>
-<section id="studio" class="home-band"><div class="wrap home-section app-feature reverse" aria-labelledby="studio-title">
+<section id="cut" class="home-band"><div class="wrap home-section app-feature" aria-labelledby="cut-title">
   <div class="feature-copy">
-    <p class="eyebrow">Feature 02 / Studio</p>
-    <h2 id="studio-title">Cut it vertical.<br />Keep your voice.</h2>
-    <p class="feature-lead">Studio builds the 9:16 draft: vertical framing, burned-in captions and audio treatment in the same graphite workspace as the rest of the app. You watch the real clip, not a mock-up.</p>
+    <p class="eyebrow">Feature 01 / Agents cut the clips</p>
+    <h2 id="cut-title">Agents cut it up.<br />You keep control.</h2>
+    <p class="feature-lead">Drop in a saved stream. Local speech-to-text gives the agents a transcript, they mark the moments worth keeping, and each cut lifts out as a captioned vertical draft.</p>
     <ul class="feature-points">
-      <li><strong>Captions that match your channel.</strong> Caption styling and brand settings carry from clip to clip.</li>
-      <li><strong>Ask for a change, get a new draft.</strong> Revisions are added next to the original instead of overwriting it.</li>
-      <li><strong>Check it properly.</strong> Speech, framing and timing are all reviewable before anything is approved.</li>
+      <li><strong>Transcript-backed choices.</strong> Every suggested moment shows the lines and timecodes behind it, so you can judge meaning rather than energy.</li>
+      <li><strong>Vertical drafts, not clip dumps.</strong> Framing, burned-in captions and audio treatment happen in the same pass.</li>
+      <li><strong>Revisions never overwrite.</strong> Ask for a different cut and the earlier one stays in the library.</li>
     </ul>
-    <p class="feature-note">Rendering runs on your machine. Local models need disk space, time and suitable hardware; optional cloud models use your own keys.</p>
+    <p class="feature-note">Ranking orders your review queue; it does not predict views. Rendering runs on your Mac, and local models need disk space, time and suitable hardware.</p>
   </div>
-  <figure class="feature-visual">
-    <div class="panel-head"><span>Draft preview</span><span class="panel-tag">Sample</span></div>
-    <div class="vertical-frame"><span class="frame-ratio">9:16</span><p class="frame-caption">“READ THAT<br />MESSAGE AGAIN”</p></div>
-    <div class="panel-foot"><span class="chip">Burned-in captions</span><span class="chip">Vertical framing</span><span class="chip">Audio treatment</span></div>
-    <figcaption>Illustration of a vertical draft. Not a screenshot; sample caption text.</figcaption>
+  <figure class="feature-visual scene-figure">
+    <div class="panel-head"><span>Agents cutting a recording</span><span class="panel-tag">Animated illustration</span></div>
+    <div class="scene" data-scene="cut" role="img" aria-label="Animated illustration: a playhead sweeps a stream recording, cut points snap around three moments, and each one lifts out as a captioned vertical draft."></div>
+    <div class="scene-controls"><button type="button" data-scene-toggle hidden>Pause</button></div>
+    <ul class="scene-stages"><li>Transcript</li><li>Cut points</li><li>Vertical draft</li></ul>
+    <figcaption>Animated illustration of the workflow. Not a screenshot, and not real performance data.</figcaption>
   </figure>
 </div></section>
-<section id="library" class="wrap home-section app-feature" aria-labelledby="library-title">
+<section id="post" class="wrap home-section app-feature reverse" aria-labelledby="post-title">
   <div class="feature-copy">
-    <p class="eyebrow">Feature 03 / Library</p>
-    <h2 id="library-title">Approve the exact<br />version. Then export.</h2>
-    <p class="feature-lead">Sources and every clip revision stay in one library, so you always know which cut you signed off on. Approve a specific revision, export the file, and upload it wherever your audience is.</p>
+    <p class="eyebrow">Feature 02 / Posting</p>
+    <h2 id="post-title">Then it goes out<br />where you said.</h2>
+    <p class="feature-lead">When you approve a revision, the app can hand it to your connected accounts — or you export the file and upload it yourself. Nothing leaves without that approval.</p>
     <ul class="feature-points">
-      <li><strong>Nothing posts itself.</strong> Approve, export and post are separate actions you take on purpose.</li>
-      <li><strong>Every revision is kept.</strong> Go back to the earlier cut whenever the new one is worse.</li>
-      <li><strong>Export-first in this beta.</strong> You upload the finished clip to TikTok, Reels or Shorts yourself.</li>
+      <li><strong>Approval is the gate.</strong> Approve, export and post stay separate actions; a new revision is not permission to publish it.</li>
+      <li><strong>Several destinations.</strong> TikTok, Instagram Reels and YouTube Shorts, with Facebook, LinkedIn, X and Threads integrations also in the codebase.</li>
+      <li><strong>Uncertain results reconcile.</strong> A post with an unclear outcome is matched by its external id instead of being blindly retried.</li>
     </ul>
-    <p class="feature-note">The app also includes connected posting for several platforms, but that path needs a paid plan and live verification, so the first beta stays export-first. Metric collection needs the app open; there is no general cloud sync.</p>
+    <p class="feature-note">Connected posting needs a paid plan, a supported account and live verification, so the first Mac beta stays export-first. This page promises no audience growth.</p>
   </div>
-  <figure class="feature-visual">
-    <div class="panel-head"><span>Clip revisions</span><span class="panel-tag">Sample</span></div>
-    <ul class="revision-rows">
-      <li><span class="row-version">v3</span><span class="row-text">Tighter in, caption size up</span><span class="row-state is-approved">Approved</span></li>
-      <li><span class="row-version">v2</span><span class="row-text">Longer setup, same hook</span><span class="row-state">Draft</span></li>
-      <li><span class="row-version">v1</span><span class="row-text">First cut from 00:41:12</span><span class="row-state">Draft</span></li>
-    </ul>
-    <div class="panel-foot"><span class="chip">You approve</span><span class="chip">Then export</span><span class="chip">Nothing auto-posts</span></div>
-    <figcaption>Illustration of revision history. Not a screenshot; sample clip data.</figcaption>
+  <figure class="feature-visual scene-figure">
+    <div class="panel-head"><span>Posting an approved clip</span><span class="panel-tag">Animated illustration</span></div>
+    <div class="scene" data-scene="post" role="img" aria-label="Animated illustration: an approved vertical clip waits at a gate until you approve it, then travels out to TikTok, Reels and Shorts cards."></div>
+    <div class="scene-controls"><button type="button" data-scene-toggle hidden>Pause</button></div>
+    <ul class="scene-stages"><li>You approve</li><li>Queued</li><li>Posted or exported</li></ul>
+    <figcaption>Animated illustration of the workflow. Platform names are labels only, with no logos and no endorsement.</figcaption>
   </figure>
 </section>
-<section id="waitlist" class="home-band"><div class="wrap home-section waitlist-section" aria-labelledby="waitlist-title">
+<section id="measure" class="home-band"><div class="wrap home-section app-feature" aria-labelledby="measure-title">
+  <div class="feature-copy">
+    <p class="eyebrow">Feature 03 / Results</p>
+    <h2 id="measure-title">Check what<br />actually worked.</h2>
+    <p class="feature-lead">Posted clips come back with whatever the platforms report, next to the source moment and the revision you approved. Your next session starts from what your audience responded to.</p>
+    <ul class="feature-points">
+      <li><strong>What was not reported stays blank.</strong> A missing metric is shown as unavailable, never as a zero that looks like failure.</li>
+      <li><strong>Review in context.</strong> Results sit beside the clip, its moment in the stream and the exact revision you signed off.</li>
+      <li><strong>Collection needs the app open.</strong> Scheduling and metric refresh run while Growth Factory is running; there is no cloud worker doing it for you.</li>
+    </ul>
+    <p class="feature-note">Numbers come from the platforms, not from us. Scores order your review queue rather than forecasting performance, and demo data stays labelled and separate from real results.</p>
+  </div>
+  <figure class="feature-visual scene-figure">
+    <div class="panel-head"><span>Checking results</span><span class="panel-tag">Animated illustration</span></div>
+    <div class="scene" data-scene="measure" role="img" aria-label="Animated illustration: sample bar shapes rise while a review cursor inspects them, and one bar with no report stays an empty dashed outline marked unavailable."></div>
+    <div class="scene-controls"><button type="button" data-scene-toggle hidden>Pause</button></div>
+    <ul class="scene-stages"><li>Reported</li><li>Unavailable stays blank</li><li>Your call next time</li></ul>
+    <figcaption>Animated illustration with sample shapes and no values. Not a screenshot, and not real performance data.</figcaption>
+  </figure>
+</div></section>
+<section id="waitlist" class="wrap home-section waitlist-section" aria-labelledby="waitlist-title">
   <div class="waitlist-copy">
     <p class="eyebrow"><span class="status-dot" aria-hidden="true"></span> Step 04 / Your turn</p>
     <h2 id="waitlist-title">Sign up to get<br />waitlisted.</h2>
@@ -107,10 +111,10 @@
     <p class="form-note">Submitting opens an email draft to <a href="mailto:jamesbodebiyi@gmail.com?subject=Growth%20Factory%20Mac%20streamer%20beta">jamesbodebiyi@gmail.com</a> with these answers filled in, and you send it yourself. This site stores nothing and sets no cookies. Joining the list is not a claim of instant access.</p>
     <noscript><p class="form-note">This form needs JavaScript to prepare the draft. <a href="mailto:jamesbodebiyi@gmail.com?subject=Growth%20Factory%20Mac%20streamer%20beta">Email us directly</a> with your Mac model and what you stream.</p></noscript>
   </form>
-</div></section>
-<section id="faq" class="wrap home-section faq-home" aria-labelledby="faq-title"><div class="section-heading"><div><p class="eyebrow">Before you join.</p><h2 id="faq-title">A few honest answers.</h2></div><p>Early access, without the fine-print surprises.</p></div>
-  <div class="learning-faq"><details><summary>Who is the first beta for?</summary><p>Small streamers on Apple Silicon Macs who have recorded streams and want help making short clips. We're looking for real footage and honest feedback—not a certain follower count.</p></details><details><summary>What happens after I join the waitlist?</summary><p>Your email draft reaches us directly. We reply as cohorts open up, starting with Apple Silicon Macs. There is no queue position to check and no automatic acceptance.</p></details><details><summary>Is there a signed Mac installer ready?</summary><p>Not yet. Join the waitlist above and tell us your Mac model. Developer source setup is documented on the <a href="/download.html">setup page</a>. Public downloads wait for a signed, verified release.</p></details><details><summary>Does it clip my stream while I'm live?</summary><p>The current workflow starts with a saved recording. Live stream capture, automatic chat-highlight detection and background cloud clipping are not promised.</p></details><details><summary>Does it work without cloud AI keys?</summary><p>Local speech and local agents can run on your Mac once their models are installed. Setup needs disk space, time and suitable hardware. Optional cloud speech and models use your own keys; provider charges are separate.</p></details><details><summary>Will it post without me reviewing?</summary><p>No. You review and approve the exact clip revision. Export and posting are separate actions. The initial beta is export-first; connected posting needs a paid plan, a supported account and live verification.</p></details><details><summary>What about Windows, Linux and scheduled posts?</summary><p>The codebase includes Windows and Linux support, but the first user cohort is Mac-first. Scheduling and metric collection currently require the app open. There is no general cloud sync or shared team workspace.</p></details></div>
 </section>
+<section id="faq" class="home-band"><div class="wrap home-section faq-home" aria-labelledby="faq-title"><div class="section-heading"><div><p class="eyebrow">Before you join.</p><h2 id="faq-title">A few honest answers.</h2></div><p>Early access, without the fine-print surprises.</p></div>
+  <div class="learning-faq"><details><summary>Who is the first beta for?</summary><p>Small streamers on Apple Silicon Macs who have recorded streams and want help making short clips. We're looking for real footage and honest feedback—not a certain follower count.</p></details><details><summary>Are the animations on this page the app?</summary><p>No. They are diagrams of the workflow, labelled as animated illustrations, drawn over the same topographic field the app uses. The only screenshot is the <a href="#workspace">app interface above</a>.</p></details><details><summary>What happens after I join the waitlist?</summary><p>Your email draft reaches us directly. We reply as cohorts open up, starting with Apple Silicon Macs. There is no queue position to check and no automatic acceptance.</p></details><details><summary>Is there a signed Mac installer ready?</summary><p>Not yet. Join the waitlist above and tell us your Mac model. Developer source setup is documented on the <a href="/download.html">setup page</a>. Public downloads wait for a signed, verified release.</p></details><details><summary>Does it clip my stream while I'm live?</summary><p>The current workflow starts with a saved recording. Live stream capture, automatic chat-highlight detection and background cloud clipping are not promised.</p></details><details><summary>Does it work without cloud AI keys?</summary><p>Local speech and local agents can run on your Mac once their models are installed. Setup needs disk space, time and suitable hardware. Optional cloud speech and models use your own keys; provider charges are separate.</p></details><details><summary>Will it post without me reviewing?</summary><p>No. You review and approve the exact clip revision. Export and posting are separate actions. The initial beta is export-first; connected posting needs a paid plan, a supported account and live verification.</p></details><details><summary>What about Windows, Linux and scheduled posts?</summary><p>The codebase includes Windows and Linux support, but the first user cohort is Mac-first. Scheduling and metric collection currently require the app open. There is no general cloud sync or shared team workspace.</p></details></div>
+</div></section>
 <section id="pricing" class="wrap home-section" aria-labelledby="pricing-title">
   <div class="section-heading"><div><p class="eyebrow">Start small.</p><h2 id="pricing-title">Try clipping first.<br />Grow from there.</h2></div><p>The Free plan is export-first. These are the app's plan limits, not a claim that live billing is launch-verified. Waitlisted beta testers start on Free.</p></div>
   <!-- build:pricing-cards -->
