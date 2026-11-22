@@ -57,49 +57,47 @@ in `styles.css`, `pages.css` and `site.css` keep the guide, pricing and setup pa
 
 Initial audience: small streamers on Apple Silicon Macs. The primary CTA opens an email
 to request beta access; it is not a signup service, guaranteed invitation, or installer.
-The initial workflow is saved recording → draft → human review → export. Live capture,
+The initial workflow is saved recording → clips → you keep or skip → export. Live capture,
 chat-highlight detection, verified audience growth and launched billing are not claimed.
 No streamer affiliation or endorsement is implied.
 
 Public site: https://clipfactory-landing.vercel.app, Vercel team `jduhkings-projects`,
 project `clipfactory-landing`. Canonical URLs and source links target this site and
-`jduhking/clipfactory`. CSS/JS and brand-image links carry `?v=pearl-streamer-6`; bump that version after
+`jduhking/clipfactory`. CSS/JS and brand-image links carry `?v=pearl-streamer-7`; bump that version after
 future visual changes to avoid stale browser asset caches. Generated HTML is committed.
 Vercel currently receives reviewed static file deployments, not automatic Git deployments.
 
-### The growth loop, animated
+### One stream, told in photos
 
-The home page is built around the app's own loop. Its five stage families (Understand, Create,
-Judge, Ship, Learn) and the order of the hero's beats come from `frontend/src/growth`: the Factory
-map's stage families, `flowEvents`, and the learning-loop demo. The motion thesis is that one clip
-is followed all the way round, and every pass leaves the channel a little more grown.
+The home page explains the app with one streamer's night rather than a diagram, in five plain
+steps anyone can follow: **Find, Cut, Pick, Post, Learn**. The words come from the code, not from
+marketing: `clip_factory/scouts.py` (hook, one complete idea, payoff; skip intros, sponsor reads
+and dead air), `faces.py` and `craft.py` (face-following vertical crop, hook card and captions off
+the face), `growth_loop.py` and `learning.py` (results per platform, one change at a time: the
+opening or the length). The agent names (Scout, Critic, Strategist) stay inside the app.
 
-- **Hero (`loop`).** The real app screenshot sits in the middle of an orbit drawn on two canvases,
-  one behind it and one in front. The agent pulls a moment out of your recording and the Editor
-  cuts a vertical clip with word-by-word captions. The critic scores it, then the loop stops at
-  your approval before the clip flies to text-labelled TikTok, Reels and Shorts portals. Results
-  come back as sample shapes, and the Strategist re-cuts the next clip hook-first. Each loop adds
-  a growth ring. After four loops the rings settle and a new stream starts. A chapter rail under
-  the stage (`railReporter`) shows the same state the painter returns, so words and picture never
-  disagree.
-- **Stations (`understand`, `cut`, `judge`, `post`, `learn`).** One sticky diagram crossfades
-  between stations as each step reaches the middle of the screen (`followSteps`).
-- **Growth.** The real Factory map, captured from the app running on labelled preview data.
+- **Hero (`story`).** Last night's stream plays through, the intro and dead air are struck out,
+  two moments are found, a dashed 9:16 crop locks on to the face and lifts into a phone, then a
+  hook and word-by-word captions appear. You keep it (and keep or skip two more), it flies to
+  text-labelled TikTok, Reels and Shorts rows, sample bars fill, Shorts stays "No report yet",
+  and one suggestion waits for Approve before joining the "What it has learned" shelf. Each
+  24 second pass is the next stream; after three the shelf clears. The rail under it shows
+  Stream N, the caption, and the five steps.
+- **Steps (`find`, `cut`, `pick`, `post`, `learn`).** The same painter, windowed to one step, on
+  the sticky figure beside the scrolling steps. Each step has a "Why it matters" line.
+- **Photos.** `assets/streamers/*.webp` are Pexels stock photos of models (see `ASSETS.md`),
+  loaded once and shared by every scene; until they arrive the scenes draw plain surfaces. The
+  page labels them as stock photos, not customers or endorsements.
+- **Honesty, enforced by `tests/scenes.test.mjs`.** No digits are ever drawn, colours come only
+  from the app palette, an unreported platform is an empty outline (never zero), nothing posts
+  before Keep, a suggestion changes nothing before Approve, and the result shapes never grow
+  between streams, so the page does not imply a lift.
+- **Restraint.** 30 fps cap, device pixel ratio capped at 1.5, asleep offscreen and in hidden
+  tabs, one chosen still frame per scene under reduced motion, no canvas in forced colors, and a
+  Pause control for each animation.
 
-The motion uses real easing: `easeInOutCubic` to travel, `easeOutBack` to settle, a comet trail
-scaled by speed, and a tilt-and-squash on landing cards. Rules the tests enforce:
-- Nothing reaches a channel before the approval beat, and the reduced-motion still of the hero is
-  that approval gate.
-- Every animation has a written description, and the station diagram is captioned
-  `Animated illustration`.
-- No scene draws a number. A platform with no report is an empty dashed outline marked
-  `No report yet`: unavailable, never zero. The results bars are labelled as sample shapes.
-- Every colour is from the palette. Each scene honours 30 fps, a 1.5 device-pixel-ratio cap,
-  sleep while offscreen or in a hidden tab, a chosen still under reduced motion, no canvas in
-  forced colours, and a pause control.
-
-The page asks for growth without promising it: the hero note, the growth section and the FAQ all
-say that nothing here guarantees more views.
+The problem section cites the Nysos 2026 study of 53,511 Twitch channels
+(https://nysos.io/en/etude-clipping-twitch).
 
 ### Keeping the design out of generated-default territory
 
