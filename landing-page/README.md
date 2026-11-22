@@ -6,7 +6,7 @@ The public website: product pages, pricing, the user guide, architecture, legal 
 
 | Page | Source |
 |---|---|
-| `/` home: the loop, agents, platforms, privacy, pricing, FAQ | `index.html` (hand-written) |
+| `/` home: the loop, agents, platforms, privacy, pricing, FAQ | `site/pages/index.html` (generated homepage) |
 | `/product.html`, `/learning.html` | hand-written |
 | `/pricing.html` plans, monthly and yearly, comparison table | `site/pages/pricing.html` + `plans.json` |
 | `/download.html` setup on Mac, Windows and Linux | `site/pages/download.html` |
@@ -47,3 +47,32 @@ Set the billing function's `BILLING_RETURN_URL` to the site origin (for example 
 The privacy and terms pages are drafts for the owner to review before launch.
 
 Asset provenance and font licenses: [ASSETS.md](ASSETS.md).
+
+## Mac-first streamer landing page
+
+The homepage source is `site/pages/index.html`; `build.mjs` generates `index.html`.
+It uses the Pearl Studio graphite/violet material from `frontend/src/growth/tokens.css`,
+self-hosted Instrument Sans, and an unchanged, labelled app screenshot. Shared styles
+in `styles.css`, `pages.css` and `site.css` keep the guide, pricing and setup pages dark too.
+
+Initial audience: small streamers on Apple Silicon Macs. The primary CTA opens an email
+to request beta access; it is not a signup service, guaranteed invitation, or installer.
+The initial workflow is saved recording → draft → human review → export. Live capture,
+chat-highlight detection, verified audience growth and launched billing are not claimed.
+No streamer affiliation or endorsement is implied.
+
+Public site: https://clipfactory-landing.vercel.app, Vercel team `jduhkings-projects`,
+project `clipfactory-landing`. Canonical URLs and source links target this site and
+`jduhking/clipfactory`. CSS/JS and brand-image links carry `?v=pearl-streamer-2`; bump that version after
+future visual changes to avoid stale browser asset caches. Generated HTML is committed.
+Vercel currently receives reviewed static file deployments, not automatic Git deployments.
+
+### Animated topography
+
+The hero reuses the app's contour shader (`frontend/src/growth/contours.ts`) in
+`contours.js`, with a manual pause adapter in `topography.js`. It is decorative,
+non-interactive, behind the content, capped at 30fps and DPR 1.5, and sleeps while
+offscreen or the tab is hidden. Reduced motion draws one still frame. Unsupported
+WebGL retains `assets/topography.svg`, a static contour field derived from the same
+terrain equation at t=41. Forced colors hides the decoration. Shader parity and
+lifecycle behavior are covered by the site tests. No runtime dependencies added.

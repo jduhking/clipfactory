@@ -1,11 +1,15 @@
 # Assets
 
 - The alpine photograph was generated with the built-in image-generation tool for this landing page. It is illustrative and does not represent customer footage, real campaign output, or an endorsement. The original is retained as `assets/alpine-story-original.png` (excluded from deployment); `assets/alpine-story.webp` is the optimized full frame.
-- `assets/peaks.webp`, `valley.webp`, `hiker.webp`, `hiker-close.webp`, `towers.webp` and `summit.webp` are crops of that same photograph, used as sample 9:16 clips and scene thumbnails.
-- `assets/growth-factory-logo.png` is an unchanged copy of the user-supplied Mac app logo in `frontend/src/growth/assets/growth-factory-logo.png`. `icon.svg`, `mark.svg`, `mark-white.svg`, and `favicon.svg` embed that artwork, framed identically to the Mac app and displayed in white on a Signal-orange rounded square with an SVG color filter. No raster artwork was edited.
-- `assets/social-card.jpg` is a capture of the updated opening screen, used for link previews.
-- Type is Manrope (headings) and Inter (body), loaded from Google Fonts. Both use the SIL Open Font License.
+- `assets/peaks.webp`, `valley.webp`, `hiker.webp`, `hiker-close.webp`, `towers.webp` and `summit.webp` are crops of that same photograph, retained as historical assets; the streamer homepage no longer uses them.
+- `assets/growth-factory-logo.png` is an unchanged copy of the user-supplied Mac app logo in `frontend/src/growth/assets/growth-factory-logo.png`. `icon.svg`, `mark.svg`, `mark-white.svg`, and `favicon.svg` embed that artwork, framed identically to the Mac app and displayed in white on a Pearl Studio violet (#a75de3) rounded square with an SVG color filter. No raster artwork was edited.
+- `assets/pearl-studio.jpg` and `assets/social-card.jpg` are unchanged copies of the real app screenshot in `docs/images/pearl-studio.png` (the source is JPEG despite its historical extension). The screenshot shows illustrative brand data, not customer results, and is labelled on the homepage. It is also used for link previews.
+- Type is Instrument Sans Variable, matching the desktop app. The Latin variable WOFF2 is self-hosted from `@fontsource-variable/instrument-sans` 5.3.0. Its SIL Open Font License is included at `assets/fonts/instrument-sans-LICENSE.txt`. No remote font request is needed.
 
 ## Image prompt
 
 Use case: photorealistic-natural. Asset type: cinematic sample footage still for a premium creative software landing page, landscape 1536x1024. Create one beautiful editorial adventure photograph: a lone small hiker wearing a vivid burnt-orange technical jacket and a pale cap, seen from behind standing on a rocky ridge in the lower right third, looking into a dramatic layered alpine valley in the Italian Dolomites. Craggy limestone peaks, deep pine-green valleys, atmospheric muted sage and grey-green distant mountains, pale creamy sky, soft warm late-afternoon light and very subtle analog 35mm grain. Premium independent outdoor film, real natural texture, considered quiet composition, art directed yet believable. Strong silhouette and terracotta color accent against the rugged olive landscape. Camera perspective from a few meters behind the hiker. Wide generous valley in the center and left, hiker about one fifth of image height. No letters, no logos, no watermarks, no UI, no borders, no extra panels. The output is a single photographic scene.
+
+- `assets/topography.svg` is a static fallback derived from the terrain equation in
+  `frontend/src/growth/contours.ts` at t=41, using marching-squares contours. The
+  animated hero uses the original app shader, not generated video or sample results.

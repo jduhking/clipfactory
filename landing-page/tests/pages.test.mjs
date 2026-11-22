@@ -75,7 +75,8 @@ test("IDs are unique and every link, asset and anchor resolves", async () => {
     assert.equal(ids.length, new Set(ids).size, `${name}: duplicate ID`);
     for (const [, href] of src.matchAll(/(?:src|href)="([^"\s]+)"/g)) {
       if (/^(?:https?:|data:|mailto:|tel:)/.test(href)) continue;
-      const [path, hash] = href.split("#");
+      const [urlPath, hash] = href.split("#");
+      const path = urlPath.split("?")[0];
       const target = path ? fileFor(name, path) : name;
       await access(join(ROOT, target)).catch(() => assert.fail(`${name}: ${href} points to a missing file`));
       if (hash) {

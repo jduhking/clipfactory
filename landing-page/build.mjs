@@ -16,7 +16,7 @@ import { renderDiagram } from "./site/diagrams.mjs";
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
 const GUIDE_SRC = join(ROOT, "..", "docs", "guide");
-const HAND_PAGES = ["index.html", "product.html", "learning.html"];
+const HAND_PAGES = ["product.html", "learning.html"];
 
 /** Docs sidebar. Every guide page must appear exactly once; build fails otherwise. */
 export const DOCS_NAV = [

@@ -4,7 +4,7 @@
 const COPY = {
   free: { tagline: "The whole factory on one brand, to try it on your own footage.", cta: "Get started free", note: "No account or card needed." },
   pro: { tagline: "For a creator posting every week across their own channels.", cta: "Start free, upgrade in the app", badge: "For most creators" },
-  business: { tagline: "For teams and agencies running many brands and accounts.", cta: "Start free, upgrade in the app" },
+  business: { tagline: "For a single operator managing many brands and accounts. No shared team workspace.", cta: "Start free, upgrade in the app" },
 };
 const PLATFORMS = "TikTok, Instagram, YouTube, Facebook, LinkedIn, X and Threads";
 

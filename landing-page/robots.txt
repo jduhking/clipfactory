@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://growth-factory-landing.vercel.app/sitemap.xml
+Sitemap: https://clipfactory-landing.vercel.app/sitemap.xml
