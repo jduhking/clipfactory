@@ -67,31 +67,29 @@ project `clipfactory-landing`. Canonical URLs and source links target this site 
 future visual changes to avoid stale browser asset caches. Generated HTML is committed.
 Vercel currently receives reviewed static file deployments, not automatic Git deployments.
 
-### One stream, told in photos
+### Clips, A/B tested
 
-The home page explains the app with one streamer's night rather than a diagram, in five plain
-steps anyone can follow: **Find, Cut, Pick, Post, Learn**. The words come from the code, not from
-marketing: `clip_factory/scouts.py` (hook, one complete idea, payoff; skip intros, sponsor reads
-and dead air), `faces.py` and `craft.py` (face-following vertical crop, hook card and captions off
-the face), `growth_loop.py` and `learning.py` (results per platform, one change at a time: the
-opening or the length). The agent names (Scout, Critic, Strategist) stay inside the app.
+The home page is written for streamers trying to work out what their viewers actually watch. Its
+claims come from the code: `clip_factory/growth_loop.py` (one variable per experiment from
+`SUPPORTED_RULES`: hook, length, framing, captions; equal measurement windows and a minimum view
+sample before a call, and "wait" until then), `learning.py` (nothing becomes a Style rule before
+you approve it), and `scouts.py`, `faces.py` and `craft.py` for finding and cutting. The agent
+names (Scout, Critic, Strategist) stay inside the app.
 
-- **Hero (`story`).** Last night's stream plays through, the intro and dead air are struck out,
-  two moments are found, a dashed 9:16 crop locks on to the face and lifts into a phone, then a
-  hook and word-by-word captions appear. You keep it (and keep or skip two more), it flies to
-  text-labelled TikTok, Reels and Shorts rows, sample bars fill, Shorts stays "No report yet",
-  and one suggestion waits for Approve before joining the "What it has learned" shelf. Each
-  24 second pass is the next stream; after three the shelf clears. The rail under it shows
-  Stream N, the caption, and the five steps.
-- **Steps (`find`, `cut`, `pick`, `post`, `learn`).** The same painter, windowed to one step, on
-  the sticky figure beside the scrolling steps. Each step has a "Why it matters" line.
-- **Photos.** `assets/streamers/*.webp` are Pexels stock photos of models (see `ASSETS.md`),
-  loaded once and shared by every scene; until they arrive the scenes draw plain surfaces. The
-  page labels them as stock photos, not customers or endorsements.
-- **Honesty, enforced by `tests/scenes.test.mjs`.** No digits are ever drawn, colours come only
-  from the app palette, an unreported platform is an empty outline (never zero), nothing posts
-  before Keep, a suggestion changes nothing before Approve, and the result shapes never grow
-  between streams, so the page does not imply a lift.
+- **Hero (`abtest`).** One idea, with no caption under it. Your stream sends out two versions of
+  a clip that differ in one thing (the hook, then the length, then the captions). A "How long
+  people watched" meter fills under each and one is marked Winner (round two keeps A, so B does
+  not always win). What it shows lands in "What works" with an approval tap, and the "Your
+  channel" line steps up. Three rounds, then it starts over.
+- **Steps (`find`, `cut`, `pick`, `post`, `learn`).** One streamer's night told in photos,
+  windowed to one step, on the sticky figure beside the scrolling steps (Find, Cut, Pick, Post,
+  Test). Each step has a "Why it matters" line.
+- **What works.** `assets/app-results.webp` is the real Results screen (see `ASSETS.md`).
+- **Photos.** `assets/streamers/*.webp` are licensed Pexels photos (see `ASSETS.md`), loaded once
+  and shared by every scene; until they arrive the scenes draw plain surfaces.
+- **Rules, enforced by `tests/scenes.test.mjs`.** No digits are ever drawn, colours come only from
+  the app palette, an unreported platform says "No report yet" (never zero), nothing posts before
+  Keep, and nothing changes before Approve.
 - **Restraint.** 30 fps cap, device pixel ratio capped at 1.5, asleep offscreen and in hidden
   tabs, one chosen still frame per scene under reduced motion, no canvas in forced colors, and a
   Pause control for each animation.

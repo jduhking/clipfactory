@@ -79,26 +79,15 @@ button,a,summary { -webkit-tap-highlight-color: transparent; }
 .hero-head h1 { text-wrap: balance; overflow-wrap: break-word; min-width: 0; max-width: 12ch; font-size: clamp(44px,6.2vw,88px); font-weight: 700; line-height: .96; letter-spacing: -.055em; }
 .hero-lead { max-width: 46ch; color: var(--muted); font-size: 17px; line-height: 1.65; }
 .hero-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 24px; margin-top: 28px; }
-.hero-note { max-width: 44ch; margin-top: 20px; color: var(--muted-2); font-size: 13px; line-height: 1.6; }
 /* The stage: one streamer's night, drawn over the hero field. The canvas fills it edge to edge. */
 .loop-figure { width: min(1320px, calc(100% - 40px)); margin: 32px auto 0; }
-.story-stage { position: relative; isolation: isolate; max-width: 1040px; margin-inline: auto; aspect-ratio: 16 / 10; }
+.story-stage { position: relative; isolation: isolate; max-width: 1040px; margin-inline: auto; aspect-ratio: 16 / 9; }
+.loop-figure .scene-controls { max-width: 1040px; margin-inline: auto; }
 .story-stage::before { content: ""; position: absolute; z-index: -1; inset: 20% 10% 0; background: radial-gradient(50% 50% at 50% 50%,var(--violet-glow),transparent); pointer-events: none; }
 .story-stage canvas { position: absolute; inset: 0; display: block; width: 100%; height: 100%; pointer-events: none; }
 .screenshot-label { color: var(--muted); }
-.loop-rail { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 12px 24px; align-items: center; max-width: 1040px; margin: 16px auto 0; }
-.loop-now { min-height: 1.5em; color: var(--foreground); font-size: 15px; line-height: 1.5; }
 [data-loop-count] { margin-right: 12px; color: var(--accent-text); font-weight: 600; font-variant-numeric: tabular-nums; }
-.loop-rail .scene-controls { margin-top: 0; }
-.loop-chapters { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(5,minmax(0,1fr)); gap: 8px; }
-.loop-chapters li { position: relative; padding-top: 12px; color: var(--muted-2); font-size: 13px; transition: color 200ms var(--ease); }
-.loop-chapters li::before, .loop-chapters li::after { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 4px; border-radius: 2px; background: var(--border); }
-.loop-chapters li::after { background: var(--action); transform: scaleX(var(--p,0)); transform-origin: left; }
-.loop-chapters li[data-done]::after { transform: scaleX(1); background: var(--border-control); }
-.loop-chapters li[data-current] { color: var(--foreground); }
-.loop-figure figcaption { max-width: 1040px; margin: 16px auto 0; color: var(--muted-2); font-size: 12px; line-height: 1.5; }
 .screenshot-label { color: var(--muted); }
-@media (forced-colors: active) { .loop-rail { display: none; } }
 /* Sections */
 .home-section { padding-block: 96px; }
 .home-band { background: var(--surface-sunken); color: var(--foreground); border-block: 1px solid var(--line); }
@@ -112,7 +101,7 @@ button,a,summary { -webkit-tap-highlight-color: transparent; }
 /* Stations: the diagram stays put while the steps scroll past it. */
 .stations-layout { display: grid; grid-template-columns: minmax(0,1.1fr) minmax(0,.9fr); gap: 72px; align-items: start; }
 .stations-visual { position: sticky; top: 120px; min-width: 0; }
-.loop-step { display: flex; flex-direction: column; justify-content: center; min-height: 64vh; padding-block: 32px; transition: opacity 240ms var(--ease); }
+.loop-step { display: flex; flex-direction: column; justify-content: center; min-height: 52vh; padding-block: 32px; transition: opacity 240ms var(--ease); }
 .stations-layout:has(.has-scene) .loop-step:not([data-active]) { opacity: .4; }
 .loop-step h3 { margin-top: 16px; font-size: clamp(22px,2.2vw,28px); font-weight: 600; line-height: 1.16; letter-spacing: -.03em; text-wrap: balance; }
 .loop-step > p:not(.step) { max-width: 46ch; margin-top: 12px; color: var(--muted); font-size: 16px; line-height: 1.7; }
@@ -135,7 +124,6 @@ button,a,summary { -webkit-tap-highlight-color: transparent; }
 .scene-controls { display: flex; justify-content: flex-end; margin-top: 8px; }
 .scene-controls button { min-height: 32px; padding: 4px 8px; font-size: 12px; color: var(--muted-2); background: transparent; border: 0; border-bottom: 1px solid var(--line); cursor: pointer; }
 .scene-controls button:hover { color: var(--foreground); border-color: var(--border-control); }
-.stations-visual figcaption { margin-top: 12px; color: var(--muted-2); font-size: 12px; line-height: 1.5; }
 @media (forced-colors: active) { .scene, .scene-controls { display: none; } .stations-layout { grid-template-columns: minmax(0,1fr); } .loop-step { min-height: 0; } }
 /* Why: the problem, in streamers' words, with its source. */
 .why .section-heading { max-width: 64ch; }
@@ -149,7 +137,6 @@ button,a,summary { -webkit-tap-highlight-color: transparent; }
 .streamer-grid { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 16px; }
 .streamer-grid img { width: 100%; aspect-ratio: 4 / 5; object-fit: cover; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
 .streamer-grid figcaption { margin-top: 12px; color: var(--foreground); font-size: 15px; font-weight: 600; }
-.photo-note { margin-top: 24px; color: var(--muted-2); font-size: 12px; line-height: 1.5; }
 /* Waitlist */
 .waitlist-section { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1.02fr); gap: 72px; align-items: start; }
 .waitlist-copy p { max-width: 46ch; margin-top: 20px; color: var(--muted); font-size: 16px; line-height: 1.7; }
@@ -182,8 +169,7 @@ button,a,summary { -webkit-tap-highlight-color: transparent; }
   .stations-layout { grid-template-columns: minmax(0,1fr); gap: 0; }
   .stations-visual { top: 72px; z-index: 3; padding-block: 8px; background: var(--background); }
   .stations-visual .scene { max-height: 36vh; margin-inline: auto; }
-  .stations-visual figcaption { display: none; }
-  .loop-step { min-height: 58vh; }
+  .loop-step { min-height: 50vh; }
   .nav-desktop { display: none; } .header-download { margin-left: auto; } .menu-btn { display: flex; }
 }
 @media (max-width: 680px) {
@@ -191,8 +177,7 @@ button,a,summary { -webkit-tap-highlight-color: transparent; }
   .header-row { gap: 12px; } .header-download { display: none; } .menu-btn { margin-left: auto; }
   .streamer-hero { padding: 40px 0 40px; } .home-section { padding-block: 56px; }
   .hero-head h1 { font-size: clamp(40px,11vw,56px); } .hero-lead { font-size: 16px; }
-  .loop-figure { width: calc(100% - 24px); } .story-stage { aspect-ratio: 1 / 1; }
-  .loop-chapters li { font-size: 11px; }
+  .loop-figure { width: calc(100% - 24px); } .story-stage { aspect-ratio: 3 / 4; }
   .section-heading { margin-bottom: 32px; } .scene { aspect-ratio: 4 / 3; }
   .waitlist-form { padding: 16px; }
 }

@@ -1,9 +1,9 @@
 <!doctype html>
 <html lang="en"><head>
   <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><meta name="theme-color" content="#121212" />
-  <title>Growth Factory: clips from every stream, made on your Mac</title><meta name="description" content="Growth Factory finds the best moments in last night’s stream, cuts them into vertical clips with hooks and captions on your Mac, posts only the ones you keep, and learns from what people watched. Join the Mac-first private beta waitlist." />
+  <title>Growth Factory: find out which clips grow your channel</title><meta name="description" content="Growth Factory cuts your streams into vertical clips on your Mac and A/B tests your best ones, so you find out what your viewers actually watch. Join the Mac beta waitlist." />
   <link rel="canonical" href="https://clipfactory-landing.vercel.app/" />
-  <meta property="og:type" content="website" /><meta property="og:site_name" content="Growth Factory" /><meta property="og:title" content="Growth Factory: clips from every stream, made on your Mac" /><meta property="og:description" content="Growth Factory finds the best moments in last night’s stream, cuts them into vertical clips with hooks and captions on your Mac, posts only the ones you keep, and learns from what people watched. Join the Mac-first private beta waitlist." /><meta property="og:url" content="https://clipfactory-landing.vercel.app/" /><meta property="og:image" content="https://clipfactory-landing.vercel.app/assets/social-card.jpg?v=pearl-streamer-7" /><meta property="og:image:width" content="1280" /><meta property="og:image:height" content="720" /><meta name="twitter:card" content="summary_large_image" />
+  <meta property="og:type" content="website" /><meta property="og:site_name" content="Growth Factory" /><meta property="og:title" content="Growth Factory: find out which clips grow your channel" /><meta property="og:description" content="Growth Factory cuts your streams into vertical clips on your Mac and A/B tests your best ones, so you find out what your viewers actually watch. Join the Mac beta waitlist." /><meta property="og:url" content="https://clipfactory-landing.vercel.app/" /><meta property="og:image" content="https://clipfactory-landing.vercel.app/assets/social-card.jpg?v=pearl-streamer-7" /><meta property="og:image:width" content="1280" /><meta property="og:image:height" content="720" /><meta name="twitter:card" content="summary_large_image" />
   <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg?v=pearl-streamer-7" />
   <link rel="stylesheet" href="/styles.css?v=pearl-streamer-7" /><link rel="stylesheet" href="/pages.css?v=pearl-streamer-7" /><link rel="stylesheet" href="/site.css?v=pearl-streamer-7" /><script src="/app.js?v=pearl-streamer-7" defer></script>
 </head>
@@ -21,28 +21,15 @@
   <div class="topography-field" data-topography aria-hidden="true"></div>
   <div class="topography-controls"><button type="button" data-topography-toggle hidden>Pause background</button></div>
   <div class="wrap hero-head">
-    <h1 id="hero-title">Your stream already has the clips.</h1>
+    <h1 id="hero-title">Find out which clips grow your channel.</h1>
     <div class="hero-copy">
-      <p class="hero-lead">Growth Factory finds the best moments in last night’s recording, cuts them into vertical clips on your Mac, and posts only the ones you keep.</p>
+      <p class="hero-lead">Growth Factory cuts your streams into vertical clips, then tests two versions of your best ones. The one people watch longer shapes every clip after it.</p>
       <div class="hero-actions"><a class="btn btn-primary" href="#waitlist">Join the waitlist</a><a class="text-link" href="#how">See how it works</a></div>
-      <p class="hero-note">Mac first, in a small private beta. Your footage stays on your machine, and nothing here promises more views.</p>
     </div>
   </div>
-  <figure class="loop-figure" id="watch" aria-describedby="story-description">
-    <div class="story-stage" data-scene="story" data-rail="#story-rail" role="img" aria-label="Animated illustration of one stream going through Growth Factory, from recording to clips to what it learned."></div>
-    <p class="visually-hidden" id="story-description">One streamer’s night, told in photos. The recording plays through, the intro and a quiet stretch are skipped, and a funny story and a big reaction are found. A vertical crop follows the streamer’s face out of the frame and becomes a clip with a hook on top and captions word by word. The streamer keeps it, keeps one other clip and skips a third. Kept clips go to TikTok, Reels and Shorts. Sample bars show how much people watched; Shorts has no report yet and stays blank. One suggestion, open on the big moment, waits for approval, then joins a shelf of what it has learned, which grows with each stream.</p>
-    <div class="loop-rail" id="story-rail">
-      <p class="loop-now"><span data-loop-count>Stream 1</span> <span data-loop-beat>Last night’s stream goes in</span></p>
-      <div class="scene-controls"><button type="button" data-scene-toggle hidden>Pause</button></div>
-      <ol class="loop-chapters" aria-label="The five steps for every stream">
-        <li data-family="find" data-current>Find</li>
-        <li data-family="cut">Cut</li>
-        <li data-family="pick">Pick</li>
-        <li data-family="post">Post</li>
-        <li data-family="learn">Learn</li>
-      </ol>
-    </div>
-    <figcaption>Animated illustration using licensed stock photos of a model, not a customer. The bars are sample shapes, not real results.</figcaption>
+  <figure class="loop-figure" id="watch">
+    <div class="story-stage ab-stage" data-scene="abtest" role="img" aria-label="Two versions of a clip from your stream, each with one difference: the hook, then the length, then the captions. The one people watched longer wins, what it shows is added to what works, and your channel line steps up."></div>
+    <div class="scene-controls"><button type="button" data-scene-toggle hidden>Pause</button></div>
   </figure>
 </section>
 <section id="why" class="home-band" aria-labelledby="why-title"><div class="wrap home-section why">
@@ -60,9 +47,8 @@
   <div class="section-heading"><h2 id="how-title">Five steps, every stream.</h2><p>The same loop every time, and you decide at every step that matters.</p></div>
   <div class="stations-layout">
     <figure class="stations-visual">
-      <div class="scene" data-scene="find" data-steps=".loop-step" role="img" aria-label="Animated illustration of the step described beside it, from finding moments in a stream to learning from what people watched."></div>
+      <div class="scene" data-scene="find" data-steps=".loop-step" role="img" aria-label="The step described beside it, shown with one stream."></div>
       <div class="scene-controls"><button type="button" data-scene-toggle hidden>Pause</button></div>
-      <figcaption>Animated illustration with stock photos. Not a screenshot, and not real results.</figcaption>
     </figure>
     <ol class="stations-steps">
       <li class="loop-step" data-stage="find" data-active>
@@ -88,32 +74,29 @@
         <h3>Kept clips go to TikTok, Reels and Shorts.</h3>
         <p>Download the files, or post straight to a connected account. A post that may have failed is checked, never blindly sent twice.</p>
         <p class="why-line">Why it matters: one stream becomes clips on every short video app you use.</p>
-        <p class="feature-note">Connected posting needs a paid plan, a supported account and live verification, so the first beta is export only.</p>
       </li>
       <li class="loop-step" data-stage="learn">
-        <p class="step">Learn</p>
-        <h3>It sees what people watched, and suggests one change.</h3>
-        <p>Each platform reports views and how much people watched. It suggests one change at a time, like opening on the big moment, and nothing changes until you approve it.</p>
-        <p class="why-line">Why it matters: the next batch is shaped by your audience, not by guesswork.</p>
-        <p class="feature-note">A platform that has not reported stays blank, never zero. Checking results and scheduling need the app open.</p>
+        <p class="step">Test</p>
+        <h3>It tests two versions, and keeps what works.</h3>
+        <p>Your best clips get a second version with one change, like a different hook or length. Post both. Once each has had the same time up and enough views, it shows which one people watched longer and suggests making that your style.</p>
+        <p class="why-line">Why it matters: your next clips are built on what your viewers actually watched.</p>
       </li>
     </ol>
   </div>
 </section>
 <section class="home-band"><div id="grow" class="wrap home-section grow" aria-labelledby="grow-title">
   <div class="grow-copy">
-    <h2 id="grow-title">Every stream teaches it something.</h2>
-    <p class="feature-lead">What it learns stays on your Mac, where you can read it and change it.</p>
+    <h2 id="grow-title">Stop guessing what works.</h2>
+    <p class="feature-lead">Post a clip, see a number, guess why. Growth Factory changes one thing at a time, so you can see what made the difference.</p>
     <dl class="feature-defs">
-      <dt>Your taste</dt><dd>Learned from what you keep and skip, once you have picked a few. It changes the order you see clips in, never the quality check.</dd>
-      <dt>What holds attention</dt><dd>Which openings and lengths people watch to the end, with the evidence beside it. A pattern, not proof.</dd>
-      <dt>One change at a time</dt><dd>Each suggestion changes one thing, the opening or the length, so you can tell what made the difference. You approve it first.</dd>
+      <dt>One change per test</dt><dd>Version B changes only the hook, the length, the framing or the captions. Everything else stays the same.</dd>
+      <dt>A fair call</dt><dd>Both versions get the same time up and enough views before it picks one. Until then, it tells you it is still waiting.</dd>
+      <dt>You approve the winner</dt><dd>What wins becomes a rule for your next clips once you say yes, written down where you can read or change it.</dd>
     </dl>
-    <p class="feature-note">Real and practice runs are kept apart, and demo data stays labelled. Nothing here guarantees growth.</p>
   </div>
   <figure class="grow-shot">
-    <a href="/assets/pearl-studio.jpg" aria-label="Open the full-size screenshot of the app"><img src="/assets/pearl-studio.jpg" width="1280" height="720" loading="lazy" alt="The Growth Factory desktop app on macOS, showing the Factory, Library, Results, Brand profile and Settings navigation beside a sample brand profile" /></a>
-    <figcaption><span class="screenshot-label">The real app, with sample brand data.</span> Not a customer result.</figcaption>
+    <a href="/assets/app-results.webp?v=pearl-streamer-7" aria-label="Open the full-size Results screenshot"><img src="/assets/app-results.webp?v=pearl-streamer-7" width="1440" height="744" loading="lazy" alt="The Growth Factory Results screen for a sample channel: what it learned, such as question hooks tend to beat your usual views, with how sure it is, above the latest posted clips" /></a>
+    <figcaption>Results: what your posts taught it, and how sure it is.</figcaption>
   </figure>
 </div></section>
 <section id="streamers" class="wrap home-section streamers" aria-labelledby="streamers-title">
@@ -124,7 +107,6 @@
     <li><figure><img src="/assets/streamers/grid-creator.webp?v=pearl-streamer-7" width="800" height="1000" loading="lazy" alt="A creator talking to camera in front of a ring light" /><figcaption>Creative</figcaption></figure></li>
     <li><figure><img src="/assets/streamers/grid-music.webp?v=pearl-streamer-7" width="800" height="1000" loading="lazy" alt="A musician streaming a performance from a home studio" /><figcaption>Music</figcaption></figure></li>
   </ul>
-  <p class="photo-note">Licensed stock photos from Pexels, of models. They are not customers and do not endorse Growth Factory.</p>
 </section>
 <section id="waitlist" class="wrap home-section waitlist-section section-rule" aria-labelledby="waitlist-title">
   <div class="waitlist-copy">
@@ -138,24 +120,24 @@
     <div class="field"><label for="wl-channel">Channel or handle <span class="optional">(optional)</span></label><input id="wl-channel" name="channel" type="text" autocomplete="off" placeholder="twitch.tv/yourname" /></div>
     <button class="btn btn-primary" type="submit">Join the waitlist</button>
     <p class="form-status" data-waitlist-status role="status" aria-live="polite"></p>
-    <p class="form-note">Submitting opens an email draft to <a href="mailto:jamesbodebiyi@gmail.com?subject=Growth%20Factory%20Mac%20streamer%20beta">jamesbodebiyi@gmail.com</a> with these answers filled in, and you send it yourself. This site stores nothing and sets no cookies. Joining the list is not a claim of instant access.</p>
+    <p class="form-note">Submitting opens an email to <a href="mailto:jamesbodebiyi@gmail.com?subject=Growth%20Factory%20Mac%20streamer%20beta">jamesbodebiyi@gmail.com</a> with your answers filled in.</p>
     <noscript><p class="form-note">This form needs JavaScript to prepare the draft. <a href="mailto:jamesbodebiyi@gmail.com?subject=Growth%20Factory%20Mac%20streamer%20beta">Email us directly</a> with your Mac model and what you stream.</p></noscript>
   </form>
 </section>
 <section class="wrap home-section faq-home section-rule" id="faq" aria-labelledby="faq-title">
-  <div class="section-heading"><h2 id="faq-title">Questions streamers ask first.</h2><p>Early access without the fine print surprises.</p></div>
+  <div class="section-heading"><h2 id="faq-title">Questions streamers ask first.</h2></div>
   <div class="learning-faq">
     <details><summary>Do I need editing experience?</summary><p>No. It hands you finished vertical clips with the hook and captions already on, and you decide which to keep. There is no timeline to learn.</p></details>
-    <details><summary>Will it grow my channel?</summary><p>Nothing can promise that. Each stream makes the next batch better informed by what you kept and what people watched, and it says how sure it is. Growth still depends on your stream.</p></details>
+    <details><summary>Will it grow my channel?</summary><p>It is built to find out what grows yours. Every test shows what your viewers watch longer, and your next clips use it. Making the stream is still up to you.</p></details>
     <details><summary>Can I paste a Twitch link?</summary><p>Not yet. Download your VOD, or use the recording your streaming software saves, and drop in the file.</p></details>
-    <details><summary>Does it clip my stream while I’m live?</summary><p>No. It starts from a saved recording after you finish. Live capture, chat highlight detection and cloud clipping in the background are not promised.</p></details>
+    <details><summary>Does it clip my stream while I’m live?</summary><p>No. It starts from a saved recording, after you finish streaming.</p></details>
     <details><summary>Does my footage leave my Mac?</summary><p>Not to be cut. Finding moments and cutting run on your Mac once the local models are installed. Cloud models are optional and use your own keys; if you choose them, the transcript and a few frames go to that provider.</p></details>
-    <details><summary>Are the people on this page real streamers?</summary><p>They are licensed stock photos of models, used to show the idea. The animations are illustrations, and the one screenshot is the real app with sample data.</p></details>
-    <details><summary>Is there a signed Mac installer?</summary><p>Not yet. Public downloads wait for a signed, verified release. Developer source setup is documented on the <a href="/download.html">setup page</a>.</p></details>
+    <details><summary>Do I have to connect my accounts?</summary><p>No. Download the clips, post them yourself and add the views by hand. Connecting an account lets it post and read results for you, on paid plans.</p></details>
+    <details><summary>Is there a signed Mac installer?</summary><p>Not yet. Downloads open once the signed release is ready. Developers can set it up from source on the <a href="/download.html">setup page</a>.</p></details>
   </div>
 </section>
 <section id="pricing" class="wrap home-section" aria-labelledby="pricing-title">
-  <div class="section-heading"><h2 id="pricing-title">Plans</h2><p>The Free plan is export first. These are the app’s plan limits, not a claim that live billing is launch verified. Beta testers start on Free.</p></div>
+  <div class="section-heading"><h2 id="pricing-title">Plans</h2><p>The Free plan is export first. Beta testers start on Free.</p></div>
   <!-- build:pricing-cards --><div class="pricing" data-pricing data-interval="month">
 <div class="pricing-toggle" role="group" aria-label="Billing period"><button type="button" data-interval="month" aria-pressed="true">Monthly</button><button type="button" data-interval="year" aria-pressed="false">Yearly <span>save about 20%</span></button></div>
 <div class="plan-cards">
