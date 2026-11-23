@@ -45,16 +45,17 @@ test('the hero is one line, one button and the real app', () => {
   assert.equal([...hero.matchAll(/class="btn /g)].length, 1, 'one button');
   assert.match(hero, /<a class="btn btn-primary btn-lg" href="#waitlist">Join the Mac beta<\/a>/);
   assert.match(hero, /<p class="hero-note">Free to start\. No card needed\.<\/p>/);
-  assert.match(hero, /<figure class="app-shot hero-shot">\s*<img src="\/assets\/app-factory\.webp\?v=pearl-streamer-8" width="1440" height="900" fetchpriority="high" alt="The Growth Factory app working through two streams in five stages, [^"]+" \/>/);
+  assert.match(hero, /<figure class="app-shot hero-shot">\s*<img src="\/assets\/app-factory\.webp\?v=pearl-streamer-9" width="1440" height="900" fetchpriority="high" alt="The Growth Factory app working through two streams in five stages, [^"]+" \/>/);
 });
 
-test('the page is simple: no animation, no stock photos, no disclaimers', () => {
-  assert.doesNotMatch(html, /<canvas|data-scene|data-topography|scenes\.js|topography\.js|<video|autoplay/, 'no animation');
-  assert.doesNotMatch(html, /assets\/streamers\//, 'no stock photos');
+test('the page stays simple: one background, two short animations, no video or disclaimers', () => {
+  assert.doesNotMatch(html, /<canvas|<video|autoplay|scenes\.js/, 'no video, and no canvas outside the background');
+  assert.equal([...html.matchAll(/data-scene="/g)].length, 2, 'two animations');
+  assert.equal([...html.matchAll(/data-topography /g)].length, 1, 'one background');
   assert.doesNotMatch(html, /Animated illustration|stock photos?|not a customer|sample shapes|do not endorse|nothing here (promises|guarantees)|Nothing can promise|fine print|not a claim/i, 'no disclaimer lines');
   assert.doesNotMatch(html, /window-chrome|window-dots|window-tag/, 'no fake browser or OS window');
-  assert.doesNotMatch(html, /alpine-story|ring-card|fake-btn|pearl-studio|Scout|Critic|Strategist|Editor\b/, 'plain words, not agent names');
-  const main = html.slice(html.indexOf('<main'), html.indexOf('</main>')).replace(/<script[\s\S]*?<\/script>/g, '').replace(/<[^>]+>/g, ' ');
+  assert.doesNotMatch(html, /alpine-story|ring-card|fake-btn|pearl-studio|Critic|Strategist|Editor\b/, 'plain words; only the scouts are named');
+  const main = html.slice(html.indexOf('<main'), html.indexOf('</main>')).replace(/<script[\s\S]*?<\/script>/g, '').replace(/<div class="scene [\s\S]*?<\/figure>/g, ' ').replace(/<[^>]+>/g, ' ');
   assert.ok(main.split(/\s+/).filter(Boolean).length < 650, 'a short page');
 });
 
@@ -76,30 +77,36 @@ test('the page runs hero, proof, three rows, waitlist, FAQ, then pricing at the 
   assert.deepEqual(rows, ['Drop in a stream. Get clips back.', 'Two versions. Keep the winner.', 'Nothing changes without you.']);
 });
 
-test('each row says what the app does, as the code has it, beside the screen that does it', async () => {
+test('each row says what the app does, as the code has it, beside the app doing it', async () => {
   const rows = [...section('id="how"', 'id="waitlist"').matchAll(/<article class="feature">([\s\S]*?)<\/article>/g)].map((m) => m[1]);
   assert.equal(rows.length, 3);
-  assert.match(rows[0], /listens to what you say and watches every scene/);
+  assert.match(rows[0], /Scouts take ten minutes each, reading the words and the frames, and score the moments worth cutting/);
   assert.match(rows[0], /vertical clips with a hook and captions/);
-  assert.match(rows[0], /runs on your Mac, and you keep or skip each one/);
+  assert.match(rows[0], /It runs on your Mac, and you keep or skip each one/);
   assert.match(rows[1], /a second version with one change, like a different hook or length/);
   assert.match(rows[1], /the same time up and enough views/);
-  assert.match(rows[1], /which one people watched longer/);
+  assert.match(rows[1], /the one people watched longer wins/);
   assert.match(rows[2], /Nothing posts until you keep it/);
   assert.match(rows[2], /only becomes a rule for your next clips once you approve it/);
-  const shots = rows.map((row) => row.match(/<figure class="app-shot"><img src="\/assets\/(app-[a-z]+)\.webp\?v=pearl-streamer-8" width="(\d+)" height="(\d+)" loading="lazy" alt="([^"]{30,})" \/><\/figure>/));
-  assert.deepEqual(shots.map((m) => m && m[1]), ['app-understand', 'app-results', 'app-learn']);
-  assert.match(shots[1][4], /for a sample channel/);
+  const scenes = rows.map((row) => row.match(/<figure class="app-shot scene-shot" role="img" aria-label="([^"]{80,})"><!-- build:scene (\w+) -->/));
+  assert.deepEqual(scenes.map((m) => m && m[2]), ['swarm', 'loop', null]);
+  for (const [i, label] of [[0, 'scout animation'], [1, 'loop animation']]) {
+    assert.ok(rows[i].includes(`<button type="button" data-scene-toggle data-label="${label}" hidden>Pause</button>`), label);
+  }
+  assert.match(rows[2], /<figure class="app-shot"><img src="\/assets\/app-learn\.webp\?v=pearl-streamer-9" width="882" height="454" loading="lazy" alt="[^"]{30,}" \/><\/figure>/);
 });
 
-test('every screenshot is a real WebP whose size matches its markup, and is credited', async () => {
-  const imgs = [...html.matchAll(/<img src="\/assets\/(app-[a-z]+\.webp)\?v=pearl-streamer-8" width="(\d+)" height="(\d+)"/g)];
-  assert.deepEqual(imgs.map((m) => m[1]), ['app-factory.webp', 'app-understand.webp', 'app-results.webp', 'app-learn.webp']);
+test('every image is a real WebP whose size matches its markup, and is credited', async () => {
+  const imgs = [...html.matchAll(/<img src="\/assets\/((?:streamers\/)?[a-z-]+\.webp)\?v=pearl-streamer-9"[^>]*?width="(\d+)" height="(\d+)"/g)];
+  const files = [...new Set(imgs.map((m) => m[1]))];
+  assert.deepEqual(files.filter((f) => f.startsWith('app-')), ['app-factory.webp', 'app-learn.webp']);
+  assert.equal(files.filter((f) => f.startsWith('streamers/')).length, 7);
   const assets = await readFile(new URL('ASSETS.md', root), 'utf8');
   for (const [, file, w, h] of imgs) {
     assert.deepEqual(webpSize(await readFile(new URL(`assets/${file}`, root))), [Number(w), Number(h)], `${file} size`);
-    assert.ok(assets.includes(`assets/${file}`), `ASSETS.md describes ${file}`);
+    assert.ok(assets.includes(file.startsWith('streamers/') ? file.slice(10) : `assets/${file}`), `ASSETS.md describes ${file}`);
   }
+  assert.match(assets, /Pexels licence/);
   const source = await readFile(new URL('../../docs/images/pearl-studio.png', import.meta.url));
   assert.deepEqual(await readFile(new URL('assets/pearl-studio.jpg', root)), source, 'the social card source is untouched');
 });
@@ -214,8 +221,8 @@ test('canonical links use this project and assets are versioned to avoid stale t
   const layout = await readFile(new URL('site/layout.mjs',root),'utf8');
   assert.match(layout,/https:\/\/clipfactory-landing.vercel.app/);
   assert.match(layout,/https:\/\/github.com\/jduhking\/clipfactory/);
-  assert.match(html,/styles.css\?v=pearl-streamer-8/);
-  assert.doesNotMatch(html,/pearl-streamer-7/);
+  assert.match(html,/styles.css\?v=pearl-streamer-9/);
+  assert.doesNotMatch(html,/pearl-streamer-[78]/);
   assert.doesNotMatch(html,/fonts.googleapis.com|growth-factory-landing.vercel.app/);
 });
 test('the waitlist form rejects a missing or malformed email without opening a draft', () => {
