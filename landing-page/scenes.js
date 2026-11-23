@@ -1,26 +1,21 @@
 /**
- * Animated illustrations of what Growth Factory does with a stream, told with one streamer's night.
+ * Animated illustrations of what Growth Factory does with a stream.
  *
- * The hero (`story`) is the whole loop in plain words, in the order the app works:
- *   Find   last night's stream goes in; the intro and dead air are skipped and the moments worth
- *          sharing are found (scouts.py CRITERIA: a hook, a funny turn, a payoff; no intros,
- *          sponsor reads or dead air).
- *   Cut    a vertical crop follows your face (faces.py, craft.py), then a hook title and
- *          word-by-word captions are added.
+ * The hero (`abtest`) is the idea in one loop: two versions of a clip that differ in one thing,
+ * the one people watched longer wins, what it shows is kept with your approval, and the channel
+ * line steps up. See growth_loop.py: one variable per experiment, equal windows, a minimum sample.
+ *
+ * The steps section uses `story`, one streamer's night told in photos, windowed to one stage per
+ * step (`find`, `cut`, `pick`, `post`, `learn`):
+ *   Find   the intro and dead air are skipped and the moments worth sharing are found (scouts.py).
+ *   Cut    a vertical crop follows your face (faces.py, craft.py), then a hook and captions.
  *   Pick   you keep or skip every clip. Nothing posts without you.
  *   Post   kept clips go to TikTok, Reels and Shorts.
- *   Learn  what each platform reports comes back, and one change is suggested for next time
- *          (growth_loop.py: one variable, hook or duration), which you approve before it is used.
- * Each stream adds what was learned to a shelf, so the loop visibly builds up over a run.
+ *   Learn  one change is suggested for next time, which you approve before it is used.
  *
- * The station scenes (`find`, `cut`, `pick`, `post`, `learn`) are the same drawing, windowed to
- * one stage, so every step on the page shows a piece of the same machine.
- *
- * Honesty rules the tests enforce: the photos are licensed stock photos of a model, not a customer,
- * and the results are sample shapes. No numbers are drawn. An unreported result is unavailable,
- * never zero, so it is an empty outline marked "No report yet". Nothing reaches a platform before
- * you keep it, and a suggestion changes nothing until you approve it. Platforms are named in text,
- * with no logos. The bars never grow from one stream to the next: nothing here promises growth.
+ * Rules the tests enforce: no numbers are drawn; an unreported result is "No report yet", never
+ * zero; nothing posts before you keep it; nothing changes before you approve it; platforms are
+ * named in text, with no logos.
  *
  * Restraint, same as the WebGL field: 30 fps at most, device pixel ratio capped at 1.5, asleep
  * offscreen or in a hidden tab, a meaningful still frame per scene under reduced motion, no canvas
@@ -644,7 +639,245 @@ function station(family, hold = 1.4) {
   return paint;
 }
 
-export const SCENES = { story, find: station(0), cut: station(1), pick: station(2), post: station(3), learn: station(4) };
+/* ---------------------------------------------------------------------------------------------
+ * The hero: clips A/B tested, round after round (growth_loop.py). Each round, two versions of one
+ * clip go out that differ in exactly one thing (SUPPORTED_RULES: the hook, the length, the
+ * captions). The one people watched longer wins, what it shows lands in "What works" with your
+ * approval, and the channel line steps up. The winner is not always B: round two keeps A.
+ * ------------------------------------------------------------------------------------------- */
+
+export const AB_ROUND = 6.5;
+export const AB_TAIL = 1.5;
+export const AB_ROUNDS = [
+  { photo: 'moment', clip: 'clip', testing: 'Testing the hook', hooks: ['Watch till the end', 'He did NOT see that coming'], words: ['NO', 'WAY'], winner: 1, lesson: 'Story hooks', fill: [0.4, 0.8] },
+  { photo: 'talk', clip: 'clipTalk', testing: 'Testing the length', hooks: ['Chat called it first', 'Chat called it first'], tags: ['Short', 'Long'], words: ['CHAT', 'KNEW'], winner: 0, lesson: 'Short clips', fill: [0.82, 0.48] },
+  { photo: 'play', clip: 'clipPlay', testing: 'Testing the captions', hooks: ['One more try', 'One more try'], captions: ['big', 'small'], words: ['ONE', 'MORE'], winner: 0, lesson: 'Big captions', fill: [0.86, 0.54] },
+];
+export const AB_PERIOD = AB_ROUND * AB_ROUNDS.length + AB_TAIL;
+const AB_DECIDE = 3.6;
+const AB_LAND = 4.6;
+const CHANNEL = [0.1, 0.34, 0.57, 0.88];
+
+/** Where the loop is: which round, how far into it, what has been learned, how far the line has risen. */
+export function abState(t) {
+  const local = cycle(t, AB_PERIOD) * AB_PERIOD;
+  const round = Math.min(AB_ROUNDS.length - 1, Math.floor(local / AB_ROUND));
+  const rt = local - round * AB_ROUND;
+  const learned = round + (rt >= AB_LAND ? 1 : 0);
+  const chart = round + easeInOutCubic(span(rt, 4.0, 4.9));
+  const reset = 1 - span(local, AB_PERIOD - 0.8, AB_PERIOD - 0.15);
+  return { round, rt, learned, chart, reset, decided: rt >= AB_DECIDE, winner: AB_ROUNDS[round].winner };
+}
+
+export function abLayout(w, h) {
+  const narrow = w < h * 1.2;
+  const fs = clamp(narrow ? w / 30 : w / 80, 9, 15);
+  const M = Math.max(10, Math.min(w, h) * 0.04);
+  const below = fs * 3.9;
+  if (!narrow) {
+    const pillH = fs * 3;
+    const frame = { x: M, w: w * 0.21 };
+    frame.h = (frame.w * 9) / 16;
+    const col = w * 0.045;
+    const pwRoom = (w - 2 * M - frame.w - 2 * col - w * 0.17) / 2.18;
+    const ph = Math.max(40, Math.min(h * 0.7, h - 2 * M - pillH - below, (pwRoom * 16) / 9));
+    const pw = (ph * 9) / 16;
+    const gap = pw * 0.18;
+    const top = Math.max(M, (h - (pillH + ph + below)) / 2);
+    const px = M + frame.w + col;
+    const py = top + pillH;
+    const phones = [{ x: px, y: py, w: pw, h: ph }, { x: px + pw + gap, y: py, w: pw, h: ph }];
+    frame.y = py + ph / 2 - frame.h / 2;
+    const sx = px + pw * 2 + gap + col;
+    const shelf = { x: sx, y: py, w: w - M - sx, row: fs * 2.3, horizontal: false };
+    const chartY = py + fs * 2.2 + 3 * shelf.row + fs * 0.6;
+    const chart = { x: sx, y: chartY, w: shelf.w, h: Math.max(fs * 4, py + ph - chartY) };
+    return { w, h, fs, M, narrow, frame, phones, shelf, chart, pill: { x: px + pw + gap / 2, y: top + pillH * 0.42 } };
+  }
+  const frame = { x: M, y: M, w: w * 0.42 };
+  frame.h = (frame.w * 9) / 16;
+  const chart = { x: M, w: w - 2 * M, h: h * 0.13 };
+  chart.y = h - M - chart.h;
+  const shelf = { x: M, y: chart.y - fs * 1.4, w: w - 2 * M, row: 0, horizontal: true };
+  const py = M + frame.h + fs * 1.3;
+  const ph = Math.max(40, shelf.y - fs * 1.1 - below - py);
+  const pw = Math.min((ph * 9) / 16, (w - 2 * M) / 2.3);
+  const gap = pw * 0.14;
+  const px = (w - (pw * 2 + gap)) / 2;
+  const phones = [{ x: px, y: py, w: pw, h: (pw * 16) / 9 }, { x: px + pw + gap, y: py, w: pw, h: (pw * 16) / 9 }];
+  const right = frame.x + frame.w;
+  return { w, h, fs, M, narrow, frame, phones, shelf, chart, pill: { x: right + (w - M - right) / 2, y: frame.y + frame.h / 2 } };
+}
+
+/** Split text into at most two lines that fit `width`. */
+function wrap(text, size, width, weight) {
+  const lines = [''];
+  for (const word of text.split(' ')) {
+    const next = lines[lines.length - 1] ? `${lines[lines.length - 1]} ${word}` : word;
+    if (textWidth(next, size, weight) <= width || !lines[lines.length - 1]) lines[lines.length - 1] = next;
+    else if (lines.length < 2) lines.push(word);
+    else lines[1] = `${lines[1]} ${word}`;
+  }
+  return lines;
+}
+
+function drawVersion(ctx, s, L, rect, round, side, t, alpha, dim) {
+  const R = AB_ROUNDS[round];
+  const lit = t >= AB_DECIDE && R.winner === side;
+  const r = drawPhoneShell(ctx, rect, alpha, lit);
+  photo(ctx, s, R.clip, rect.x, rect.y, rect.w, rect.h, { alpha, r, dim });
+  // The hook on top.
+  const hook = span(t, 0.9, 1.2);
+  if (hook > 0) {
+    const size = Math.max(7, rect.w * 0.07);
+    const bw = rect.w * 0.86;
+    const lines = wrap(R.hooks[side], size, bw - size, 700);
+    const bh = size * (1.2 + lines.length * 1.3);
+    const bx = rect.x + (rect.w - bw) / 2;
+    const by = rect.y + rect.h * 0.07;
+    path(ctx, { fill: INK, alpha: alpha * hook }, () => box(ctx, bx, by, bw, bh, size * 0.5));
+    lines.forEach((line, i) => label(ctx, line, rect.x + rect.w / 2, by + size * (1.25 + i * 1.3), { size, color: SURFACE, align: 'center', weight: 700, alpha: alpha * hook }));
+  }
+  // Captions, word by word. Round three tests big captions against small ones.
+  const big = (R.captions?.[side] ?? 'big') === 'big';
+  const size = big ? Math.max(8, rect.w * 0.13) : Math.max(6, rect.w * 0.07);
+  const weight = big ? 800 : 600;
+  const on = Math.floor(Math.max(0, t - 1.1) / 0.45) % R.words.length;
+  const widths = R.words.map((word) => textWidth(word, size, weight));
+  let x = rect.x + rect.w / 2 - (widths.reduce((a, b) => a + b, 0) + size * 0.3 * (widths.length - 1)) / 2;
+  const caps = span(t, 1.1, 1.3);
+  R.words.forEach((word, i) => {
+    label(ctx, word, x + widths[i] / 2, rect.y + rect.h * 0.7, { size, color: big && i === on ? ACCENT : INK, align: 'center', weight, alpha: alpha * caps, shadow: 6 });
+    x += widths[i] + size * 0.3;
+  });
+  // Round two tests the length, so each version says how long it is.
+  if (R.tags) pill(ctx, R.tags[side], rect.x + rect.w / 2, rect.y + rect.h * 0.85, { size: Math.max(7, L.fs * 0.8), align: 'center', alpha: alpha * caps });
+}
+
+function drawMeter(ctx, L, rect, round, side, t, alpha) {
+  const R = AB_ROUNDS[round];
+  const { fs } = L;
+  const y = rect.y + rect.h + fs * 1.7;
+  const won = t >= AB_DECIDE && R.winner === side;
+  path(ctx, { fill: SURFACE, stroke: won ? PINE : LINE, width: 1.2, alpha }, () => ctx.arc(rect.x + fs * 0.75, y, fs * 0.75, 0, Math.PI * 2));
+  label(ctx, side ? 'B' : 'A', rect.x + fs * 0.75, y, { size: fs * 0.85, color: won ? PINE : INK, align: 'center', weight: 700, alpha });
+  const bx = rect.x + fs * 2;
+  const bw = rect.w - fs * 2;
+  const bh = Math.max(4, fs * 0.45);
+  path(ctx, { fill: LINE, alpha }, () => box(ctx, bx, y - bh / 2, bw, bh, bh / 2));
+  const v = easeInOutCubic(span(t, 1.3, 3.4)) * R.fill[side];
+  if (v > 0.002) path(ctx, { fill: won ? PINE : VIOLET, alpha }, () => box(ctx, bx, y - bh / 2, bw * v, bh, bh / 2));
+}
+
+function drawShelfAB(ctx, L, learned, alpha, landing) {
+  const { shelf, fs } = L;
+  const size = shelf.horizontal ? fs * 0.8 : fs * 0.9;
+  label(ctx, 'What works', shelf.x, shelf.horizontal ? shelf.y : shelf.y + fs * 0.7, { size: fs * 0.85, color: MUTED, alpha });
+  const slots = [];
+  let x = shelf.x + textWidth('What works', fs * 0.85) + fs * 0.7;
+  AB_ROUNDS.forEach((R, i) => {
+    const w = textWidth(R.lesson, size, 600) + size * 1.5;
+    const slot = shelf.horizontal ? { x, y: shelf.y } : { x: shelf.x, y: shelf.y + fs * 2.2 + i * shelf.row };
+    slots.push(slot);
+    x += w + fs * 0.5;
+    if (i < learned && !(landing && i === learned - 1)) pill(ctx, R.lesson, slot.x, slot.y, { size, color: ACCENT, stroke: VIOLET, alpha });
+  });
+  return { slots, size };
+}
+
+function drawChannel(ctx, L, progress, alpha) {
+  const { chart, fs } = L;
+  if (alpha <= 0.002) return;
+  path(ctx, { fill: SURFACE, stroke: LINE, width: 1.2, alpha }, () => box(ctx, chart.x, chart.y, chart.w, chart.h, fs * 0.6));
+  label(ctx, 'Your channel', chart.x + fs * 0.8, chart.y + fs * 1.2, { size: fs * 0.8, color: MUTED, alpha });
+  const pad = fs * 0.9;
+  const x0 = chart.x + pad;
+  const x1 = chart.x + chart.w - pad;
+  const yTop = chart.y + fs * 2.2;
+  const y0 = chart.y + chart.h - pad;
+  const at = (u) => {
+    const seg = Math.min(2, Math.floor(u * 3));
+    const f = u * 3 - seg;
+    const v = mix(CHANNEL[seg], CHANNEL[seg + 1], f * f * (3 - 2 * f)) + 0.02 * Math.sin(u * 29);
+    return { x: mix(x0, x1, u), y: mix(y0, yTop, clamp01(v)) };
+  };
+  const end = clamp01(progress / 3);
+  const n = Math.max(2, Math.ceil(end * 48));
+  const pts = Array.from({ length: n + 1 }, (_, i) => at((end * i) / n));
+  path(ctx, { fill: VIOLET, alpha: alpha * 0.14 }, () => {
+    ctx.moveTo(pts[0].x, y0);
+    pts.forEach((p) => ctx.lineTo(p.x, p.y));
+    ctx.lineTo(pts[pts.length - 1].x, y0);
+    ctx.closePath();
+  });
+  path(ctx, { stroke: VIOLET_SOFT, width: 2, alpha }, () => { ctx.moveTo(pts[0].x, pts[0].y); pts.slice(1).forEach((p) => ctx.lineTo(p.x, p.y)); });
+  const tip = pts[pts.length - 1];
+  glow(ctx, tip.x, tip.y, fs * 1.4, alpha * 0.6);
+  path(ctx, { fill: ACCENT, alpha }, () => ctx.arc(tip.x, tip.y, Math.max(2.5, fs * 0.28), 0, Math.PI * 2));
+}
+
+function abtest(ctx, s) {
+  const L = abLayout(s.w, s.h);
+  const state = abState(s.t);
+  const { round, rt, learned, chart, reset } = state;
+  const R = AB_ROUNDS[round];
+  const { frame, phones, fs } = L;
+
+  // Your stream, where every round starts.
+  const fr = fs * 0.6;
+  photo(ctx, s, R.photo, frame.x, frame.y, frame.w, frame.h, { r: fr });
+  if (rt < 0.35 && round > 0) photo(ctx, s, AB_ROUNDS[round - 1].photo, frame.x, frame.y, frame.w, frame.h, { r: fr, alpha: 1 - span(rt, 0, 0.35) });
+  path(ctx, { stroke: LINE, width: 1.2 }, () => box(ctx, frame.x, frame.y, frame.w, frame.h, fr));
+  pill(ctx, 'Your stream', frame.x + fs * 0.6, frame.y + fs * 1.3, { size: fs * 0.75, alpha: 0.95 });
+  const srcH = frame.h * 0.9;
+  const src = { x: frame.x + frame.w * 0.6 - (srcH * 9) / 32, y: frame.y + frame.h * 0.05, w: (srcH * 9) / 16, h: srcH };
+  const pick = span(rt, 0, 0.15) * (1 - span(rt, 0.5, 0.8));
+  if (pick > 0) path(ctx, { stroke: ACCENT, width: 1.5, alpha: pick, dash: [4, 4] }, () => box(ctx, src.x, src.y, src.w, src.h, 4));
+
+  // What it is testing this round.
+  pill(ctx, R.testing, L.pill.x, L.pill.y, { size: fs * 0.9, color: INK, stroke: VIOLET, align: 'center', alpha: span(rt, 0.2, 0.6) * (1 - span(rt, 5.8, 6.3)) });
+
+  // Two versions fly out of the stream, race, and one wins.
+  const last = round === AB_ROUNDS.length - 1;
+  const out = last ? 1 - span(rt, AB_ROUND + AB_TAIL - 0.9, AB_ROUND + AB_TAIL - 0.3) : 1 - span(rt, 5.8, 6.4);
+  [0, 1].forEach((side) => {
+    const fly = easeInOutCubic(span(rt, 0.15 + side * 0.15, 0.85 + side * 0.15));
+    if (fly <= 0) return;
+    const rect = lerpRect(src, phones[side], fly);
+    const lost = state.decided && R.winner !== side ? span(rt, AB_DECIDE, AB_DECIDE + 0.4) : 0;
+    const alpha = Math.min(1, fly * 1.5) * out * (1 - lost * 0.55);
+    drawVersion(ctx, s, L, rect, round, side, rt, alpha, lost * 0.3);
+    if (fly >= 1) drawMeter(ctx, L, rect, round, side, rt, alpha);
+  });
+  const meters = span(rt, 1.0, 1.3) * out;
+  label(ctx, 'How long people watched', (phones[0].x + phones[1].x + phones[1].w) / 2, phones[0].y + phones[0].h + fs * 3.3, { size: fs * 0.8, color: MUTED, align: 'center', alpha: meters });
+  if (state.decided) {
+    const win = phones[R.winner];
+    pill(ctx, 'Winner', win.x + win.w / 2, win.y + win.h, { size: fs * 0.85, color: PINE, stroke: PINE, align: 'center', alpha: span(rt, AB_DECIDE, AB_DECIDE + 0.25) * out });
+  }
+
+  // What won goes on the shelf when you approve it, and the channel line steps up.
+  const landing = rt >= 4.0 && rt < AB_LAND;
+  const { slots, size } = drawShelfAB(ctx, L, landing ? learned + 1 : learned, reset, landing);
+  if (rt >= 4.0) {
+    const slot = slots[round];
+    const win = phones[R.winner];
+    const v = easeInOutCubic(span(rt, 4.0, AB_LAND));
+    const w = textWidth(R.lesson, size, 600) + size * 1.5;
+    const x = mix(win.x + win.w / 2 - w / 2, slot.x, v);
+    const y = mix(win.y + win.h * 0.5, slot.y, v);
+    if (rt < AB_LAND) pill(ctx, R.lesson, x, y, { size, color: ACCENT, stroke: VIOLET, alpha: reset });
+    const tapAt = span(rt, AB_LAND - 0.05, AB_LAND + 0.5);
+    tap(ctx, slot.x + w / 2, slot.y, size * 1.6, tapAt);
+    if (rt >= AB_LAND) tick(ctx, slot.x + w + size * 0.9, slot.y, size * 0.6, reset * (1 - span(rt, 5.6, 6.2)));
+  }
+  drawChannel(ctx, L, chart, reset);
+  return state;
+}
+abtest.contours = false;
+abtest.still = AB_ROUND * 2 + 5;
+
+export const SCENES = { abtest, story, find: station(0), cut: station(1), pick: station(2), post: station(3), learn: station(4) };
 
 /**
  * Mount one scene on a host element. Returns null when the scene name is unknown, so markup can

@@ -84,7 +84,7 @@ globalThis.IntersectionObserver = class { constructor(fn) { this.fn = fn; Inters
 globalThis.ResizeObserver = class { constructor(fn) { this.fn = fn; } observe() {} disconnect() {} };
 globalThis.performance = { now: () => 0 };
 
-const { mountScene, SCENES, PHOTOS, railReporter, followSteps, loadPhotos, storyState, storyLayout, STORY_BEATS, STORY_PERIOD, STORY_RUN, FAMILIES, LESSONS } = await import('../scenes.js');
+const { mountScene, SCENES, PHOTOS, railReporter, followSteps, loadPhotos, storyState, storyLayout, STORY_BEATS, STORY_PERIOD, STORY_RUN, FAMILIES, LESSONS, abState, abLayout, AB_ROUNDS, AB_ROUND, AB_PERIOD } = await import('../scenes.js');
 const { terrain, contourSegments, SPAN, STILL_AT } = await import('../terrain.js');
 
 /** Stand-ins for the loaded photos, at their real sizes. */
@@ -135,9 +135,9 @@ test('contour lines are deterministic, scaled like the shader, and every fifth o
 });
 
 test('every scene paints in the app palette, at every size, and never draws a number', () => {
-  assert.deepEqual(Object.keys(SCENES), ['story', 'find', 'cut', 'pick', 'post', 'learn']);
+  assert.deepEqual(Object.keys(SCENES), ['abtest', 'story', 'find', 'cut', 'pick', 'post', 'learn']);
   const allowed = new Set(['#ececec', '#a75de3', '#af85f3', '#d2acf7', '#2c2c2c', '#191919', '#8a8a8a', '#6fcf97', 'rgba(167,93,227,0)']);
-  const sizes = [[1320, 619], [480, 370], [350, 350], [900, 420]];
+  const sizes = [[1040, 585], [480, 370], [366, 488], [900, 420]];
   for (const kind of Object.keys(SCENES)) {
     for (const [w, h] of sizes) {
       for (const photos of [loaded, {}]) {
@@ -153,6 +153,54 @@ test('every scene paints in the app palette, at every size, and never draws a nu
           if (photos !== loaded) assert.ok(!ctx.calls.some(([name]) => name === 'drawImage'), 'nothing is drawn from a photo that has not loaded');
         }
       }
+    }
+  }
+});
+
+test('the hero is clips A/B tested: one difference a round, the one watched longer wins, and the line rises', () => {
+  assert.equal(AB_ROUNDS.length, 3);
+  for (const round of AB_ROUNDS) {
+    assert.match(round.testing, /^Testing the (hook|length|captions)$/);
+    const differences = [round.hooks[0] !== round.hooks[1], !!round.tags, !!round.captions].filter(Boolean).length;
+    assert.equal(differences, 1, `${round.testing} changes exactly one thing`);
+    assert.ok(round.fill[round.winner] > round.fill[1 - round.winner], 'the winner is the one watched longer');
+  }
+  assert.equal(new Set(AB_ROUNDS.map((round) => round.winner)).size, 2, 'B does not always win');
+  const racing = paint('abtest', 2).ctx.texts;
+  for (const word of ['Your stream', 'Testing the hook', 'A', 'B', 'How long people watched', 'What works', 'Your channel']) assert.ok(racing.includes(word), `the race shows ${word}`);
+  assert.ok(!racing.includes('Winner'), 'no winner before the views are in');
+  assert.ok(paint('abtest', 3.9).ctx.texts.includes('Winner'));
+  const shelf = (t) => AB_ROUNDS.map((round) => round.lesson).filter((lesson) => paint('abtest', t).ctx.texts.includes(lesson));
+  assert.deepEqual(shelf(2), []);
+  assert.deepEqual(shelf(AB_ROUND + 2), [AB_ROUNDS[0].lesson]);
+  assert.deepEqual(shelf(AB_ROUND * 2 + 5), AB_ROUNDS.map((round) => round.lesson));
+  assert.deepEqual(shelf(AB_PERIOD + 2), [], 'the loop starts over with nothing learned');
+  let last = -1;
+  for (let t = 0; t < AB_PERIOD - 0.01; t += 0.1) {
+    const { chart } = abState(t);
+    assert.ok(chart >= last - 1e-9, `the channel line never drops within a run (${t})`);
+    last = chart;
+  }
+  const still = paint('abtest', SCENES.abtest.still).ctx.texts;
+  for (const word of ['Winner', ...AB_ROUNDS.map((round) => round.lesson)]) assert.ok(still.includes(word), `the still shows ${word}`);
+  assert.equal(SCENES.abtest.contours, false);
+});
+
+test('the hero fits inside its stage at desktop and phone sizes', () => {
+  const inside = (r, w, h, what) => assert.ok(r.x >= 0 && r.y >= 0 && r.x + r.w <= w + 0.5 && r.y + r.h <= h + 0.5, `${what} fits at ${w}x${h}: ${JSON.stringify(r)}`);
+  for (const [w, h] of [[1040, 585], [860, 484], [700, 394], [366, 488], [350, 467], [320, 427]]) {
+    const L = abLayout(w, h);
+    inside(L.frame, w, h, 'stream');
+    inside(L.chart, w, h, 'channel line');
+    for (const p of L.phones) inside({ ...p, h: p.h + L.fs * 3.9 }, w, h, 'version and its meter');
+    assert.ok(L.phones[0].x + L.phones[0].w < L.phones[1].x, 'the versions sit side by side');
+    if (L.narrow) {
+      const size = L.fs * 0.8;
+      const chips = AB_ROUNDS.reduce((sum, round) => sum + round.lesson.length * size * 0.58 + size * 1.5 + L.fs * 0.5, 0);
+      assert.ok(L.shelf.x + 'What works'.length * L.fs * 0.85 * 0.53 + L.fs * 0.7 + chips + size * 1.5 <= w - L.M + 0.5, `what works fits in one row at ${w}`);
+      assert.ok(L.shelf.y > L.phones[0].y + L.phones[0].h + L.fs * 3.3, 'under the meters');
+    } else {
+      assert.ok(L.chart.x >= L.phones[1].x + L.phones[1].w, 'the channel line is beside the versions');
     }
   }
 });
@@ -212,8 +260,7 @@ test('pick, post, learn: you keep it before it posts, and approve before anythin
   for (const text of ['Try next', LESSONS[0], 'Approve', 'Nothing changes until you do']) assert.ok(card.includes(text), `the suggestion shows ${text}`);
   assert.ok(paint('story', 21).ctx.texts.includes('Nothing yet'), 'the shelf is empty until you approve');
   assert.ok(paint('story', 23).ctx.texts.includes(LESSONS[0]), 'then the lesson is on the shelf');
-  assert.match(sceneSource, /unreported result is unavailable,\s+\*?\s*never zero/i);
-  assert.match(sceneSource, /bars never grow/i);
+  assert.match(sceneSource, /unreported result is "No report yet", never\s+\*?\s*zero/i);
 });
 
 test('each stream adds what it learned, and the run starts fresh after the last one', () => {
