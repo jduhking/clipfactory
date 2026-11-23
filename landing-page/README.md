@@ -25,7 +25,7 @@ The public website: product pages, pricing, the user guide, architecture, legal 
 
 Edit the sources, then run `npm run generate` and commit the output. `npm run check` fails when the committed pages are stale. Keep `docs/architecture.md` (Mermaid) in step with `site/diagrams.mjs`.
 
-No page links an installer until a signed release exists. Illustrative photos and sample metrics are labeled; no animation is presented as a live agent run or measured growth.
+No page links an installer until a signed release exists. The homepage animations use sample content; none is presented as a live agent run or measured growth.
 
 ## Preview and checks
 
@@ -52,7 +52,7 @@ Asset provenance and font licenses: [ASSETS.md](ASSETS.md).
 
 The homepage source is `site/pages/index.html`; `build.mjs` generates `index.html`.
 It uses the Pearl Studio graphite/violet material from `frontend/src/growth/tokens.css`,
-self-hosted Instrument Sans, and screenshots of the real app. Shared styles
+self-hosted Instrument Sans, screenshots of the real app and two short animations of it. Shared styles
 in `styles.css`, `pages.css` and `site.css` keep the guide, pricing and setup pages dark too.
 
 Initial audience: small streamers on Apple Silicon Macs. The primary CTA opens an email
@@ -63,30 +63,59 @@ No streamer affiliation or endorsement is implied.
 
 Public site: https://clipfactory-landing.vercel.app, Vercel team `jduhkings-projects`,
 project `clipfactory-landing`. Canonical URLs and source links target this site and
-`jduhking/clipfactory`. CSS/JS and brand-image links carry `?v=pearl-streamer-8`; bump that version after
+`jduhking/clipfactory`. CSS/JS and brand-image links carry `?v=pearl-streamer-9`; bump that version after
 future visual changes to avoid stale browser asset caches. Generated HTML is committed.
 Vercel currently receives reviewed static file deployments, not automatic Git deployments.
 
-### One line, one button, the real app
+### One line, one button, the app at work
 
 The home page follows the shape of simple product sites like Streamable: a centred headline,
-one sentence, one button, then the product itself. It has no animation, stock photos or
-disclaimer lines.
+one sentence, one button, then the product itself. It has no video and no disclaimer lines.
 
 - **Hero.** "Clips that grow your channel." with one lead sentence, "Join the Mac beta", and
-  `assets/app-factory.webp`, the Factory screen working through two streams in five stages.
+  `assets/app-factory.webp`, the Factory screen working through two streams in five stages, over
+  the animated topography.
 - **Proof.** One sourced line from the Nysos 2026 study of 53,511 Twitch channels
   (https://nysos.io/en/etude-clipping-twitch).
-- **Three rows**, each one sentence beside the app screen that does it: Understand (finding and
-  cutting clips), Results (two versions, one winner), and Learn (rules wait for your approval).
+- **Three rows**, each a few sentences beside the app doing it: the scout animation (finding and
+  cutting clips), the loop animation (two versions, one winner, a rule you approve), and the Learn
+  screenshot (rules wait for your approval).
 - **Waitlist, FAQ, then pricing** at the bottom.
 
 The copy comes from the code: `clip_factory/growth_loop.py` (one variable per experiment from
 `SUPPORTED_RULES`: hook, length, framing, captions; equal measurement windows and a minimum view
 sample before a call), `learning.py` (nothing becomes a Style rule before you approve it), and
-`scouts.py`, `faces.py` and `craft.py` for finding and cutting. The agent names (Scout, Critic,
-Strategist) stay inside the app. `tests/site.test.mjs` checks each screenshot's markup size
-against its WebP header.
+`scouts.py`, `faces.py` and `craft.py` for finding and cutting. Only the scouts are named on the
+page; the other agent names (Critic, Strategist) stay inside the app. `tests/site.test.mjs`
+checks each image's markup size against its WebP header.
+
+### The two animations
+
+`motion.js` holds both scenes: their data, the finished-state HTML that `build.mjs` writes into
+`<!-- build:scene swarm -->` and `<!-- build:scene loop -->`, and a small player. They are HTML
+and CSS in the app's own surfaces, not recordings, so they read the same with JavaScript off.
+
+- **Swarm** follows `scouts.py`: a two-hour sample stream is split into twelve ten-minute
+  stretches, one scout per stretch proposes up to two moments scored 1 to 10, then the selector
+  keeps the best per stretch and the top three become vertical clips. Scouts share one model and
+  run one after another, so they light in turn, and the status line uses the app's own progress
+  messages ("Scout 4/12 reviewing minutes 30-40", "Selecting the best 3 of 14 scout candidates").
+- **Loop** follows `growth_loop.py`: three rounds, each changing one supported rule (hook,
+  length, captions). Bars fill only after both versions have had the same time and enough views;
+  the longer-watched version wins (not always the new one); the lesson waits for your OK before
+  it becomes a rule for your next clips.
+
+The player runs only while a scene is on screen and the tab is visible, has a Pause button, and
+shows the finished frame with reduced motion. `tests/motion.test.mjs` checks the scenes against
+the constants and messages in `scouts.py` and `growth_loop.py`, and the player against fakes.
+
+### Animated topography
+
+The hero background is the app's contour field: `topography.js` mounts `contours.js`, the
+website adapter of the WebGL shader in `frontend/src/growth/contours.ts`, behind the hero. It
+pauses offscreen and in hidden tabs, has a "Pause background" button, draws one still frame with
+reduced motion, hides with forced colours, and leaves the static `assets/topography.svg` in place
+without WebGL or JavaScript.
 
 ### Keeping the design out of generated-default territory
 
@@ -95,7 +124,7 @@ The home page is checked against the tells that make a page read as machine-made
 a heading, no arrows padding a control label, no middle-dot meta strings, no em dashes in copy, no
 re-drawn browser chrome, no decorative status dots, straight quotes replaced with typographic
 ones, every colour declared in the `:root` token block, and one elevation token on one surface
-(the screenshots). Hierarchy comes from size, weight and measure instead.
+(the app frames). Hierarchy comes from size, weight and measure instead.
 
 Hallmark's `sloplint.mjs` (from the design skills in the workspace) was used as an outside check.
 One warning is accepted deliberately: the plan button label comes from `plans.json`, which
