@@ -13,7 +13,7 @@ import { renderMarkdown, escapeHtml } from "./site/markdown.mjs";
 import { page, header, footer, stamp, canonical, SITE, REPO } from "./site/layout.mjs";
 import { pricingCards, pricingTable } from "./site/plans.mjs";
 import { renderDiagram } from "./site/diagrams.mjs";
-import { swarmMarkup, loopMarkup } from "./motion.js";
+import { swarmMarkup, loopMarkup, learnMarkup, heroMarkup } from "./motion.js";
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
 const GUIDE_SRC = join(ROOT, "..", "docs", "guide");
@@ -105,6 +105,8 @@ function fill(html, catalog) {
       : name === "diagram" ? renderDiagram(arg)
       : name === "scene" && arg === "swarm" ? swarmMarkup()
       : name === "scene" && arg === "loop" ? loopMarkup()
+      : name === "scene" && arg === "learn" ? learnMarkup()
+      : name === "scene" && arg === "hero" ? heroMarkup()
       : (() => { throw new Error(`Unknown build placeholder: ${name}`); })();
     return `<!-- build:${name}${arg ? ` ${arg}` : ""} -->${content}<!-- /build:${name} -->`;
   });
