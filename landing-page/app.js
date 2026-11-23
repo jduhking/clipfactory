@@ -51,7 +51,6 @@ document.querySelectorAll('[data-waitlist]').forEach((form) => {
       `Email: ${address}`,
       `Mac: ${value('mac') || 'not given'}`,
       `Streams: ${value('stream') || 'not given'}`,
-      `Channel: ${value('channel') || 'not given'}`,
       '',
       'Sent from the Growth Factory waitlist form.',
     ];

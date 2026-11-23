@@ -7,7 +7,6 @@ const root = new URL('../', import.meta.url);
 const html = await readFile(new URL('index.html', root), 'utf8');
 const css = await readFile(new URL('styles.css', root), 'utf8');
 const js = await readFile(new URL('app.js', root), 'utf8');
-const scenes = await readFile(new URL('scenes.js', root), 'utf8');
 
 test('the website uses the app graphite and violet tokens, not its old orange identity', async () => {
   const source = await readFile(new URL('../../frontend/src/growth/tokens.css', import.meta.url), 'utf8');
@@ -25,26 +24,38 @@ test('the website uses the app graphite and violet tokens, not its old orange id
   }
 });
 
-test('the hero is one idea: clips A/B tested until they grow your channel', async () => {
-  const hero = html.slice(html.indexOf('<section class="streamer-hero'), html.indexOf('<section id="why"'));
-  assert.match(hero, /<h1 id="hero-title">Find out which clips grow your channel\.<\/h1>/);
-  assert.match(hero, /tests two versions of your best ones\. The one people watch longer shapes every clip after it\./);
-  assert.match(hero, /class="story-stage ab-stage" data-scene="abtest" role="img" aria-label="Two versions of a clip from your stream, each with one difference: .{60,}"/);
-  assert.match(hero, /data-scene-toggle hidden>Pause<\/button>/);
+// Image sizes read from the WebP header (VP8, VP8L or VP8X), so the markup can never disagree with the file.
+function webpSize(buf) {
+  assert.equal(buf.subarray(0, 4).toString(), 'RIFF');
+  assert.equal(buf.subarray(8, 12).toString(), 'WEBP');
+  const kind = buf.subarray(12, 16).toString();
+  if (kind === 'VP8 ') return [buf.readUInt16LE(26) & 0x3fff, buf.readUInt16LE(28) & 0x3fff];
+  if (kind === 'VP8L') { const b = buf.readUInt32LE(21); return [(b & 0x3fff) + 1, ((b >> 14) & 0x3fff) + 1]; }
+  if (kind === 'VP8X') return [buf.readUIntLE(24, 3) + 1, buf.readUIntLE(27, 3) + 1];
+  throw new Error(`unknown WebP chunk ${kind}`);
+}
+const section = (from, to) => html.slice(html.indexOf(from), html.indexOf(to));
+
+test('the hero is one line, one button and the real app', () => {
+  const hero = section('<section class="hero"', '<section class="proof"');
+  assert.match(hero, /<h1 id="hero-title">Clips that grow your channel\.<\/h1>/);
   const lead = hero.match(/<p class="hero-lead">([^<]+)<\/p>/)[1];
-  assert.ok(lead.split(/\s+/).length <= 30, 'a short lead');
-  for (const name of ['stream-talk','stream-play','stream-moment','clip-moment','clip-talk','clip-play']) {
-    assert.ok(scenes.includes(`/assets/streamers/${name}.webp`), `the scenes use ${name}`);
-    await readFile(new URL(`assets/streamers/${name}.webp`, root));
-  }
-  assert.doesNotMatch(html, /window-chrome|window-dots|window-tag|data-scene-anchor/, 'no fake browser or OS window');
-  assert.doesNotMatch(html, /alpine-story|ring-card|fake-btn|Scout|Critic|Strategist|Editor\b/, 'plain words, not agent names');
+  assert.equal(lead, 'Drop in a stream. Growth Factory cuts the best moments into vertical clips, tests two versions, and keeps what people watch.');
+  assert.ok(lead.split(/\s+/).length <= 22, 'a short lead');
+  assert.equal([...hero.matchAll(/class="btn /g)].length, 1, 'one button');
+  assert.match(hero, /<a class="btn btn-primary btn-lg" href="#waitlist">Join the Mac beta<\/a>/);
+  assert.match(hero, /<p class="hero-note">Free to start\. No card needed\.<\/p>/);
+  assert.match(hero, /<figure class="app-shot hero-shot">\s*<img src="\/assets\/app-factory\.webp\?v=pearl-streamer-8" width="1440" height="900" fetchpriority="high" alt="The Growth Factory app working through two streams in five stages, [^"]+" \/>/);
 });
 
-test('the hero is not a slideshow and the page does not hedge itself', () => {
-  const hero = html.slice(html.indexOf('<section class="streamer-hero'), html.indexOf('<section id="why"'));
-  assert.doesNotMatch(hero, /data-rail|loop-chapters|data-loop-beat|<figcaption/, 'no chapter rail or caption under the hero');
+test('the page is simple: no animation, no stock photos, no disclaimers', () => {
+  assert.doesNotMatch(html, /<canvas|data-scene|data-topography|scenes\.js|topography\.js|<video|autoplay/, 'no animation');
+  assert.doesNotMatch(html, /assets\/streamers\//, 'no stock photos');
   assert.doesNotMatch(html, /Animated illustration|stock photos?|not a customer|sample shapes|do not endorse|nothing here (promises|guarantees)|Nothing can promise|fine print|not a claim/i, 'no disclaimer lines');
+  assert.doesNotMatch(html, /window-chrome|window-dots|window-tag/, 'no fake browser or OS window');
+  assert.doesNotMatch(html, /alpine-story|ring-card|fake-btn|pearl-studio|Scout|Critic|Strategist|Editor\b/, 'plain words, not agent names');
+  const main = html.slice(html.indexOf('<main'), html.indexOf('</main>')).replace(/<script[\s\S]*?<\/script>/g, '').replace(/<[^>]+>/g, ' ');
+  assert.ok(main.split(/\s+/).filter(Boolean).length < 650, 'a short page');
 });
 
 test('the primary calls to action lead to the waitlist, with no invented installer or access guarantee', () => {
@@ -56,79 +67,52 @@ test('the primary calls to action lead to the waitlist, with no invented install
   assert.doesNotMatch(html, /Suburbbaby|Streamer University|trusted by/i);
 });
 
-test('the page runs hero, problem, steps, learning, streamers, waitlist, FAQ, then pricing at the bottom', () => {
-  const ids = ['why','how','grow','streamers','waitlist','faq','pricing'];
-  const order = ids.map((id) => html.indexOf(`id="${id}"`));
-  for (const [i,at] of order.entries()) assert.ok(at > 0, `missing #${ids[i]}`);
-  assert.deepEqual([...order].sort((a,b) => a-b), order);
-  assert.ok(html.indexOf('streamer-hero') < order[0], 'hero leads the page');
-  assert.match(html, /<a class="text-link" href="#how">See how it works<\/a>/);
-  const markers = [...html.matchAll(/<p class="step">([A-Za-z]+)<\/p>/g)].map((m) => m[1]);
-  assert.deepEqual(markers, ['Find','Cut','Pick','Post','Test'], 'only the step sequence is marked');
+test('the page runs hero, proof, three rows, waitlist, FAQ, then pricing at the bottom', () => {
+  const marks = ['<section class="hero"', '<section class="proof"', 'id="how"', 'id="waitlist"', 'id="faq"', 'id="pricing"'];
+  const order = marks.map((m) => html.indexOf(m));
+  for (const [i, at] of order.entries()) assert.ok(at > 0, `missing ${marks[i]}`);
+  assert.deepEqual([...order].sort((a, b) => a - b), order);
+  const rows = [...section('id="how"', 'id="waitlist"').matchAll(/<article class="feature">[\s\S]*?<h2>([^<]+)<\/h2>/g)].map((m) => m[1]);
+  assert.deepEqual(rows, ['Drop in a stream. Get clips back.', 'Two versions. Keep the winner.', 'Nothing changes without you.']);
 });
 
-test('the steps scroll one illustration through every stage', () => {
-  const kinds = [...html.matchAll(/data-scene="([a-z]+)"/g)].map((m) => m[1]);
-  assert.deepEqual(kinds, ['abtest','find']);
-  assert.match(html, /data-scene="find" data-steps="\.loop-step" role="img" aria-label="The step described beside it, shown with one stream\."/);
-  const stages = [...html.matchAll(/<li class="loop-step" data-stage="([a-z]+)"/g)].map((m) => m[1]);
-  assert.deepEqual(stages, ['find','cut','pick','post','learn']);
-  assert.match(scenes, /export const SCENES = \{ abtest, story, find: station\(0\), cut: station\(1\), pick: station\(2\), post: station\(3\), learn: station\(4\) \};/);
-  assert.equal([...html.matchAll(/data-scene-toggle/g)].length, 2, 'each animation can be paused');
-  assert.ok(html.includes('<script type="module" src="/scenes.js?v=pearl-streamer-7">'));
+test('each row says what the app does, as the code has it, beside the screen that does it', async () => {
+  const rows = [...section('id="how"', 'id="waitlist"').matchAll(/<article class="feature">([\s\S]*?)<\/article>/g)].map((m) => m[1]);
+  assert.equal(rows.length, 3);
+  assert.match(rows[0], /listens to what you say and watches every scene/);
+  assert.match(rows[0], /vertical clips with a hook and captions/);
+  assert.match(rows[0], /runs on your Mac, and you keep or skip each one/);
+  assert.match(rows[1], /a second version with one change, like a different hook or length/);
+  assert.match(rows[1], /the same time up and enough views/);
+  assert.match(rows[1], /which one people watched longer/);
+  assert.match(rows[2], /Nothing posts until you keep it/);
+  assert.match(rows[2], /only becomes a rule for your next clips once you approve it/);
+  const shots = rows.map((row) => row.match(/<figure class="app-shot"><img src="\/assets\/(app-[a-z]+)\.webp\?v=pearl-streamer-8" width="(\d+)" height="(\d+)" loading="lazy" alt="([^"]{30,})" \/><\/figure>/));
+  assert.deepEqual(shots.map((m) => m && m[1]), ['app-understand', 'app-results', 'app-learn']);
+  assert.match(shots[1][4], /for a sample channel/);
 });
 
-test('each step says what happens and why it matters, as the code has it', () => {
-  const step = (stage) => { const at = html.indexOf(`data-stage="${stage}"`); return html.slice(at, html.indexOf('</li>', at)); };
-  for (const stage of ['find','cut','pick','post','learn']) assert.match(step(stage), /<p class="why-line">Why it matters: /, `${stage} says why it matters`);
-  assert.match(step('find'), /skips the intro, sponsor reads and dead air/);
-  assert.match(step('find'), /a hook, one complete idea and a payoff/);
-  assert.match(step('find'), /runs on your Mac/);
-  assert.match(step('cut'), /The crop follows your face/);
-  assert.match(step('cut'), /captions land word by word, kept clear of your face/);
-  assert.match(step('cut'), /20 to 60 seconds/);
-  assert.match(step('pick'), /not what will do well/);
-  assert.match(step('pick'), /nothing posts without you/);
-  assert.match(step('post'), /never blindly sent twice/);
-  assert.match(step('learn'), /<p class="step">Test<\/p>/);
-  assert.match(step('learn'), /a second version with one change, like a different hook or length/);
-  assert.match(step('learn'), /the same time up and enough views/);
-  assert.match(step('learn'), /suggests making that your style/);
-});
-
-test('the what-works section is for streamers testing what works, with the real Results screen', async () => {
+test('every screenshot is a real WebP whose size matches its markup, and is credited', async () => {
+  const imgs = [...html.matchAll(/<img src="\/assets\/(app-[a-z]+\.webp)\?v=pearl-streamer-8" width="(\d+)" height="(\d+)"/g)];
+  assert.deepEqual(imgs.map((m) => m[1]), ['app-factory.webp', 'app-understand.webp', 'app-results.webp', 'app-learn.webp']);
+  const assets = await readFile(new URL('ASSETS.md', root), 'utf8');
+  for (const [, file, w, h] of imgs) {
+    assert.deepEqual(webpSize(await readFile(new URL(`assets/${file}`, root))), [Number(w), Number(h)], `${file} size`);
+    assert.ok(assets.includes(`assets/${file}`), `ASSETS.md describes ${file}`);
+  }
   const source = await readFile(new URL('../../docs/images/pearl-studio.png', import.meta.url));
   assert.deepEqual(await readFile(new URL('assets/pearl-studio.jpg', root)), source, 'the social card source is untouched');
-  const grow = html.slice(html.indexOf('id="grow"'), html.indexOf('<section id="streamers"'));
-  assert.match(grow, /<h2 id="grow-title">Stop guessing what works\.<\/h2>/);
-  assert.match(grow, /<img src="\/assets\/app-results.webp\?v=pearl-streamer-7" width="1440" height="744" loading="lazy" alt="The Growth Factory Results screen for a sample channel: /);
-  const shot = await readFile(new URL('assets/app-results.webp', root));
-  assert.equal(shot.subarray(8, 12).toString(), 'WEBP');
-  assert.doesNotMatch(html, /pearl-studio/, 'not the brand-profile screenshot');
-  for (const term of ['One change per test','A fair call','You approve the winner']) assert.ok(grow.includes(`<dt>${term}</dt>`), term);
-  assert.match(grow, /the hook, the length, the framing or the captions/);
-  assert.match(grow, /same time up and enough views before it picks one/);
-  assert.match(grow, /once you say yes/);
-  const assets = await readFile(new URL('ASSETS.md', root), 'utf8');
-  assert.match(assets, /assets\/app-results\.webp/);
 });
 
-test('the problem is sourced, and every streamer photo is licensed and credited', async () => {
-  const why = html.slice(html.indexOf('id="why"'), html.indexOf('<section id="how"'));
-  assert.match(why, /53,511 Twitch channels/);
-  assert.match(why, /href="https:\/\/nysos.io\/en\/etude-clipping-twitch"/);
-  const grid = html.slice(html.indexOf('id="streamers"'), html.indexOf('<section id="waitlist"'));
-  const photos = [...grid.matchAll(/<img src="\/assets\/streamers\/(grid-[a-z]+)\.webp\?v=pearl-streamer-7" width="800" height="1000" loading="lazy" alt="([^"]{20,})"/g)];
-  assert.deepEqual(photos.map((m) => m[1]), ['grid-gaming','grid-chatting','grid-creator','grid-music']);
-  for (const [, name] of photos) await readFile(new URL(`assets/streamers/${name}.webp`, root));
-  assert.match(grid, /works best when you talk/);
-  const assets = await readFile(new URL('ASSETS.md', root), 'utf8');
-  assert.match(assets, /pexels.com\/license/);
-  for (const id of ['7047347','7047530','7047002','7047345','7047236','9072273','5489389','8369604','7120841']) assert.ok(assets.includes(id), `ASSETS.md credits Pexels ${id}`);
+test('the problem is sourced', () => {
+  const proof = section('<section class="proof"', 'id="how"');
+  assert.match(proof, /More than a third of Twitch channels posted no clips in the past month\./);
+  assert.match(proof, /href="https:\/\/nysos.io\/en\/etude-clipping-twitch"/);
+  assert.match(proof, /53,511 Twitch channels/);
 });
 
 test('the page keeps its clipping focus and discloses unverified services', () => {
-  for (const wording of ['a saved recording','Can I paste a Twitch link?','Do I need editing experience?','not what will do well','Do I have to connect my accounts?','add the views by hand','on paid plans','No installer to download yet','The Free plan is export first']) assert.ok(html.includes(wording), wording);
+  for (const wording of ['a saved recording','Can I paste a Twitch link?','Do I need editing experience?','Do I have to connect my accounts?','add the views by hand','on paid plans','No installer to download yet','The Free plan is export first']) assert.ok(html.includes(wording), wording);
   assert.doesNotMatch(html, /guaranteed|viral|10x|grow your audience by/i);
 });
 
@@ -140,7 +124,7 @@ test('the page avoids the generated-design tells it was built to avoid', () => {
   assert.match(css, /:focus-visible/);
   assert.match(css, /:active/);
   assert.match(css, /text-wrap: balance/);
-  // One raised surface on the page: the app screenshot.
+  // One raised surface on the page: the app screenshots.
   const shadows = [...css.matchAll(/box-shadow: ([^;]+);/g)].map((m) => m[1].trim());
   assert.deepEqual(shadows, ['var(--lift)'], 'elevation is one token on one element');
   // Every colour lives in the token block.
@@ -161,9 +145,10 @@ test('the page avoids the generated-design tells it was built to avoid', () => {
 test('the waitlist form collects beta-screening answers and states where they go', () => {
   const form = html.slice(html.indexOf('<form class="waitlist-form"'), html.indexOf('</form>'));
   assert.match(form, /novalidate/);
-  for (const name of ['email','mac','stream','channel']) assert.ok(form.includes(`name="${name}"`), name);
+  for (const name of ['email','mac','stream']) assert.ok(form.includes(`name="${name}"`), name);
+  assert.doesNotMatch(form, /name="channel"/, 'three questions, no more');
   assert.match(form, /id="wl-email"[^>]*type="email"[^>]*required/);
-  for (const id of ['wl-email','wl-mac','wl-stream','wl-channel']) assert.ok(form.includes(`for="${id}"`), `label for ${id}`);
+  for (const id of ['wl-email','wl-mac','wl-stream']) assert.ok(form.includes(`for="${id}"`), `label for ${id}`);
   assert.match(form, /data-waitlist-status role="status" aria-live="polite"/);
   assert.match(form, /Submitting opens an email to <a href="mailto:jamesbodebiyi@gmail.com[^"]*">jamesbodebiyi@gmail.com<\/a> with your answers filled in\./);
   assert.match(form, /<noscript>/);
@@ -185,7 +170,7 @@ function element(attributes = {}) {
 }
 function waitlistForm() {
   const status = element(); status.textContent = ''; status.className = '';
-  const fields = { email: element(), mac: element(), stream: element(), channel: element() };
+  const fields = { email: element(), mac: element(), stream: element() };
   for (const input of Object.values(fields)) input.value = '';
   const form = element();
   form.querySelector = (selector) => selector === '[data-waitlist-status]' ? status
@@ -229,7 +214,8 @@ test('canonical links use this project and assets are versioned to avoid stale t
   const layout = await readFile(new URL('site/layout.mjs',root),'utf8');
   assert.match(layout,/https:\/\/clipfactory-landing.vercel.app/);
   assert.match(layout,/https:\/\/github.com\/jduhking\/clipfactory/);
-  assert.match(html,/styles.css\?v=pearl-streamer-7/);
+  assert.match(html,/styles.css\?v=pearl-streamer-8/);
+  assert.doesNotMatch(html,/pearl-streamer-7/);
   assert.doesNotMatch(html,/fonts.googleapis.com|growth-factory-landing.vercel.app/);
 });
 test('the waitlist form rejects a missing or malformed email without opening a draft', () => {
@@ -259,7 +245,7 @@ test('a valid entry prepares a prefilled draft with the answers given', () => {
   assert.match(body, /Email: streamer@example\.com/);
   assert.match(body, /Mac: MacBook Air \(Apple Silicon\)/);
   assert.match(body, /Streams: horror games/);
-  assert.match(body, /Channel: not given/);
+  assert.doesNotMatch(body, /Channel/);
   assert.match(h.waitlist.status.textContent, /Send it from your mail app/);
   assert.match(h.waitlist.status.className, /is-ready/);
   assert.equal(h.waitlist.fields.email.attributes['aria-invalid'], 'false');
