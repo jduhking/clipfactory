@@ -63,23 +63,24 @@ No streamer affiliation or endorsement is implied.
 
 Public site: https://clipfactory-landing.vercel.app, Vercel team `jduhkings-projects`,
 project `clipfactory-landing`. Canonical URLs and source links target this site and
-`jduhking/clipfactory`. CSS/JS and brand-image links carry `?v=pearl-streamer-9`; bump that version after
+`jduhking/clipfactory`. CSS/JS and brand-image links carry `?v=pearl-streamer-10`; bump that version after
 future visual changes to avoid stale browser asset caches. Generated HTML is committed.
 Vercel currently receives reviewed static file deployments, not automatic Git deployments.
 
-### One line, one button, the app at work
+### One line, one button, a stream turning into clips
 
 The home page follows the shape of simple product sites like Streamable: a centred headline,
 one sentence, one button, then the product itself. It has no video and no disclaimer lines.
 
 - **Hero.** "Clips that grow your channel." with one lead sentence, "Join the Mac beta", and
-  `assets/app-factory.webp`, the Factory screen working through two streams in five stages, over
-  the animated topography.
+  one picture over the animated topography: a two-hour stream with its three best moments marked,
+  and the three vertical clips cut from them, with hooks, captions and the platform each is for.
+  It is HTML and CSS from `motion.js` (`<!-- build:scene hero -->`), not a screenshot.
 - **Proof.** One sourced line from the Nysos 2026 study of 53,511 Twitch channels
   (https://nysos.io/en/etude-clipping-twitch).
-- **Three rows**, each a few sentences beside the app doing it: the scout animation (finding and
-  cutting clips), the loop animation (two versions, one winner, a rule you approve), and the Learn
-  screenshot (rules wait for your approval).
+- **Three rows**, each a sentence or two beside an animation: the scouts (finding and cutting
+  clips), the A/B loop (two versions on Instagram, the one with more views wins), and the playbook
+  (approved rules stacking up week by week as the channel grows).
 - **Waitlist, FAQ, then pricing** at the bottom.
 
 The copy comes from the code: `clip_factory/growth_loop.py` (one variable per experiment from
@@ -89,10 +90,10 @@ sample before a call), `learning.py` (nothing becomes a Style rule before you ap
 page; the other agent names (Critic, Strategist) stay inside the app. `tests/site.test.mjs`
 checks each image's markup size against its WebP header.
 
-### The two animations
+### The animations
 
-`motion.js` holds both scenes: their data, the finished-state HTML that `build.mjs` writes into
-`<!-- build:scene swarm -->` and `<!-- build:scene loop -->`, and a small player. They are HTML
+`motion.js` holds the hero picture and the three scenes: their data, the finished-state HTML that
+`build.mjs` writes into `<!-- build:scene hero|swarm|loop|learn -->`, and a small player. They are HTML
 and CSS in the app's own surfaces, not recordings, so they read the same with JavaScript off.
 
 - **Swarm** follows `scouts.py`: a two-hour sample stream is split into twelve ten-minute
@@ -101,13 +102,19 @@ and CSS in the app's own surfaces, not recordings, so they read the same with Ja
   run one after another, so they light in turn, and the status line uses the app's own progress
   messages ("Scout 4/12 reviewing minutes 30-40", "Selecting the best 3 of 14 scout candidates").
 - **Loop** follows `growth_loop.py`: three rounds, each changing one supported rule (hook,
-  length, captions). Bars fill only after both versions have had the same time and enough views;
-  the longer-watched version wins (not always the new one); the lesson waits for your OK before
-  it becomes a rule for your next clips.
+  length, captions). Both versions go up on Instagram, the platform whose insights include reach
+  (`REPORTED_METRICS` in `posting_server.py`). Views, reach, likes and shares count up over the
+  same seven days; only then, with at least 100 views on both, does the version with more views
+  win (`compare_observations` defaults to views), and it is not always the new one. The lesson
+  waits for your OK before it becomes a rule for your next clips.
+- **Playbook** ("It learns what works for your channel.") shows eight weeks of a sample channel:
+  average views per new clip and how many suggested clips you keep both climb as approved rules
+  stack up, Style v2 to v5. The first three rules are the loop's lessons.
 
 The player runs only while a scene is on screen and the tab is visible, has a Pause button, and
 shows the finished frame with reduced motion. `tests/motion.test.mjs` checks the scenes against
-the constants and messages in `scouts.py` and `growth_loop.py`, and the player against fakes.
+the constants and messages in `scouts.py`, `growth_loop.py` and `posting_server.py`, and the
+player against fakes.
 
 ### Animated topography
 

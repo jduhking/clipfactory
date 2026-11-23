@@ -1,11 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import { SWARM, stretchCount, candidateCount, swarmPicks, swarmSteps, swarmMarkup, LOOP, loopSteps, loopMarkup, mountScene } from '../motion.js';
+import { SWARM, stretchCount, candidateCount, swarmPicks, swarmSteps, swarmMarkup, heroMarks, heroMarkup, LOOP, loopSteps, loopMarkup, LEARN, learnSteps, learnMarkup, fmt, mountScene } from '../motion.js';
 
 const root = new URL('../', import.meta.url);
 const scouts = await readFile(new URL('../../clip_factory/scouts.py', import.meta.url), 'utf8');
 const growth = await readFile(new URL('../../clip_factory/growth_loop.py', import.meta.url), 'utf8');
+const posting = await readFile(new URL('../../clip_factory/posting_server.py', import.meta.url), 'utf8');
+const supported = growth.match(/SUPPORTED_RULES = \{([^}]+)\}/)[1].match(/"([a-z_]+)"/g).map((x) => x.slice(1, -1));
 const html = await readFile(new URL('index.html', root), 'utf8');
 const seconds = (t) => t.split(':').map(Number).reduce((sum, part) => sum * 60 + part, 0);
 
@@ -32,7 +34,9 @@ test('the swarm shows the app progress messages, one scout at a time', () => {
   assert.deepEqual(scoutSteps.map((s) => s.active), [...Array(12).keys()], 'one scout lit at a time, in order');
   assert.ok(steps.some((s) => s.status === `Selecting the best 3 of ${candidateCount()} scout candidates`));
   assert.equal(candidateCount(), 14);
-  assert.ok(steps.every((s) => s.ms >= 400 && s.ms <= 4000));
+  const ready = steps.findIndex((s) => s.done);
+  assert.ok(steps.slice(0, ready).reduce((t, s) => t + s.ms, 0) <= 6000, 'clips are ready within six seconds');
+  assert.ok(steps.every((s) => s.ms >= 150 && s.ms <= 4000));
   const firstPick = steps.findIndex((s) => s.picked), firstCut = steps.findIndex((s) => s.cut);
   assert.ok(firstPick > steps.indexOf(scoutSteps.at(-1)) && firstCut > firstPick, 'pick after scouting, cut after picking');
 });
@@ -51,24 +55,36 @@ test('the kept clips are the best idea per stretch, top three, inside their stre
   }
 });
 
-test('the loop follows growth_loop.py: one supported change per round, the longer-watched version wins', () => {
-  const rules = growth.match(/SUPPORTED_RULES = \{([^}]+)\}/)[1].match(/"([a-z_]+)"/g).map((s) => s.slice(1, -1));
-  assert.ok(rules.length >= 4);
+test('the loop follows growth_loop.py: one supported change per round on a platform that reports reach, more views wins', () => {
+  const reported = posting.match(/"instagram": \{([^}]+)\}/)[1];
+  assert.match(growth, /def compare_observations\(before: dict, after: dict, \*, metric="views", min_views=100/);
+  assert.equal(LOOP.metric, 'views');
+  assert.equal(LOOP.minViews, 100);
+  assert.equal(LOOP.platform, 'Instagram');
   for (const round of LOOP.rounds) {
-    assert.ok(rules.includes(round.rule), `${round.rule} is a supported rule`);
+    assert.ok(supported.includes(round.rule), `${round.rule} is a supported rule`);
     const diff = ['label', 'tag'].filter((k) => round.a[k] !== round.b[k]);
     assert.equal(diff.length, 1, `${round.change}: one change`);
-    const winner = round.a.watched > round.b.watched ? 'a' : 'b';
-    assert.equal(round.winner, winner, `${round.change}: the longer-watched version wins`);
+    for (const side of ['a', 'b']) {
+      for (const key of Object.keys(round[side].stats)) assert.ok(reported.includes(`"${key}"`), `Instagram reports ${key}`);
+      assert.ok(round[side].stats.views >= LOOP.minViews, 'enough views on both');
+    }
+    const [win, lose] = round.winner === 'a' ? [round.a, round.b] : [round.b, round.a];
+    assert.ok(win.stats.views > lose.stats.views, `${round.change}: more views wins`);
+    assert.ok(win.stats.reach > lose.stats.reach, `${round.change}: and more reach`);
+    assert.ok(win.stats.reach <= win.stats.views && lose.stats.reach <= lose.stats.views, 'reach never exceeds views');
   }
   assert.ok(new Set(LOOP.rounds.map((r) => r.winner)).size > 1, 'the new version does not always win');
-  assert.match(growth, /min_views/);
+  assert.equal(fmt(940), '940');
+  assert.equal(fmt(3410), '3.4K');
+  assert.equal(fmt(1020), '1K');
 });
 
-test('the loop never calls a winner before measuring, or applies a lesson before you approve it', () => {
+test('the loop never calls a winner before the window ends, or applies a lesson before you approve it', () => {
   const steps = loopSteps();
-  assert.equal(steps.length, LOOP.rounds.length * 7);
+  assert.equal(steps.length, LOOP.rounds.length * 9);
   for (const s of steps) {
+    if (s.measured) assert.equal(s.progress, 1, 'measured only once the window is complete');
     if (s.won) assert.ok(s.measured);
     if (s.learned) assert.ok(s.won);
     if (s.approved) assert.ok(s.learned);
@@ -77,16 +93,45 @@ test('the loop never calls a winner before measuring, or applies a lesson before
   }
   for (let r = 0; r < LOOP.rounds.length; r++) {
     const round = steps.filter((s) => s.round === r);
-    assert.equal(round[0].measured, false, 'each round starts unmeasured');
+    assert.equal(round[0].progress, 0, 'each round starts at zero');
+    assert.ok(round.every((s, i) => i === 0 || s.progress >= round[i - 1].progress), 'numbers only climb');
+    assert.ok(round.some((s) => s.status === `More views and reach: keep ${LOOP.rounds[r].winner.toUpperCase()}`));
     assert.ok(round.some((s) => s.learned && !s.approved), 'a lesson waits for approval');
     assert.equal(round.at(-1).status, r < LOOP.rounds.length - 1 ? `Next test: ${LOOP.rounds[r + 1].change}` : 'Your next clips use it');
   }
 });
 
+test('the playbook stacks the approved lessons week by week as Style versions', () => {
+  assert.equal(LEARN.views.length, LEARN.weeks);
+  assert.equal(LEARN.kept.length, LEARN.weeks);
+  assert.ok(LEARN.kept.every((k) => k >= 0 && k <= 10));
+  for (const rule of LEARN.rules) assert.ok(supported.includes(rule.rule), `${rule.rule} is a supported rule`);
+  assert.deepEqual(LEARN.rules.slice(0, LOOP.rounds.length).map((r) => r.text), LOOP.rounds.map((r) => r.lesson), 'the loop lessons are the first rules');
+  assert.deepEqual(LEARN.rules.slice(0, LOOP.rounds.length).map((r) => r.rule), LOOP.rounds.map((r) => r.rule));
+  const steps = learnSteps();
+  assert.deepEqual(steps.filter((s) => !s.done).map((s) => s.week), [...Array(LEARN.weeks).keys()].map((k) => k + 1));
+  for (const rule of LEARN.rules) assert.equal(steps[rule.week - 1].status, `Week ${rule.week}: you approved a new rule`);
+  assert.equal(steps.at(-1).status, `Style v${LEARN.rules.length + 1}: ${LEARN.rules.length} rules, each one approved by you`);
+  assert.match(growth, /^MIN_TASTE_REVIEWS = \d+$/m);
+});
+
+test('the hero marks where each kept clip comes from and names real posting platforms', () => {
+  const labels = [...posting.match(/PLATFORM_LABELS = \{([^}]+)\}/)[1].matchAll(/: "([^"]+)"/g)].map((m) => m[1]);
+  const marks = heroMarks();
+  assert.equal(marks.length, SWARM.clips.length);
+  SWARM.clips.forEach((clip, i) => {
+    assert.ok(marks[i] > clip.stretch / stretchCount() && marks[i] < (clip.stretch + 1) / stretchCount(), `mark ${i + 1} sits in its stretch`);
+    assert.ok(labels.some((label) => clip.platform.startsWith(label)), `${clip.platform} is a posting platform`);
+  });
+  const hero = heroMarkup();
+  assert.equal([...hero.matchAll(/class="hero-clip"/g)].length, 3);
+  assert.equal([...hero.matchAll(/class="hero-mark"/g)].length, 3);
+  assert.equal([...hero.matchAll(/fetchpriority="high"/g)].length, 1, 'only the stream frame loads first');
+});
+
 test('the built page carries both scenes in their finished state', () => {
-  const swarm = swarmMarkup(), loop = loopMarkup();
-  assert.ok(html.includes(swarm), 'index.html has the swarm markup');
-  assert.ok(html.includes(loop), 'index.html has the loop markup');
+  const swarm = swarmMarkup(), loop = loopMarkup(), learn = learnMarkup();
+  for (const [name, markup] of [['swarm', swarm], ['loop', loop], ['learn', learn], ['hero', heroMarkup()]]) assert.ok(html.includes(markup), `index.html has the ${name} markup`);
   assert.equal([...swarm.matchAll(/class="scout /g)].length, 12);
   assert.equal([...swarm.matchAll(/class="stretch /g)].length, 12);
   assert.equal([...swarm.matchAll(/class="idea/g)].length, 14);
@@ -97,9 +142,14 @@ test('the built page carries both scenes in their finished state', () => {
   assert.equal([...loop.matchAll(/class="loop-round[ "]/g)].length, 3);
   assert.equal([...loop.matchAll(/class="version[ "]/g)].length, 6);
   assert.equal([...loop.matchAll(/class="version is-winner"/g)].length, 3);
+  assert.equal([...loop.matchAll(/data-stat="/g)].length, 24);
+  assert.equal([...loop.matchAll(/class="version-win"/g)].length, 3, 'only winners carry the badge');
+  assert.equal([...learn.matchAll(/class="week /g)].length, 8);
+  assert.equal([...learn.matchAll(/class="rule is-on"/g)].length, 4);
+  assert.match(learn, /Sample channel/);
   assert.equal([...loop.matchAll(/class="lesson is-approved"/g)].length, 3);
   assert.match(loop, /class="scene loop is-measured is-won is-learned is-approved is-next"/);
-  assert.doesNotMatch(swarm + loop, /<script|on[a-z]+=/i);
+  assert.doesNotMatch(swarm + loop + learn, /<script|on[a-z]+=/i);
 });
 
 function harness({ reduced = false } = {}) {
