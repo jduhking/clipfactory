@@ -77,9 +77,6 @@ one sentence, one button, then the product itself. It has no video and no discla
   and the three vertical clips cut from them, with hooks, captions, each scout's score and the
   platform each is for.
   It is HTML and CSS from `motion.js` (`<!-- build:scene hero -->`), not a screenshot.
-- **Proof.** Four numbers: 35.8% of 53,511 active Twitch channels got no clips in 30 days (the
-  Nysos 2026 study, https://nysos.io/en/etude-clipping-twitch), then 12 scouts per two-hour
-  stream, 1 change per test and 0 rules without your OK, all from the code.
 - **Three rows**, each a sentence or two beside an animation: the scouts (finding and cutting
   clips), the A/B loop (two versions on Instagram, the one with more views wins), and the playbook
   (approved rules stacking up week by week as the channel grows).

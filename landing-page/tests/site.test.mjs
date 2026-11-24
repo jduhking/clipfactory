@@ -37,7 +37,7 @@ function webpSize(buf) {
 const section = (from, to) => html.slice(html.indexOf(from), html.indexOf(to));
 
 test('the hero is three short lines, one button and a stream turning into clips', () => {
-  const hero = section('<section class="hero"', '<section class="proof"');
+  const hero = section('<section class="hero"', 'id="how"');
   assert.match(hero, /<h1 id="hero-title">One stream in\.<br>Clips worth posting\.<br>Smarter every week\.<\/h1>/);
   const lead = hero.match(/<p class="hero-lead">([^<]+)<\/p>/)[1];
   assert.equal(lead, 'Growth Factory cuts each stream into clips, tests them, and learns what your viewers watch.');
@@ -70,8 +70,8 @@ test('the primary calls to action lead to the waitlist, with no invented install
   assert.doesNotMatch(html, /Suburbbaby|Streamer University|trusted by/i);
 });
 
-test('the page runs hero, proof, three rows, your week, waitlist, FAQ, then pricing at the bottom', () => {
-  const marks = ['<section class="hero"', '<section class="proof"', 'id="how"', 'id="week"', 'id="waitlist"', 'id="faq"', 'id="pricing"'];
+test('the page runs hero, three rows, your week, waitlist, FAQ, then pricing at the bottom', () => {
+  const marks = ['<section class="hero"', 'id="how"', 'id="week"', 'id="waitlist"', 'id="faq"', 'id="pricing"'];
   const order = marks.map((m) => html.indexOf(m));
   for (const [i, at] of order.entries()) assert.ok(at > 0, `missing ${marks[i]}`);
   assert.deepEqual([...order].sort((a, b) => a - b), order);
@@ -111,12 +111,8 @@ test('every image is a real WebP whose size matches its markup, and is credited'
   assert.deepEqual(await readFile(new URL('assets/pearl-studio.jpg', root)), source, 'the social card source is untouched');
 });
 
-test('the numbers are sourced: the study, and the app itself', async () => {
-  const scouts = await readFile(new URL('../../clip_factory/scouts.py', import.meta.url), 'utf8');
-  assert.match(scouts, /^CHUNK_SECONDS = 600(\.0)?$/m, 'ten minutes per scout, so twelve on two hours');
-  const proof = section('<section class="proof"', 'id="how"');
-  assert.match(proof, /<b>35\.8%<\/b><span>of 53,511 active Twitch channels got no clips in 30 days\. <a class="source-link" href="https:\/\/nysos.io\/en\/etude-clipping-twitch" rel="noopener">Nysos study<\/a>/);
-  assert.deepEqual([...proof.matchAll(/<li><b>([^<]+)<\/b>/g)].map((m) => m[1]), ['35.8%', '12', '1', '0']);
+test('the week cards say what you do and what you get', () => {
+  assert.doesNotMatch(html, /class="proof|By the numbers|35\.8%/, 'no numbers band');
   const week = section('id="week"', 'id="waitlist"');
   assert.deepEqual([...week.matchAll(/<h3>([^<]+)<\/h3>/g)].map((m) => m[1]), ['Tonight', 'Tomorrow', 'Next week']);
   assert.equal([...week.matchAll(/<dt>You do<\/dt>/g)].length, 3);
