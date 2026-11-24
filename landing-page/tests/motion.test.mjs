@@ -127,6 +127,9 @@ test('the hero marks where each kept clip comes from and names real posting plat
   assert.equal([...hero.matchAll(/class="hero-clip"/g)].length, 3);
   assert.equal([...hero.matchAll(/class="hero-mark"/g)].length, 3);
   assert.equal([...hero.matchAll(/fetchpriority="high"/g)].length, 1, 'only the stream frame loads first');
+  const scores = swarmPicks().map((p) => p.score);
+  assert.deepEqual([...hero.matchAll(/class="hero-score">Score (\d+)\/10</g)].map((m) => Number(m[1])), scores, 'each clip shows the score its scout gave it');
+  assert.ok(scores.every((x) => x >= 1 && x <= 10));
 });
 
 test('the built page carries both scenes in their finished state', () => {
@@ -163,8 +166,6 @@ function harness({ reduced = false } = {}) {
   };
   const classes = new Set();
   const root = { classList: { add: (c) => classes.add(c), remove: (c) => classes.delete(c), toggle: (c, on) => (on ? classes.add(c) : classes.delete(c)) }, classes };
-  const attrs = {};
-  const button = listeners({ hidden: true, textContent: 'Pause', dataset: { label: 'loop animation' }, setAttribute: (k, v) => { attrs[k] = v; }, attrs });
   const motion = listeners({ matches: reduced });
   const doc = listeners({ hidden: false });
   const lifecycle = listeners({});
@@ -174,14 +175,13 @@ function harness({ reduced = false } = {}) {
   const timers = { set: (fn, ms) => { const t = { fn, ms }; pending.push(t); return t; }, clear: (t) => { pending = pending.filter((x) => x !== t); } };
   const observe = (el, fn) => { seen = fn; return () => { stopped++; }; };
   const tick = () => { const t = pending.shift(); assert.ok(t, 'a timer is pending'); t.fn(); return t.ms; };
-  const handle = mountScene({ root, button, scene, media: () => motion, lifecycle, doc, observe, timers });
-  return { handle, root, button, motion, doc, lifecycle, rendered, tick, pending: () => pending, show: (on) => seen(on), stopped: () => stopped };
+  const handle = mountScene({ root, scene, media: () => motion, lifecycle, doc, observe, timers });
+  return { handle, root, motion, doc, lifecycle, rendered, tick, pending: () => pending, show: (on) => seen(on), stopped: () => stopped };
 }
 
 test('the player waits until it is on screen, then steps and wraps around', () => {
   const h = harness();
   assert.ok(h.root.classes.has('is-live'));
-  assert.equal(h.button.hidden, false);
   assert.equal(h.pending().length, 0, 'nothing runs offscreen');
   h.show(true);
   assert.deepEqual(h.rendered.slice(-1), [0]);
@@ -193,31 +193,25 @@ test('the player waits until it is on screen, then steps and wraps around', () =
   assert.equal(h.pending().length, 0, 'sleeps when scrolled away');
 });
 
-test('pause holds the frame and the button says what it will do', () => {
+test('a hidden tab holds the frame and resumes from it', () => {
   const h = harness();
   h.show(true);
   h.tick();
-  assert.equal(h.button.attrs['aria-label'], 'Pause the loop animation');
-  h.button.fire('click');
-  assert.equal(h.pending().length, 0);
-  assert.equal(h.button.textContent, 'Play');
-  assert.equal(h.button.attrs['aria-label'], 'Play the loop animation');
   const frames = h.rendered.length;
-  h.button.fire('click');
-  assert.equal(h.button.textContent, 'Pause');
-  assert.equal(h.pending().length, 1);
-  assert.equal(h.rendered.length, frames, 'resumes from the same frame');
   h.doc.hidden = true;
   h.doc.fire('visibilitychange');
   assert.equal(h.pending().length, 0, 'sleeps in a hidden tab');
+  h.doc.hidden = false;
+  h.doc.fire('visibilitychange');
+  assert.equal(h.pending().length, 1);
+  assert.equal(h.rendered.length, frames, 'resumes from the same frame');
 });
 
-test('reduced motion shows the finished frame with no timers and no button', () => {
+test('reduced motion shows the finished frame with no timers', () => {
   const h = harness({ reduced: true });
   h.show(true);
   assert.equal(h.pending().length, 0);
   assert.deepEqual(h.rendered, [2]);
-  assert.equal(h.button.hidden, true);
   assert.ok(!h.root.classes.has('is-live'));
   const live = harness();
   live.show(true);
@@ -235,7 +229,7 @@ test('leaving the page tears the player down, but a back-forward cache stay does
   h.lifecycle.fire('pagehide', { persisted: false });
   assert.equal(h.pending().length, 0);
   assert.equal(h.stopped(), 1);
-  assert.equal(h.button.count() + h.doc.count() + h.motion.count() + h.lifecycle.count(), 0, 'listeners removed');
+  assert.equal(h.doc.count() + h.motion.count() + h.lifecycle.count(), 0, 'listeners removed');
   assert.ok(!h.root.classes.has('is-live'));
   assert.equal(h.rendered.at(-1), 2);
 });
