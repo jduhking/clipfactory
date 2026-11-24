@@ -36,11 +36,11 @@ function webpSize(buf) {
 }
 const section = (from, to) => html.slice(html.indexOf(from), html.indexOf(to));
 
-test('the hero is one line, one button and a stream turning into clips', () => {
+test('the hero is three short lines, one button and a stream turning into clips', () => {
   const hero = section('<section class="hero"', '<section class="proof"');
-  assert.match(hero, /<h1 id="hero-title">Clips that grow your channel\.<\/h1>/);
+  assert.match(hero, /<h1 id="hero-title">One stream in\.<br>Clips worth posting\.<br>Smarter every week\.<\/h1>/);
   const lead = hero.match(/<p class="hero-lead">([^<]+)<\/p>/)[1];
-  assert.equal(lead, 'Drop in a stream. Growth Factory cuts the best moments into vertical clips, tests two versions, and keeps what people watch.');
+  assert.equal(lead, 'Growth Factory cuts each stream into clips, tests them, and learns what your viewers watch.');
   assert.ok(lead.split(/\s+/).length <= 22, 'a short lead');
   assert.equal([...hero.matchAll(/class="btn /g)].length, 1, 'one button');
   assert.match(hero, /<a class="btn btn-primary btn-lg" href="#waitlist">Join the Mac beta<\/a>/);
@@ -58,7 +58,7 @@ test('the page stays simple: one background, three short animations, no video or
   assert.doesNotMatch(html, /window-chrome|window-dots|window-tag/, 'no fake browser or OS window');
   assert.doesNotMatch(html, /alpine-story|ring-card|fake-btn|pearl-studio|Critic|Strategist|Editor\b/, 'plain words; only the scouts are named');
   const main = html.slice(html.indexOf('<main'), html.indexOf('</main>')).replace(/<script[\s\S]*?<\/script>/g, '').replace(/<div class="(scene|hero-visual)[ "][\s\S]*?<\/figure>/g, ' ').replace(/<[^>]+>/g, ' ');
-  assert.ok(main.split(/\s+/).filter(Boolean).length < 650, 'a short page');
+  assert.ok(main.split(/\s+/).filter(Boolean).length < 800, 'a short page');
 });
 
 test('the primary calls to action lead to the waitlist, with no invented installer or access guarantee', () => {
@@ -70,8 +70,8 @@ test('the primary calls to action lead to the waitlist, with no invented install
   assert.doesNotMatch(html, /Suburbbaby|Streamer University|trusted by/i);
 });
 
-test('the page runs hero, proof, three rows, waitlist, FAQ, then pricing at the bottom', () => {
-  const marks = ['<section class="hero"', '<section class="proof"', 'id="how"', 'id="waitlist"', 'id="faq"', 'id="pricing"'];
+test('the page runs hero, proof, three rows, your week, waitlist, FAQ, then pricing at the bottom', () => {
+  const marks = ['<section class="hero"', '<section class="proof"', 'id="how"', 'id="week"', 'id="waitlist"', 'id="faq"', 'id="pricing"'];
   const order = marks.map((m) => html.indexOf(m));
   for (const [i, at] of order.entries()) assert.ok(at > 0, `missing ${marks[i]}`);
   assert.deepEqual([...order].sort((a, b) => a - b), order);
@@ -94,9 +94,7 @@ test('each row says what the app does, as the code has it, beside the app doing 
   assert.deepEqual(scenes.map((m) => m && m[2]), ['swarm', 'loop', 'learn']);
   assert.match(scenes[1][1], /Instagram/);
   assert.match(scenes[2][1], /sample channel/);
-  for (const [i, label] of [[0, 'scout animation'], [1, 'loop animation'], [2, 'learning animation']]) {
-    assert.ok(rows[i].includes(`<button type="button" data-scene-toggle data-label="${label}" hidden>Pause</button>`), label);
-  }
+  assert.doesNotMatch(html, /data-scene-toggle|scene-controls|>Pause</, 'the animations have no pause control');
 });
 
 test('every image is a real WebP whose size matches its markup, and is credited', async () => {
@@ -113,11 +111,16 @@ test('every image is a real WebP whose size matches its markup, and is credited'
   assert.deepEqual(await readFile(new URL('assets/pearl-studio.jpg', root)), source, 'the social card source is untouched');
 });
 
-test('the problem is sourced', () => {
+test('the numbers are sourced: the study, and the app itself', async () => {
+  const scouts = await readFile(new URL('../../clip_factory/scouts.py', import.meta.url), 'utf8');
+  assert.match(scouts, /^CHUNK_SECONDS = 600(\.0)?$/m, 'ten minutes per scout, so twelve on two hours');
   const proof = section('<section class="proof"', 'id="how"');
-  assert.match(proof, /More than a third of Twitch channels posted no clips in the past month\./);
-  assert.match(proof, /href="https:\/\/nysos.io\/en\/etude-clipping-twitch"/);
-  assert.match(proof, /53,511 Twitch channels/);
+  assert.match(proof, /<b>35\.8%<\/b><span>of 53,511 active Twitch channels got no clips in 30 days\. <a class="source-link" href="https:\/\/nysos.io\/en\/etude-clipping-twitch" rel="noopener">Nysos study<\/a>/);
+  assert.deepEqual([...proof.matchAll(/<li><b>([^<]+)<\/b>/g)].map((m) => m[1]), ['35.8%', '12', '1', '0']);
+  const week = section('id="week"', 'id="waitlist"');
+  assert.deepEqual([...week.matchAll(/<h3>([^<]+)<\/h3>/g)].map((m) => m[1]), ['Tonight', 'Tomorrow', 'Next week']);
+  assert.equal([...week.matchAll(/<dt>You do<\/dt>/g)].length, 3);
+  assert.equal([...week.matchAll(/<dt>You get<\/dt>/g)].length, 3);
 });
 
 test('the page keeps its clipping focus and discloses unverified services', () => {

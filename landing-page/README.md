@@ -72,15 +72,18 @@ Vercel currently receives reviewed static file deployments, not automatic Git de
 The home page follows the shape of simple product sites like Streamable: a centred headline,
 one sentence, one button, then the product itself. It has no video and no disclaimer lines.
 
-- **Hero.** "Clips that grow your channel." with one lead sentence, "Join the Mac beta", and
-  one picture over the animated topography: a two-hour stream with its three best moments marked,
-  and the three vertical clips cut from them, with hooks, captions and the platform each is for.
+- **Hero.** Three short lines ("One stream in. Clips worth posting. Smarter every week."), one
+  lead sentence, "Join the Mac beta", and one picture over the animated topography: a two-hour stream with its three best moments marked,
+  and the three vertical clips cut from them, with hooks, captions, each scout's score and the
+  platform each is for.
   It is HTML and CSS from `motion.js` (`<!-- build:scene hero -->`), not a screenshot.
-- **Proof.** One sourced line from the Nysos 2026 study of 53,511 Twitch channels
-  (https://nysos.io/en/etude-clipping-twitch).
+- **Proof.** Four numbers: 35.8% of 53,511 active Twitch channels got no clips in 30 days (the
+  Nysos 2026 study, https://nysos.io/en/etude-clipping-twitch), then 12 scouts per two-hour
+  stream, 1 change per test and 0 rules without your OK, all from the code.
 - **Three rows**, each a sentence or two beside an animation: the scouts (finding and cutting
   clips), the A/B loop (two versions on Instagram, the one with more views wins), and the playbook
   (approved rules stacking up week by week as the channel grows).
+- **Your week.** Tonight, tomorrow and next week, each with what you do and what you get.
 - **Waitlist, FAQ, then pricing** at the bottom.
 
 The copy comes from the code: `clip_factory/growth_loop.py` (one variable per experiment from
@@ -111,8 +114,8 @@ and CSS in the app's own surfaces, not recordings, so they read the same with Ja
   average views per new clip and how many suggested clips you keep both climb as approved rules
   stack up, Style v2 to v5. The first three rules are the loop's lessons.
 
-The player runs only while a scene is on screen and the tab is visible, has a Pause button, and
-shows the finished frame with reduced motion. `tests/motion.test.mjs` checks the scenes against
+The player runs only while a scene is on screen and the tab is visible, and shows the finished
+frame with reduced motion. There is no pause control on the page. `tests/motion.test.mjs` checks the scenes against
 the constants and messages in `scouts.py`, `growth_loop.py` and `posting_server.py`, and the
 player against fakes.
 

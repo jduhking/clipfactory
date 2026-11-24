@@ -40,9 +40,9 @@ export const SWARM = {
   keep: 3,
   // The kept moments, in the order they happen in the stream.
   clips: [
-    { stretch: 2, photo: 'clip-play', hook: 'He did NOT see that coming', at: '0:24:12', length: '0:34', caption: 'NO WAY', platform: 'TikTok' },
-    { stretch: 6, photo: 'clip-moment', hook: 'The comeback nobody saw', at: '1:04:48', length: '0:41', caption: 'WE ARE SO BACK', platform: 'Instagram Reels' },
-    { stretch: 9, photo: 'clip-talk', hook: 'Chat called it first', at: '1:33:06', length: '0:27', caption: 'YOU GUYS KNEW', platform: 'YouTube Shorts' },
+    { stretch: 2, photo: 'clip-play', hook: 'He did NOT see that coming', at: '0:24:12', length: '0:34', caption: 'No way', platform: 'TikTok' },
+    { stretch: 6, photo: 'clip-moment', hook: 'The comeback nobody saw', at: '1:04:48', length: '0:41', caption: 'We are so back', platform: 'Instagram Reels' },
+    { stretch: 9, photo: 'clip-talk', hook: 'Chat called it first', at: '1:33:06', length: '0:27', caption: 'You guys knew', platform: 'YouTube Shorts' },
   ],
 };
 
@@ -104,8 +104,9 @@ export const HERO = { frame: 'stream-moment', tilts: [-4, 0, 4] };
 export const heroMarks = () => SWARM.clips.map((c) => seconds(c.at) / (SWARM.minutes * 60));
 
 export function heroMarkup() {
+  const scores = new Map(swarmPicks().map((p) => [p.stretch, p.score]));
   const marks = heroMarks().map((at, i) => `<span class="hero-mark" style="--at:${at.toFixed(4)}"><span>${i + 1}</span></span>`).join('');
-  const clips = SWARM.clips.map((c, i) => `<li class="hero-clip" style="--tilt:${HERO.tilts[i]}deg;--i:${i}"><div class="clip-frame">${img(c.photo)}<span class="clip-hook">${esc(c.hook)}</span><span class="clip-caption">${esc(c.caption)}</span><span class="hero-num">${i + 1}</span></div><span class="hero-clip-meta"><span>${c.platform}</span><span>${c.length}</span></span></li>`).join('');
+  const clips = SWARM.clips.map((c, i) => `<li class="hero-clip" style="--tilt:${HERO.tilts[i]}deg;--i:${i}"><div class="clip-frame">${img(c.photo)}<span class="clip-hook">${esc(c.hook)}</span><span class="clip-caption">${esc(c.caption)}</span><span class="hero-score">Score ${scores.get(c.stretch)}/10</span><span class="hero-num">${i + 1}</span></div><span class="hero-clip-meta"><span>${c.platform}</span><span>${c.length}</span></span></li>`).join('');
   return `<div class="hero-visual">
 <div class="hero-stream app-shot">${img(HERO.frame, true)}<span class="hero-file">${SWARM.file}<span>${SWARM.length}</span></span><div class="hero-track">${marks}</div></div>
 <ul class="hero-clips">${clips}</ul>
@@ -302,19 +303,12 @@ export function learnScene(root) {
 const SCENES = { swarm: swarmScene, loop: loopScene, learn: learnScene };
 
 /** Plays a scene while it is on screen and the tab is visible. Reduced motion shows the finished frame. */
-export function mountScene({ root, button, scene, media = window.matchMedia.bind(window), lifecycle = window, doc = document, observe, timers = { set: (fn, ms) => setTimeout(fn, ms), clear: (id) => clearTimeout(id) } }) {
+export function mountScene({ root, scene, media = window.matchMedia.bind(window), lifecycle = window, doc = document, observe, timers = { set: (fn, ms) => setTimeout(fn, ms), clear: (id) => clearTimeout(id) } }) {
   const motion = media('(prefers-reduced-motion: reduce)');
   const last = scene.steps.length - 1;
-  let step = 0, paused = false, visible = false, timer = null, disposed = false, started = false;
+  let step = 0, visible = false, timer = null, disposed = false, started = false;
   const live = () => !disposed && !motion.matches;
-  const running = () => live() && !paused && visible && !doc.hidden;
-  const updateButton = () => {
-    if (!button) return;
-    button.hidden = !live();
-    button.textContent = paused ? 'Play' : 'Pause';
-    const what = button.dataset?.label;
-    if (what) button.setAttribute('aria-label', `${paused ? 'Play' : 'Pause'} the ${what}`);
-  };
+  const running = () => live() && visible && !doc.hidden;
   const schedule = () => {
     if (timer !== null) { timers.clear(timer); timer = null; }
     if (!running()) return;
@@ -324,10 +318,8 @@ export function mountScene({ root, button, scene, media = window.matchMedia.bind
   const sync = () => {
     if (live()) root.classList.add('is-live');
     else { root.classList.remove('is-live'); started = false; step = last; scene.render(last); }
-    updateButton();
     schedule();
   };
-  const onClick = () => { paused = !paused; updateButton(); schedule(); };
   const onVisibility = () => schedule();
   const onHide = (event) => { if (!event.persisted) dispose(); };
   const stopObserving = (observe ?? ((el, fn) => {
@@ -342,15 +334,12 @@ export function mountScene({ root, button, scene, media = window.matchMedia.bind
     if (timer !== null) timers.clear(timer);
     timer = null;
     stopObserving();
-    button?.removeEventListener('click', onClick);
     motion.removeEventListener('change', sync);
     doc.removeEventListener('visibilitychange', onVisibility);
     lifecycle.removeEventListener('pagehide', onHide);
     root.classList.remove('is-live');
     scene.render(last);
-    updateButton();
   };
-  button?.addEventListener('click', onClick);
   motion.addEventListener('change', sync);
   doc.addEventListener('visibilitychange', onVisibility);
   lifecycle.addEventListener('pagehide', onHide);
@@ -359,9 +348,8 @@ export function mountScene({ root, button, scene, media = window.matchMedia.bind
 }
 
 if (typeof document !== 'undefined') {
-  for (const wrap of document.querySelectorAll('.scene-wrap')) {
-    const root = wrap.querySelector('[data-scene]');
-    const make = root && SCENES[root.dataset.scene];
-    if (make) mountScene({ root, button: wrap.querySelector('[data-scene-toggle]'), scene: make(root) });
+  for (const root of document.querySelectorAll('[data-scene]')) {
+    const make = SCENES[root.dataset.scene];
+    if (make) mountScene({ root, scene: make(root) });
   }
 }
