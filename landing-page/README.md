@@ -83,7 +83,7 @@ one sentence, one button, then the product itself. It has no video and no discla
 - **Three rows**, each a sentence or two beside an animation: the scouts (finding and cutting
   clips), the A/B loop (two versions on Instagram, the one with more views wins), and the playbook
   (approved rules stacking up week by week as the channel grows).
-- **Your week.** Tonight, tomorrow and next week, each with what you do and what you get.
+- **Your week.** Tonight, tomorrow and next week, each with what you do and what you get. One player (`routineScene` in `motion.js`, built by `<!-- build:scene routine-* -->`) walks the cards in order: the live stream is saved and the 12 scouts find 3 moments; you keep two clips, skip one and post; the first A/B round counts up, B wins, you approve and the rule appears. It reuses the swarm stream and clips and the loop's first round, so the cards match the rows above.
 - **Waitlist, FAQ, then pricing** at the bottom.
 
 The copy comes from the code: `clip_factory/growth_loop.py` (one variable per experiment from
