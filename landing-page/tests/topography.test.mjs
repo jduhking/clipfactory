@@ -20,7 +20,7 @@ test('topography uses the exact app shaders and performance limits', async () =>
 });
 test('topography is decorative, behind content, with static and forced-color fallbacks', async () => {
   assert.match(html,/class="topography-field" data-topography aria-hidden="true"/);
-  assert.match(html,/data-topography-toggle hidden>Pause background/);
+  assert.doesNotMatch(html,/data-topography-toggle|Pause background/,'no background button on the page');
   assert.match(html,/type="module" src="\/topography.js\?v=pearl-streamer-10"/);
   assert.match(css,/\.topography-field \{[^}]*z-index: -1[^}]*pointer-events: none[^}]*topography.svg/);
   assert.match(css,/forced-colors: active/);

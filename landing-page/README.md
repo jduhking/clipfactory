@@ -120,7 +120,7 @@ player against fakes.
 
 The hero background is the app's contour field: `topography.js` mounts `contours.js`, the
 website adapter of the WebGL shader in `frontend/src/growth/contours.ts`, behind the hero. It
-pauses offscreen and in hidden tabs, has a "Pause background" button, draws one still frame with
+pauses offscreen and in hidden tabs, shows no on-page control, draws one still frame with
 reduced motion, hides with forced colours, and leaves the static `assets/topography.svg` in place
 without WebGL or JavaScript.
 

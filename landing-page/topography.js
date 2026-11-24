@@ -67,5 +67,5 @@ export function mountTopography({ host, button, start = startContours, media = w
 if (typeof document !== 'undefined') {
   const hero = document.querySelector('.hero');
   const host = hero?.querySelector('[data-topography]');
-  if (host) mountTopography({ host, button: hero.querySelector('[data-topography-toggle]') });
+  if (host) mountTopography({ host });
 }

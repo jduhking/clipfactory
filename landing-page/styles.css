@@ -53,7 +53,7 @@ button,a,summary { -webkit-tap-highlight-color: transparent; }
 .btn:active { transform: translateY(1px); }
 .btn-primary:disabled, .btn:disabled { background: var(--surface); color: var(--muted-2); border-color: var(--line); cursor: not-allowed; transform: none; }
 .waitlist-form input:disabled, .waitlist-form select:disabled { color: var(--muted-2); background: var(--surface); cursor: not-allowed; }
-.text-link:active, .nav-desktop a:active, .source-link:active, .scene-controls button:active, .topography-controls button:active { color: var(--action-hover); }
+.text-link:active, .nav-desktop a:active, .source-link:active, .scene-controls button:active { color: var(--action-hover); }
 .btn-sm { min-height: 40px; padding: 8px 16px; font-size: 14px; }
 .menu-btn { display: none; align-items: center; justify-content: center; width: 44px; height: 44px; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; cursor: pointer; }
 .menu-btn svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.7; }
@@ -83,11 +83,9 @@ button,a,summary { -webkit-tap-highlight-color: transparent; }
 .topography-field { position: absolute; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; background: url("/assets/topography.svg") center / cover no-repeat; -webkit-mask-image: linear-gradient(to bottom, var(--foreground) 55%, transparent); mask-image: linear-gradient(to bottom, var(--foreground) 55%, transparent); }
 .topography-field.has-contours { background-image: none; }
 .topography-field canvas { display: block; width: 100%; height: 100%; }
-.topography-controls { position: absolute; top: 12px; right: 16px; }
-.topography-controls button, .scene-controls button { min-height: 32px; padding: 4px 8px; font-size: 12px; color: var(--muted-2); background: transparent; border: 0; border-bottom: 1px solid var(--line); cursor: pointer; }
-.topography-controls button:hover, .scene-controls button:hover { color: var(--foreground); border-color: var(--border-control); }
-@media (prefers-reduced-motion: reduce) { .topography-controls { display: none; } }
-@media (forced-colors: active) { .topography-field, .topography-controls { display: none; } }
+.scene-controls button { min-height: 32px; padding: 4px 8px; font-size: 12px; color: var(--muted-2); background: transparent; border: 0; border-bottom: 1px solid var(--line); cursor: pointer; }
+.scene-controls button:hover { color: var(--foreground); border-color: var(--border-control); }
+@media (forced-colors: active) { .topography-field { display: none; } }
 
 /* Scenes: two short animations of the app at work, drawn in its own surfaces. Plain HTML in the
    finished state; motion.js adds .is-live and steps through. Sizes follow the figure's width. */
