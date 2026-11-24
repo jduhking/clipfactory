@@ -50,9 +50,9 @@ test('the hero is three short lines, one button and a stream turning into clips'
   assert.equal([...hero.matchAll(/class="hero-clip"/g)].length, 3, 'three clips');
 });
 
-test('the page stays simple: one background, three short animations, no video or disclaimers', () => {
+test('the page stays simple: one background, a few short animations, no video or disclaimers', () => {
   assert.doesNotMatch(html, /<canvas|<video|autoplay|scenes\.js/, 'no video, and no canvas outside the background');
-  assert.equal([...html.matchAll(/data-scene="/g)].length, 3, 'three animations');
+  assert.equal([...html.matchAll(/data-scene="/g)].length, 4, 'three rows and the week cards');
   assert.equal([...html.matchAll(/data-topography /g)].length, 1, 'one background');
   assert.doesNotMatch(html, /Animated illustration|stock photos?|not a customer|sample shapes|do not endorse|nothing here (promises|guarantees)|Nothing can promise|fine print|not a claim/i, 'no disclaimer lines');
   assert.doesNotMatch(html, /window-chrome|window-dots|window-tag/, 'no fake browser or OS window');
@@ -121,6 +121,9 @@ test('the numbers are sourced: the study, and the app itself', async () => {
   assert.deepEqual([...week.matchAll(/<h3>([^<]+)<\/h3>/g)].map((m) => m[1]), ['Tonight', 'Tomorrow', 'Next week']);
   assert.equal([...week.matchAll(/<dt>You do<\/dt>/g)].length, 3);
   assert.equal([...week.matchAll(/<dt>You get<\/dt>/g)].length, 3);
+  assert.match(week, /<ol class="routine-steps" data-scene="routine">/, 'one player walks the three cards');
+  assert.deepEqual([...week.matchAll(/<li class="routine-card" data-card="(\d)"><figure class="routine-vis" aria-hidden="true"><!-- build:scene routine-([a-z]+) -->/g)].map((m) => `${m[1]}:${m[2]}`), ['0:tonight', '1:tomorrow', '2:next']);
+  assert.doesNotMatch(css, /\.week-steps|\.week > h2|\.week \{ padding/, 'the section does not reuse the learn chart .week class');
 });
 
 test('the page keeps its clipping focus and discloses unverified services', () => {

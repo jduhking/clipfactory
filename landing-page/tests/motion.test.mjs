@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import { SWARM, stretchCount, candidateCount, swarmPicks, swarmSteps, swarmMarkup, heroMarks, heroMarkup, LOOP, loopSteps, loopMarkup, LEARN, learnSteps, learnMarkup, fmt, mountScene } from '../motion.js';
+import { SWARM, stretchCount, candidateCount, swarmPicks, swarmSteps, swarmMarkup, heroMarks, heroMarkup, LOOP, loopSteps, loopMarkup, LEARN, learnSteps, learnMarkup, ROUTINE, routineSteps, routineMarkup, routineScene, fmt, mountScene } from '../motion.js';
 
 const root = new URL('../', import.meta.url);
 const scouts = await readFile(new URL('../../clip_factory/scouts.py', import.meta.url), 'utf8');
@@ -232,4 +232,64 @@ test('leaving the page tears the player down, but a back-forward cache stay does
   assert.equal(h.doc.count() + h.motion.count() + h.lifecycle.count(), 0, 'listeners removed');
   assert.ok(!h.root.classes.has('is-live'));
   assert.equal(h.rendered.at(-1), 2);
+});
+
+test('the week cards replay the rows: the same stream, scouts, clips and first A/B round, with your OK before the rule', () => {
+  const steps = routineSteps();
+  const round = LOOP.rounds[0];
+  assert.deepEqual([...new Set(steps.map((s) => s.card))], [0, 1, 2], 'Tonight, then Tomorrow, then Next week');
+  for (let i = 1; i < steps.length; i++) assert.ok(steps[i].card >= steps[i - 1].card, 'cards never go back');
+  assert.equal(ROUTINE.scouts.at(-1), stretchCount(), 'every ten-minute stretch gets a scout');
+  assert.match(steps.find((s) => s.saved).note, new RegExp(SWARM.file.replace('.', '\\.')));
+  assert.equal(steps.find((s) => s.scouts === stretchCount()).note, `${swarmPicks().length} moments found`);
+  assert.equal(ROUTINE.kept.length, SWARM.clips.length);
+  assert.deepEqual(ROUTINE.platforms, SWARM.clips.map((c) => c.platform.split(' ').at(-1)), 'the platforms the clips are made for');
+  assert.match(posting, /"tiktok"/); assert.match(posting, /"instagram"/); assert.match(posting, /"youtube"/);
+  assert.equal(ROUTINE.days.at(-1), LOOP.windowDays, 'the test runs the full window');
+  assert.equal(steps.findIndex((s) => s.progress === 1), steps.findIndex((s) => s.note === `Day ${LOOP.windowDays} of ${LOOP.windowDays} on ${LOOP.platform}`));
+  const won = steps.findIndex((s) => s.won), asked = steps.findIndex((s) => s.asked), ok = steps.findIndex((s) => s.approved), rule = steps.findIndex((s) => s.rule);
+  assert.ok(steps.findIndex((s) => s.progress === 1) < won && won < asked && asked < ok && ok < rule, 'measure, win, ask, approve, then the rule');
+  assert.equal(steps[won].note, `More views: keep ${round.winner.toUpperCase()}`);
+  assert.ok(round[round.winner].stats.views > round[round.winner === 'a' ? 'b' : 'a'].stats.views);
+  assert.ok(steps.every((s) => s.ms >= 500 && s.ms <= 3000));
+});
+
+test('the week cards are built finished, and every moving part names the step that shows it', () => {
+  const steps = routineSteps();
+  const all = ROUTINE.cards.map((c) => routineMarkup(c)).join('');
+  assert.throws(() => routineMarkup('later'));
+  for (const [, at] of all.matchAll(/data-at="(\d+)"/g)) assert.ok(Number(at) >= 0 && Number(at) < steps.length);
+  assert.equal([...all.matchAll(/data-at="/g)].length, [...all.matchAll(/class="[^"]*is-on[^"]*" data-at="/g)].length, 'finished frame: everything on');
+  assert.match(all, /class="routine-badge routine-live is-off" data-off="\d+"/);
+  assert.equal([...all.matchAll(/class="routine-mark /g)].length, swarmPicks().length);
+  assert.equal([...all.matchAll(/class="routine-clip /g)].length, SWARM.clips.length);
+  assert.equal([...all.matchAll(/>Kept</g)].length, 2); assert.equal([...all.matchAll(/>Skipped</g)].length, 1);
+  assert.match(all, new RegExp(`<b data-set="a">${fmt(LOOP.rounds[0].a.stats.views)}</b>`));
+  assert.match(all, new RegExp(`<span>New rule</span>${LOOP.rounds[0].lesson}`));
+  for (const card of ROUTINE.cards) assert.ok(html.includes(routineMarkup(card)), `${card} is on the page`);
+  assert.doesNotMatch(all, /<script|on[a-z]+=/i);
+});
+
+test('the week player lights each card in turn and ends on the finished frame', () => {
+  const make = (tag, attrs = {}) => ({ tag, dataset: { ...attrs }, textContent: '', classes: new Set(), classList: { toggle(name, on) { on ? this.owner.classes.add(name) : this.owner.classes.delete(name); } } });
+  const el = (tag, attrs) => { const e = make(tag, attrs); e.classList.owner = e; return e; };
+  const notes = [0, 1, 2].map(() => el('p'));
+  const cards = [0, 1, 2].map((k) => Object.assign(el('li', { card: String(k) }), { querySelector: () => notes[k] }));
+  const rule = el('p', { at: String(routineSteps().findIndex((s) => s.rule)) });
+  const live = el('span', { off: '2' });
+  const a = el('b', { set: 'a' });
+  const style = {};
+  const root = { style: { setProperty: (k, v) => { style[k] = v; } }, querySelectorAll: (sel) => ({ '[data-card]': cards, '[data-at]': [rule], '[data-off]': [live], '[data-set]': [a] })[sel] };
+  const scenes = routineScene(root);
+  scenes.render(0);
+  assert.ok(cards[0].classes.has('is-now') && !cards[1].classes.has('is-now'));
+  assert.equal(notes[1].textContent, ROUTINE.idle[1]);
+  assert.ok(!rule.classes.has('is-on') && !live.classes.has('is-off'));
+  assert.equal(a.textContent, '0'); assert.equal(style['--ab'], '0');
+  const last = scenes.steps.length - 1;
+  scenes.render(last);
+  assert.ok(cards[0].classes.has('is-done') && cards[1].classes.has('is-done') && cards[2].classes.has('is-now'));
+  assert.ok(rule.classes.has('is-on') && live.classes.has('is-off'));
+  assert.equal(a.textContent, fmt(LOOP.rounds[0].a.stats.views)); assert.equal(style['--ab'], '1');
+  assert.equal(notes[0].textContent, `${SWARM.keep} moments found`);
 });

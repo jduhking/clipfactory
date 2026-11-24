@@ -222,6 +222,85 @@ export function learnMarkup() {
 </div>`;
 }
 
+// ── Routine ──────────────────────────────────────────────────────────────────────────────
+// The Tonight / Tomorrow / Next week cards. One player walks the three cards in order, reusing the
+// swarm's stream and clips and the loop's first round, so the cards tell the same story as the rows.
+
+export const ROUTINE = {
+  cards: ['tonight', 'tomorrow', 'next'],
+  stream: 'stream-talk',
+  timer: ['0:41:12', '1:22:05', '2:00:00'],
+  scouts: [4, 8, 12],
+  // Your taste on the three suggested clips: keep the first two, skip the third.
+  kept: [true, true, false],
+  platforms: ['TikTok', 'Reels', 'Shorts'],
+  days: [1, 4, 7],
+  idle: ['Waiting for tonight', 'Waiting for clips', 'Waiting for results'],
+};
+
+export function routineSteps() {
+  const round = LOOP.rounds[0];
+  const n = stretchCount();
+  const keptCount = ROUTINE.kept.filter(Boolean).length;
+  const steps = [];
+  let state = { timer: ROUTINE.timer[0], saved: false, scouts: 0, shown: false, picked: 0, posted: false, progress: 0, won: false, asked: false, approved: false, rule: false };
+  const add = (card, ms, note, change = {}) => { state = { ...state, ...change }; steps.push({ ms, card, note, ...state }); };
+  ROUTINE.timer.forEach((timer, k) => {
+    const end = k === ROUTINE.timer.length - 1;
+    add(0, end ? 900 : 650, end ? `Stream saved: ${SWARM.file}` : `Live ${timer}`, { timer, saved: end });
+  });
+  ROUTINE.scouts.forEach((scouts) => add(0, scouts === n ? 1300 : 550, scouts === n ? `${SWARM.keep} moments found` : `Scouts ${scouts} of ${n}`, { scouts }));
+  add(1, 800, `${SWARM.keep} clips ready`, { shown: true });
+  ROUTINE.kept.forEach((keep, k) => add(1, 650, `You ${keep ? 'keep' : 'skip'} clip ${k + 1}`, { picked: k + 1 }));
+  add(1, 1500, `${keptCount} clips posted`, { posted: true });
+  ROUTINE.days.forEach((day) => add(2, day === LOOP.windowDays ? 900 : 700, `Day ${day} of ${LOOP.windowDays} on ${LOOP.platform}`, { progress: day / LOOP.windowDays }));
+  add(2, 1000, `More views: keep ${round.winner.toUpperCase()}`, { won: true });
+  add(2, 900, 'Waiting for your OK', { asked: true });
+  add(2, 700, 'Approved', { approved: true });
+  add(2, 2600, 'Every new clip starts from it', { rule: true });
+  return steps;
+}
+
+const routineAt = (pred) => routineSteps().findIndex(pred);
+const routineDuration = (card) => routineSteps().filter((s) => s.card === card).reduce((sum, s) => sum + s.ms, 0);
+const routineNote = (card) => routineSteps().filter((s) => s.card === card).at(-1).note;
+
+/** One card's picture, in its finished state; data-at / data-off name the step that turns each part on or off. */
+export function routineMarkup(card) {
+  const k = ROUTINE.cards.indexOf(card);
+  if (k < 0) throw new Error(`Unknown routine card: ${card}`);
+  const n = stretchCount();
+  const round = LOOP.rounds[0];
+  let stage = '', row = '';
+  if (card === 'tonight') {
+    const saved = routineAt((s) => s.saved);
+    const found = routineAt((s) => s.scouts >= n);
+    const segments = Array.from({ length: n }, (_, i) => `<li class="is-on" data-at="${routineAt((s) => s.scouts > i)}"></li>`).join('');
+    const marks = swarmPicks().map((p) => `<span class="routine-mark is-on" data-at="${found}" style="--x:${((p.stretch + SWARM.ideas[p.stretch][p.idea][1]) / n).toFixed(3)}"></span>`).join('');
+    stage = `${img(ROUTINE.stream)}<span class="routine-badge routine-live is-off" data-off="${saved}"><i></i>Live <b data-set="timer">${ROUTINE.timer.at(-1)}</b></span><span class="routine-badge routine-file is-on" data-at="${saved}">${esc(SWARM.file)}</span>`;
+    row = `<div class="routine-scan"><ol>${segments}</ol>${marks}</div>`;
+  } else if (card === 'tomorrow') {
+    const shown = routineAt((s) => s.shown), posted = routineAt((s) => s.posted);
+    const clips = SWARM.clips.map((c, i) => {
+      const keep = ROUTINE.kept[i];
+      return `<li class="routine-clip is-on${keep ? '' : ' is-skipped'}" data-at="${shown}">${img(c.photo)}<span class="routine-pick is-on" data-at="${routineAt((s) => s.picked > i)}">${keep ? 'Kept' : 'Skipped'}</span>${keep ? `<span class="routine-posted is-on" data-at="${posted}">Posted</span>` : ''}</li>`;
+    }).join('');
+    stage = `<ol class="routine-clips">${clips}</ol>`;
+    row = `<ul class="routine-chips">${ROUTINE.platforms.map((p) => `<li class="is-on" data-at="${posted}">${p}</li>`).join('')}</ul>`;
+  } else {
+    const top = Math.max(round.a.stats.views, round.b.stats.views);
+    const side = (key) => {
+      const v = round[key];
+      const win = round.winner === key;
+      return `<div class="routine-ab${win ? ' is-winner' : ''}"><span class="routine-letter">${key.toUpperCase()}</span><span class="routine-hook">${esc(v.label)}</span><span class="routine-views"><b data-set="${key}">${fmt(v.stats.views)}</b> views</span><span class="routine-bar"><i style="--share:${(v.stats.views / top).toFixed(3)}"></i></span>${win ? `<span class="routine-win is-on" data-at="${routineAt((s) => s.won)}">Winner</span>` : ''}</div>`;
+    };
+    const ask = routineAt((s) => s.asked), ok = routineAt((s) => s.approved);
+    stage = `<div class="routine-test"><p class="routine-meta">${LOOP.platform}, ${LOOP.windowDays} days</p>${side('a')}${side('b')}<span class="routine-btn is-on" data-at="${ask}"><span>Approve</span><span class="routine-ok is-on" data-at="${ok}">Approved</span></span></div>`;
+    row = `<p class="routine-rule is-on" data-at="${routineAt((s) => s.rule)}"><span>New rule</span>${esc(round.lesson)}</p>`;
+  }
+  return `<div class="scene routine-scene routine-${card}"><span class="routine-progress" style="--dur:${routineDuration(k)}ms"></span><div class="routine-stage">${stage}</div>${row}<p class="routine-note" data-note>${esc(routineNote(k))}</p></div>`;
+}
+
 // ── Players ──────────────────────────────────────────────────────────────────────────────
 
 const toggle = (el, name, on) => el.classList.toggle(name, !!on);
@@ -300,7 +379,31 @@ export function learnScene(root) {
   };
 }
 
-const SCENES = { swarm: swarmScene, loop: loopScene, learn: learnScene };
+export function routineScene(root) {
+  const steps = routineSteps();
+  const round = LOOP.rounds[0];
+  const cards = [...root.querySelectorAll('[data-card]')];
+  const notes = cards.map((card) => card.querySelector('[data-note]'));
+  const finals = ROUTINE.cards.map((_, k) => routineNote(k));
+  const ons = [...root.querySelectorAll('[data-at]')];
+  const offs = [...root.querySelectorAll('[data-off]')];
+  const sets = [...root.querySelectorAll('[data-set]')];
+  return {
+    steps,
+    render(i) {
+      const s = steps[i];
+      const values = { timer: s.timer, a: fmt(round.a.stats.views * s.progress), b: fmt(round.b.stats.views * s.progress) };
+      ons.forEach((el) => toggle(el, 'is-on', i >= Number(el.dataset.at)));
+      offs.forEach((el) => toggle(el, 'is-off', i >= Number(el.dataset.off)));
+      sets.forEach((el) => { el.textContent = values[el.dataset.set]; });
+      cards.forEach((el, k) => { toggle(el, 'is-now', k === s.card); toggle(el, 'is-done', k < s.card); });
+      notes.forEach((el, k) => { if (el) el.textContent = k === s.card ? s.note : k < s.card ? finals[k] : ROUTINE.idle[k]; });
+      root.style.setProperty('--ab', String(s.progress));
+    },
+  };
+}
+
+const SCENES = { swarm: swarmScene, loop: loopScene, learn: learnScene, routine: routineScene };
 
 /** Plays a scene while it is on screen and the tab is visible. Reduced motion shows the finished frame. */
 export function mountScene({ root, scene, media = window.matchMedia.bind(window), lifecycle = window, doc = document, observe, timers = { set: (fn, ms) => setTimeout(fn, ms), clear: (id) => clearTimeout(id) } }) {
