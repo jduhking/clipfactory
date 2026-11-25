@@ -90,9 +90,14 @@ button,a,summary { -webkit-tap-highlight-color: transparent; }
   .hero-shot .hero-stream { grid-area: 1 / 1 / 2 / 10; }
   .hero-shot .hero-clips { grid-area: 1 / 6 / 2 / 13; margin: -4cqi 0 0; }
 }
-/* Topography: the app's contour field, decorative, behind the hero. */
+/* Topography: the app's contour field, one fixed layer behind the whole home page. Every section shows it
+   and fades to the solid background at its edges; border-image paints the fade full width, even on .wrap sections. */
 .hero { position: relative; isolation: isolate; }
-.topography-field { position: absolute; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; background: url("/assets/topography.svg") center / cover no-repeat; -webkit-mask-image: linear-gradient(to bottom, var(--foreground) 55%, transparent); mask-image: linear-gradient(to bottom, var(--foreground) 55%, transparent); }
+.topography-field { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; background: url("/assets/topography.svg") center / cover no-repeat; }
+.streamer-home main > section { --seam: 96px; border-image: linear-gradient(to bottom, var(--background), transparent var(--seam), transparent calc(100% - var(--seam)), var(--background)) fill 0 / 0 / 0 100vw; }
+.streamer-home main > .hero { border-image: linear-gradient(to bottom, transparent calc(100% - var(--seam)), var(--background)) fill 0 / 0 / 0 100vw; }
+.streamer-home main > .cta-band { background: none; }
+.streamer-home .site-foot { margin-top: 0; }
 .topography-field.has-contours { background-image: none; }
 .topography-field canvas { display: block; width: 100%; height: 100%; }
 @media (forced-colors: active) { .topography-field { display: none; } }
@@ -363,11 +368,12 @@ button,a,summary { -webkit-tap-highlight-color: transparent; }
   .feature, .feature:nth-child(even) { grid-template-columns: minmax(0,1fr); gap: 32px; } .feature:nth-child(even) .feature-copy { order: 0; }
   .features { gap: 88px; padding-block: 64px 96px; }
   .hero { padding-top: 64px; } .home-section, .cta-band { padding-block: 80px; }
-  .nav-desktop { display: none; } .header-download { margin-left: auto; } .menu-btn { display: flex; }
+  .nav-desktop { display: none; } .menu-btn { display: flex; margin-left: auto; }
 }
 @media (max-width: 680px) {
+  .streamer-home main > section { --seam: 64px; }
   .wrap { width: calc(100% - 40px); }
-  .header-row { gap: 12px; } .header-download { display: none; } .menu-btn { margin-left: auto; }
+  .header-row { gap: 12px; }
   .hero { padding-top: 48px; } .hero h1 { font-size: clamp(34px,9.4vw,56px); } .hero-lead { font-size: 16px; }
   .hero-shot { width: calc(100% - 24px); margin-top: 48px; border-radius: 8px; }
   .routine { padding-bottom: 96px; } .routine-card { grid-template-columns: minmax(0,1fr); gap: 20px; padding: 20px; } .home-section, .cta-band { padding-block: 64px; }
