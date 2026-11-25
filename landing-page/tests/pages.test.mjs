@@ -61,7 +61,7 @@ test("every page has a unique title, one H1, a description, a canonical URL and 
     assert.match(src, /<meta property="og:title"/, `${name}: Open Graph`);
     assert.match(src, /<!-- site:header --><header class="site-header">/, `${name}: header`);
     assert.match(src, /<!-- site:footer --><footer class="site-foot">/, `${name}: footer`);
-    for (const href of ["/#how", "/pricing.html", "/#faq", "/guide/", "/download.html", "/#waitlist"]) {
+    for (const href of ["/#how", "/pricing.html", "/#faq", "/guide/", "/download.html"]) {
       assert.ok(src.includes(`href="${href}"`), `${name}: nav link ${href}`);
     }
     assert.match(src, /aria-controls="mobile-nav" aria-expanded="false"/, `${name}: menu button`);
@@ -205,7 +205,7 @@ test("the old agent-workflow pages are gone, redirect home, and nothing links to
   for (const [name, src] of pages) {
     assert.doesNotMatch(src, /href="\/(product|learning)(\.html)?"/, `${name}: links a retired page`);
     assert.doesNotMatch(src, /<a class="btn[^"]*" href="mailto:/, `${name}: a button that skips the beta form`);
-    assert.match(src, /<a class="btn btn-dark btn-sm header-download" href="\/#waitlist">Join the Mac beta<\/a>/, `${name}: header goes to the beta form`);
+    assert.doesNotMatch(src, /Join the Mac beta|header-download/, `${name}: no beta button in the header or menu`);
   }
   assert.ok(!files.includes("product.html") && !files.includes("learning.html"));
 });

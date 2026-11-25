@@ -1,6 +1,6 @@
 import { startContours } from './contours.js?v=pearl-streamer-10';
 
-/** Decorative only: one field in the hero, never over controls or content. */
+/** Decorative only: one fixed field behind the whole home page, never over controls or content. */
 export function mountTopography({ host, button, start = startContours, media = window.matchMedia.bind(window), lifecycle = window }) {
   const forced = media('(forced-colors: active)');
   const motion = media('(prefers-reduced-motion: reduce)');
@@ -65,7 +65,6 @@ export function mountTopography({ host, button, start = startContours, media = w
 }
 
 if (typeof document !== 'undefined') {
-  const hero = document.querySelector('.hero');
-  const host = hero?.querySelector('[data-topography]');
+  const host = document.querySelector('[data-topography]');
   if (host) mountTopography({ host });
 }

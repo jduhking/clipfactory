@@ -26,9 +26,8 @@ export function header(path) {
   return `<header class="site-header"><div class="wrap header-row">
   <a class="brand header-logo" href="/" aria-label="Growth Factory home"><img src="/assets/icon.svg?v=pearl-streamer-10" alt="" width="36" height="36" /><span class="header-title">Growth Factory</span></a>
   <nav class="nav-desktop" aria-label="Main navigation">${links}</nav>
-  <a class="btn btn-dark btn-sm header-download" href="/#waitlist">Join the Mac beta</a>
   <button class="menu-btn" type="button" aria-label="Open menu" aria-controls="mobile-nav" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" /></svg></button>
-</div><nav id="mobile-nav" class="nav-mobile" aria-label="Mobile navigation" hidden>${links}<a class="btn btn-dark" href="/#waitlist">Join the Mac beta</a></nav></header>`;
+</div><nav id="mobile-nav" class="nav-mobile" aria-label="Mobile navigation" hidden>${links}</nav></header>`;
 }
 
 export function footer(path) {
