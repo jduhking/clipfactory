@@ -26,7 +26,7 @@ test('topography is decorative, behind content, with static and forced-color fal
   assert.match(css,/forced-colors: active/);
   assert.match(html,/<div class="topography-field" data-topography aria-hidden="true"><\/div>\s*<section class="hero"/,'one field for the whole page, outside the hero');
   assert.match(css,/\.topography-field \{ position: fixed; inset: 0;/,'fixed behind every section');
-  assert.match(css,/\.streamer-home main > section \{ --seam: 96px; border-image: linear-gradient\(to bottom, var\(--background\), transparent var\(--seam\), transparent calc\(100% - var\(--seam\)\), var\(--background\)\) fill 0 \/ 0 \/ 0 100vw; \}/,'each section fades to the solid background, full width');
+  assert.match(css,/\.streamer-home main > section \{ --seam: 96px; border-image: linear-gradient\(to bottom, transparent, var\(--background\) var\(--seam\), var\(--background\) calc\(100% - var\(--seam\)\), transparent\) fill 0 \/ 0 \/ 0 100vw; \}/,'each section is a solid band, full width, fading into the field at its edges');
   const svg = await readFile(new URL('assets/topography.svg',root),'utf8');
   assert.match(svg,/<svg[^>]*viewBox="0 0 1440 800"/);
   assert.ok((svg.match(/<path /g)||[]).length>5);

@@ -90,12 +90,13 @@ button,a,summary { -webkit-tap-highlight-color: transparent; }
   .hero-shot .hero-stream { grid-area: 1 / 1 / 2 / 10; }
   .hero-shot .hero-clips { grid-area: 1 / 6 / 2 / 13; margin: -4cqi 0 0; }
 }
-/* Topography: the app's contour field, one fixed layer behind the whole home page. Every section shows it
-   and fades to the solid background at its edges; border-image paints the fade full width, even on .wrap sections. */
+/* Topography: the app's contour field, one fixed layer behind the whole home page. Each section is a solid band
+   across the full width; the field shows in the hero and where two sections meet, fading into the bands.
+   border-image paints the band full width, even on .wrap sections. */
 .hero { position: relative; isolation: isolate; }
 .topography-field { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; background: url("/assets/topography.svg") center / cover no-repeat; }
-.streamer-home main > section { --seam: 96px; border-image: linear-gradient(to bottom, var(--background), transparent var(--seam), transparent calc(100% - var(--seam)), var(--background)) fill 0 / 0 / 0 100vw; }
-.streamer-home main > .hero { border-image: linear-gradient(to bottom, transparent calc(100% - var(--seam)), var(--background)) fill 0 / 0 / 0 100vw; }
+.streamer-home main > section { --seam: 96px; border-image: linear-gradient(to bottom, transparent, var(--background) var(--seam), var(--background) calc(100% - var(--seam)), transparent) fill 0 / 0 / 0 100vw; }
+.streamer-home main > .hero { border-image: none; }
 .streamer-home main > .cta-band { background: none; }
 .streamer-home .site-foot { margin-top: 0; }
 .topography-field.has-contours { background-image: none; }
