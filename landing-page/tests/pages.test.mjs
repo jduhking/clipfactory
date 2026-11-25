@@ -61,7 +61,7 @@ test("every page has a unique title, one H1, a description, a canonical URL and 
     assert.match(src, /<meta property="og:title"/, `${name}: Open Graph`);
     assert.match(src, /<!-- site:header --><header class="site-header">/, `${name}: header`);
     assert.match(src, /<!-- site:footer --><footer class="site-foot">/, `${name}: footer`);
-    for (const href of ["/product.html", "/learning.html", "/pricing.html", "/guide/", "/download.html"]) {
+    for (const href of ["/#how", "/pricing.html", "/#faq", "/guide/", "/download.html", "/#waitlist"]) {
       assert.ok(src.includes(`href="${href}"`), `${name}: nav link ${href}`);
     }
     assert.match(src, /aria-controls="mobile-nav" aria-expanded="false"/, `${name}: menu button`);
@@ -195,4 +195,17 @@ test("docs/architecture.md has a Mermaid version of every website diagram", asyn
   const doc = await readFile(join(REPO, "docs", "architecture.md"), "utf8");
   for (const spec of Object.values(DIAGRAMS)) assert.match(doc, new RegExp(`^## ${spec.title}$`, "m"), spec.title);
   assert.equal((doc.match(/^```mermaid$/gm) || []).length, Object.keys(DIAGRAMS).length);
+});
+
+test("the old agent-workflow pages are gone, redirect home, and nothing links to them or to a bare mailto button", async () => {
+  const vercel = JSON.parse(await readFile(join(ROOT, "vercel.json"), "utf8"));
+  for (const source of ["/product", "/product.html", "/learning", "/learning.html"]) {
+    assert.ok(vercel.redirects.some((r) => r.source === source && r.destination === "/#how"), `${source} redirects home`);
+  }
+  for (const [name, src] of pages) {
+    assert.doesNotMatch(src, /href="\/(product|learning)(\.html)?"/, `${name}: links a retired page`);
+    assert.doesNotMatch(src, /<a class="btn[^"]*" href="mailto:/, `${name}: a button that skips the beta form`);
+    assert.match(src, /<a class="btn btn-dark btn-sm header-download" href="\/#waitlist">Join the Mac beta<\/a>/, `${name}: header goes to the beta form`);
+  }
+  assert.ok(!files.includes("product.html") && !files.includes("learning.html"));
 });

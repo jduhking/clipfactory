@@ -17,7 +17,9 @@ import { swarmMarkup, loopMarkup, learnMarkup, heroMarkup, routineMarkup } from 
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
 const GUIDE_SRC = join(ROOT, "..", "docs", "guide");
-const HAND_PAGES = ["product.html", "learning.html"];
+// The old Product and Learning pages pitched an agent workflow, not the streamer beta; /product and /learning
+// now redirect to the home page (vercel.json).
+const HAND_PAGES = [];
 
 /** Docs sidebar. Every guide page must appear exactly once; build fails otherwise. */
 export const DOCS_NAV = [

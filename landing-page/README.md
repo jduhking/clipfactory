@@ -6,8 +6,8 @@ The public website: product pages, pricing, the user guide, architecture, legal 
 
 | Page | Source |
 |---|---|
-| `/` home: the loop, agents, platforms, privacy, pricing, FAQ | `site/pages/index.html` (generated homepage) |
-| `/product.html`, `/learning.html` | hand-written |
+| `/` home: hero, three animated rows, your week, the beta form, FAQ, pricing | `site/pages/index.html` (generated homepage) |
+| `/product`, `/learning` | redirect to `/#how` in `vercel.json`; the old agent-workflow pages are retired |
 | `/pricing.html` plans, monthly and yearly, comparison table | `site/pages/pricing.html` + `plans.json` |
 | `/download.html` setup on Mac, Windows and Linux | `site/pages/download.html` |
 | `/architecture.html` five system diagrams | `site/pages/architecture.html` + `site/diagrams.mjs` |
