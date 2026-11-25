@@ -71,13 +71,25 @@ button,a,summary { -webkit-tap-highlight-color: transparent; }
 .hero-center { display: flex; flex-direction: column; align-items: center; text-align: center; }
 .hero h1 { text-wrap: balance; overflow-wrap: break-word; font-size: clamp(44px,6.4vw,84px); font-weight: 700; line-height: 1; letter-spacing: -.05em; }
 .hero-lead { max-width: 44ch; margin-top: 20px; color: var(--muted); font-size: clamp(17px,1.5vw,20px); line-height: 1.6; text-wrap: pretty; }
-.hero-center .btn { margin-top: 32px; }
+.hero-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 16px 28px; margin-top: 32px; }
+.hero-more { font-weight: 600; }
 .btn-lg { min-height: 52px; padding: 12px 28px; font-size: 16px; }
 .hero-note { margin-top: 16px; color: var(--muted-2); font-size: 14px; }
 /* The screenshots: the real app, on the page's one raised surface. */
 .app-shot { min-width: 0; border-radius: 12px; overflow: hidden; background: var(--surface); outline: 1px solid var(--violet-rim); outline-offset: -1px; box-shadow: var(--lift); }
 .app-shot img { width: 100%; }
 .hero-shot { width: min(1160px, calc(100% - 48px)); margin: 56px auto 0; }
+@media (min-width: 1200px) {
+  .hero { display: grid; grid-template-columns: minmax(24px,1fr) minmax(0,500px) minmax(0,700px) minmax(24px,1fr); align-items: center; column-gap: 48px; padding: 64px 0 112px; }
+  .hero-center { grid-column: 2; width: auto; margin: 0; align-items: flex-start; text-align: left; }
+  .hero h1 { font-size: clamp(44px,3.6vw,56px); }
+  .hero-actions { justify-content: flex-start; }
+  .hero-shot { grid-column: 3; width: auto; margin: 0; }
+  /* Beside the headline the picture stays side by side, even where its own width would stack it. */
+  .hero-shot .hero-visual { padding: 4cqi 0 0; font-size: clamp(10px,1.7cqi,14px); }
+  .hero-shot .hero-stream { grid-area: 1 / 1 / 2 / 10; }
+  .hero-shot .hero-clips { grid-area: 1 / 6 / 2 / 13; margin: -4cqi 0 0; }
+}
 /* Topography: the app's contour field, decorative, behind the hero. */
 .hero { position: relative; isolation: isolate; }
 .topography-field { position: absolute; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; background: url("/assets/topography.svg") center / cover no-repeat; -webkit-mask-image: linear-gradient(to bottom, var(--foreground) 55%, transparent); mask-image: linear-gradient(to bottom, var(--foreground) 55%, transparent); }

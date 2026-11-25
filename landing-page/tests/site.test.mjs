@@ -43,6 +43,7 @@ test('the hero is three short lines, one button and a stream turning into clips'
   assert.equal(lead, 'Growth Factory cuts each stream into clips, tests them, and learns what your viewers watch.');
   assert.ok(lead.split(/\s+/).length <= 22, 'a short lead');
   assert.equal([...hero.matchAll(/class="btn /g)].length, 1, 'one button');
+  assert.match(hero, /<a class="text-link hero-more" href="#how">See how it works<\/a>/, 'a quiet second path for the curious');
   assert.match(hero, /<a class="btn btn-primary btn-lg" href="#waitlist">Join the Mac beta<\/a>/);
   assert.match(hero, /<p class="hero-note">Free to start\. No card needed\.<\/p>/);
   assert.match(hero, /<figure class="hero-shot" role="img" aria-label="A two-hour stream with its three best moments marked, [^"]+TikTok, Instagram Reels and YouTube Shorts\."><!-- build:scene hero --><div class="hero-visual">/);
@@ -63,7 +64,8 @@ test('the page stays simple: one background, a few short animations, no video or
 
 test('the primary calls to action lead to the waitlist, with no invented installer or access guarantee', () => {
   assert.ok([...html.matchAll(/<a\b[^>]*href="#waitlist"/g)].length >= 1);
-  assert.ok([...html.matchAll(/href="mailto:jamesbodebiyi@gmail.com\?subject=Growth%20Factory%20Mac%20streamer%20beta"/g)].length >= 3);
+  assert.equal([...html.matchAll(/<a class="btn btn-dark[^"]*" href="\/#waitlist">Join the Mac beta<\/a>/g)].length, 2, 'header and mobile menu go to the beta form');
+  assert.ok([...html.matchAll(/href="mailto:jamesbodebiyi@gmail.com\?subject=Growth%20Factory%20Mac%20streamer%20beta"/g)].length >= 1, 'the address is still there to write to directly');
   assert.match(html, /Submitting opens an email to <a href="mailto:/);
   assert.match(html, /Apple Silicon/);
   assert.doesNotMatch(html, /Download for Mac|data-download|theclipfactory-frontend-two\.vercel\.app/);
