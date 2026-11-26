@@ -16,7 +16,7 @@ CUT_START=270 CUT_END=392        # the original's old 3D shot, frames 270-391 (9
 
 [ -f "$SRC" ] || { echo "Original trailer not found: $SRC (pass its path as the first argument)" >&2; exit 1; }
 command -v ffmpeg >/dev/null || { echo "ffmpeg is required" >&2; exit 1; }
-for take in clipA-1 clipB-1 clipCD-1; do
+for take in clipA-1 clipB-1 clipCD2-1; do
   [ -f "$OUT/takes/$take.mp4" ] || { echo "Missing $OUT/takes/$take.mp4: generate it with muapi.py (see README)" >&2; exit 1; }
 done
 export VSCO_DIR="${VSCO_DIR:-$OUT/vsco}"
@@ -24,9 +24,9 @@ export VSCO_DIR="${VSCO_DIR:-$OUT/vsco}"
 
 # Shots in 24 fps source frames [start, end). Each is a multiple of 4 frames (1/6 s), so every cut lands on a whole
 # frame at 30 fps. A: boots to the valley reveal. B: the corrupted tree, ending on the lightning flash. CD: the
-# serious stare into the goofy face, ending before a second Moku appears at 5.6 s.
-A0=0 A1=152 B0=100 B1=188 C0=20 C1=132
-REVEAL=3.75 GOOFY=2.54 MOKU=3.80   # seconds into clip A (reveal) and clip CD (goofy face, Moku pops up)
+# serious stare into the goofy face as Moku floats up, ending before the light swells at 4.17 s.
+A0=0 A1=152 B0=100 B1=188 C0=0 C1=100
+REVEAL=3.75 GOOFY=1.71 MOKU=2.75   # seconds into clip A (reveal) and clip CD2 (goofy face, Moku's sting)
 
 "$PY" - "$A0" "$A1" "$B0" "$B1" "$C0" "$C1" "$REVEAL" "$GOOFY" "$MOKU" > "$OUT/cues.json" <<'PY'
 import json, sys
@@ -45,7 +45,7 @@ GRADE="fps=30,scale=1920:1080:flags=lanczos:in_color_matrix=bt601:out_color_matr
 setparams=range=tv:colorspace=bt709:color_primaries=bt709:color_trc=bt709,eq=contrast=1.06:saturation=1.03:brightness=0.02,\
 colorbalance=rs=-0.02:bs=0.03:rh=0.03:bh=-0.02,noise=c0s=5:c0f=t+u,vignette=PI/10,fade=t=in:st=0:d=0.4,\
 format=yuv420p,setsar=1"
-ffmpeg -hide_banner -loglevel error -y -i "$OUT/takes/clipA-1.mp4" -i "$OUT/takes/clipB-1.mp4" -i "$OUT/takes/clipCD-1.mp4" \
+ffmpeg -hide_banner -loglevel error -y -i "$OUT/takes/clipA-1.mp4" -i "$OUT/takes/clipB-1.mp4" -i "$OUT/takes/clipCD2-1.mp4" \
   -filter_complex "[0:v]trim=start_frame=$A0:end_frame=$A1,setpts=PTS-STARTPTS[a];\
 [1:v]trim=start_frame=$B0:end_frame=$B1,setpts=PTS-STARTPTS[b];\
 [2:v]trim=start_frame=$C0:end_frame=$C1,setpts=PTS-STARTPTS[c];\

@@ -72,6 +72,18 @@
    "first": "out/keys/cd_first.png",
    "last": "out/keys/cd_last.png",
    "prompt": "Live-action film footage. Close-up of the young woman with pink hair, mint highlights and tall furry pink rabbit ears standing in the storm, rain on her face. For two seconds she stares ahead, serious and determined, wind in her hair. Then she suddenly pulls a goofy face: she crosses her eyes, sticks her tongue out and puffs one cheek. Moku, a small dark-teal rabbit-like creature with long soft ears, pops up onto her shoulder and pulls the same goofy face beside her. They hold the pose."
+  },
+  {
+   "id": "clipCD2",
+   "note": "Redo of clipCD with Moku as he really is: a floating blob with bunny ears. Same first frame; no last frame, because the draft has the wrong Moku in it.",
+   "endpoint": "veo3.1-fast-image-to-video",
+   "params": {
+    "resolution": "1080p",
+    "aspect_ratio": "16:9",
+    "duration": 8
+   },
+   "first": "out/keys/cd_first.png",
+   "prompt": "Live-action film footage. Close-up of the young woman with pink hair, mint highlights and tall furry pink rabbit ears standing in the storm, rain on her face. For two seconds she stares ahead, serious and determined, wind in her hair. Then she suddenly pulls a goofy face: she crosses her eyes, sticks her tongue out and puffs one cheek. Moku floats up into the frame beside her cheek and pulls the same goofy face, tongue out. Moku is a magical floating blob, not an animal: a smooth, round, dark-teal body the size of a grapefruit, soft and a little squishy like a gummy sweet, with two long upright bunny ears on top, two big glossy dark eyes and a tiny mouth. Moku has no arms, no legs, no paws, no tail and no animal body, and never touches her: he hovers in mid-air next to her face, bobbing gently. They hold the goofy pose together."
   }
  ]
 }

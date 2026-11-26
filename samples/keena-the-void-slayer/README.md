@@ -1,18 +1,18 @@
 # Keena the Void Slayer trailer (sample video)
 
 `keena-trailer-live-intro.mp4` is a sample video to try Clip Factory on: the Keena the Void Slayer trailer with a new
-live-action-style cold open. It is 78.6 s long, 1920×1080 at 30 fps, H.264 video with AAC stereo sound, 46 MB.
+live-action-style cold open. It is 78.1 s long, 1920×1080 at 30 fps, H.264 video with AAC stereo sound, 46 MB.
 
 | Time | What happens |
 |---|---|
 | 0–6.3 s | The camera starts low at Keena's boots in wet grass and rises behind her to reveal Leporidia: the valley, the giant tree and a swarm of voidlings. |
 | 6.3–10 s | The giant tree and its hive, corrupted by purple void in a storm. It cuts on a lightning flash. |
 | 10–11.7 s | Close-up of Keena's serious stare on the big hit. |
-| 11.7–14.7 s | The music stops dead. She pulls a goofy face, Moku pops up on her shoulder and copies it, and a bassoon and tuba sting lands on A, the key the trailer opens in. |
-| 14.7–78.6 s | The original trailer, without its old 3D shot (9.0–13.07 s of the original). That shot is exactly 8 beats long, so the music stays on the beat. |
+| 11.7–14.2 s | The music stops dead. She pulls a goofy face, Moku floats up beside her and copies it, and a bassoon and tuba sting lands on A, the key the trailer opens in. |
+| 14.2–78.1 s | The original trailer, without its old 3D shot (9.0–13.07 s of the original). That shot is exactly 8 beats long, so the music stays on the beat. |
 
-Keena is played as a live-action character: a young woman in a practical version of her costume, with Moku as a
-realistic creature.
+Keena is played as a live-action character: a young woman in a practical version of her costume. Moku is as he is
+in the game: a small floating dark-teal blob with bunny ears and no legs.
 
 ## How it was made
 
@@ -21,7 +21,7 @@ realistic creature.
 | Two 17 s drafts of the whole intro to block the shots, the second in live-action style | Seedance 2.5 omni-reference on MuAPI at 480p, with crops of the style moodboard and a meadow photo as references | $5.78 |
 | Shot A, boots to the valley, from a frame of the second draft | Veo 3.1 Fast image-to-video on MuAPI | refunded by MuAPI |
 | Shot B, the corrupted tree | Veo 3.1 Fast text-to-video | $0.78 |
-| Shot CD, the stare to the goofy face, between two frames of the second draft | Veo 3.1 Fast image-to-video, first and last frame | refunded by MuAPI |
+| Shot CD, the stare to the goofy face, from a frame of the second draft | Veo 3.1 Fast image-to-video | refunded by MuAPI |
 | Music | `score.py`, from VSCO 2 Community Edition orchestral samples | free |
 | Edit, grade, film grain and the 24 to 30 fps conversion | ffmpeg | free |
 
@@ -44,7 +44,7 @@ cd samples/keena-the-void-slayer/generator-v2
 mkdir -p out/takes
 curl -L -o out/takes/clipA-1.mp4 https://cdn.muapi.ai/outputs/generated/271c588e-580d-44de-a9e7-173334c02a8e_4f05adf3.mp4
 curl -L -o out/takes/clipB-1.mp4 https://cdn.muapi.ai/outputs/generated/5988257d-8503-4723-96cc-f56e505a6216_8f5cc22f.mp4
-curl -L -o out/takes/clipCD-1.mp4 https://cdn.muapi.ai/outputs/generated/a65d5cfb-2d69-43dc-8892-b5130cc6a1bd_08a6131e.mp4
+curl -L -o out/takes/clipCD2-1.mp4 https://cdn.muapi.ai/outputs/generated/3e8255cd-8501-4b59-90bb-2ada8ba29293_8ef1f6ad.mp4
 PYTHON=python3 bash build.sh /path/to/keenathevoidslayertrailer.mp4
 ```
 
@@ -56,18 +56,18 @@ PYTHON=python3 bash build.sh /path/to/keenathevoidslayertrailer.mp4
 4. writes `out/keena-trailer-live-intro.mp4` (two-pass H.264 at 4.6 Mbps, as committed here) and `out/intro-live.mp4`
    (the intro on its own).
 
-To make new takes instead, set `MUAPI_API_KEY` and run `python3 muapi.py run clipA` (or `clipB`, `clipCD`). Each shot
+To make new takes instead, set `MUAPI_API_KEY` and run `python3 muapi.py run clipA` (or `clipB`, `clipCD2`). Each shot
 costs about $0.78 and comes out different every time, so check the trims and cue times at the top of `build.sh`
 afterwards. `muapi.py price <job>` shows the cost first, and `run` refuses any job that would take the total in
 `out/ledger.json` past `BUDGET_USD` (default 10). Shots A and CD start from frames of the second draft, upscaled to
-1920×1080 in `out/keys/`: 0.17 s for A, 12.70 s and 16.70 s for CD. That draft can be downloaded until the same date
+1920×1080 in `out/keys/`: 0.17 s for A and 12.70 s for CD. That draft can be downloaded until the same date
 from https://cdn.muapi.ai/outputs/generated/bd42150e-f1b5-4ad6-a17a-1f878f81f1b2_1a982641.mp4.
 
 ## What is where
 
 | File in `generator-v2/` | Contents |
 |---|---|
-| `jobs.json` | Prompts and settings for every generated shot, including both drafts |
+| `jobs.json` | Prompts and settings for every generated shot, including both drafts and `clipCD`, a first take of CD that made Moku a rabbit on her shoulder |
 | `muapi.py` | MuAPI client: prices a job, keeps to the budget, runs it and downloads the take. `reconcile` records what MuAPI actually charged. |
 | `score.py` | The intro's music, timed to `out/cues.json` |
 | `fetch_vsco.py` | Downloads the VSCO samples the score uses |
