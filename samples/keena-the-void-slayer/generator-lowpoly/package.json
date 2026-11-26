@@ -1,0 +1,10 @@
+{
+  "name": "keena-trailer-lowpoly-intro",
+  "private": true,
+  "type": "module",
+  "description": "Low-poly pixel-art cold open for the Keena the Void Slayer trailer, rendered headless with Three.js",
+  "dependencies": {
+    "playwright": "1.65.1",
+    "three": "0.170.0"
+  }
+}

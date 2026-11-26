@@ -1,0 +1,89 @@
+{
+ "style": "Real live-action footage filmed on location, shot on 35 mm film with an ARRI camera and anamorphic lenses: natural storm light with a low sun breaking through heavy clouds, real skin texture with pores and fine peach fuzz, flyaway hairs, wet fabric, mud and rain droplets, true real-world scale, slight handheld camera shake, natural motion blur, shallow depth of field, gentle lens flare, film grain and a restrained natural grade with pink and teal accents. This is real camera footage, not animation: no cartoon or stylised 3D render, no plastic skin, no cel shading, no glowing outlines, no text, no subtitles, no music.",
+ "jobs": [
+  {
+   "id": "draft",
+   "note": "Seedance 2.5 blocking pass for the whole intro; frames from it become Veo start/end frames.",
+   "endpoint": "seedance-2.5-omni-reference",
+   "params": {
+    "resolution": "480p",
+    "duration": 17,
+    "aspect_ratio": "16:9",
+    "omni_reference_task_type": "reference",
+    "high_bitrate": true
+   },
+   "refs": [
+    "refs/ref_scene.png",
+    "refs/ref_head.png",
+    "refs/ref_moku.png"
+   ],
+   "prompt": "A 17-second photoreal cold open in five timed shots. Use the first reference image for Keena and Moku's character design, the second for Keena's head, hair, ears and face, and the third for Moku. Use them only for identity, shapes, colours and costume, never for drawing style. [0-3.5 s] Ground-level close-up in tall wet storm-blown grass at dusk: Keena's teal leather boots with white laces planted firmly; the camera cranes up slowly while orbiting around her legs to her back; her face is not visible. [3.5-8 s] The same continuous move keeps rising past her shoulder and long pink rabbit ears to an over-the-shoulder view of the kingdom of Leporidia below: rolling green hills, small cottages, and on the horizon a colossal ancient tree with a giant golden beehive hanging from its branches. Black-violet corruption spreads across the land and swarms of small shadowy voidlings with glowing magenta eyes pour over the hills toward the tree. [8-11.5 s] Cut to a wide telephoto shot of the colossal tree and hive: black-violet tendrils climb the bark, the hive's honey glow dims, bees flee, lightning flickers inside a swirling dark storm above. [11.5-14.5 s] Cut back to Keena: the camera arcs around to her front and rises to a close-up of her face for the first time, serious and determined, wind in her pink hair, storm light on her face. [14.5-17 s] Same close-up: she suddenly breaks into a cute goofy face with crossed eyes, tongue out and one cheek puffed; Moku pops up from behind her shoulder and makes the same goofy face beside her; they hold it.",
+   "style": "Photoreal live-action cinema footage shot on an ARRI Alexa with anamorphic lenses: natural storm light from a low sun breaking through clouds, real atmosphere with haze, drifting pollen and light rain, shallow depth of field, natural motion blur, fine 35 mm film grain, muted colour with pink and teal accents. Keena and Moku are high-end feature-film CG characters integrated into real photography, like modern live-action family films: stylised proportions (big teal eyes, small nose, long pink rabbit ears) with real materials, including individual strands of pink hair with a mint sheen, soft fur on the ears, a mint sleeveless cotton tunic with visible stitching, cream suede gloves with teal cuffs, knitted pale-pink leg warmers and scuffed teal leather boots with white laces. Moku is a small dark-teal creature with long soft ears, velvety skin and glossy eyes. No cel shading, no glowing outlines, no text, no subtitles, no music."
+  },
+  {
+   "id": "draft2",
+   "note": "Live-action redraft: Keena as an actress in a practical costume, a real photo as the look reference.",
+   "endpoint": "seedance-2.5-omni-reference",
+   "params": {
+    "resolution": "480p",
+    "duration": 17,
+    "aspect_ratio": "16:9",
+    "omni_reference_task_type": "reference",
+    "high_bitrate": true
+   },
+   "refs": [
+    "refs/photo_meadow.jpg",
+    "refs/ref_moku.png"
+   ],
+   "prompt": "A 17-second live-action cold open in five timed shots, filmed on location like a theatrical movie commercial. The first reference image is a real photograph: match its photographic realism, natural light, sky and landscape detail. The second reference image is a drawing of Moku: reproduce its shape and colours as a photoreal creature. Keena is a real young woman in a practical movie costume: long pink hair with mint-green highlights blowing in the wind, tall pink rabbit ears made of real soft fur, large teal eyes, a mint-green sleeveless cotton tunic with stitching, cream suede gloves with teal cuffs, knitted pale-pink leg warmers and scuffed teal leather boots with white laces. Moku is a small dark-teal rabbit-like creature with long soft ears, damp velvety skin and glossy dark eyes, as real as an animal. [0-3 s] Ground-level close-up in tall wet grass whipped by storm wind at dusk: Keena's teal boots planted firmly; the camera cranes up slowly while orbiting her legs to her back, making her look towering; her face stays hidden. [3-7 s] The same continuous move rises past her shoulder and rabbit ears into an over-the-shoulder view of the kingdom of Leporidia below: rolling green hills, small stone cottages and, on the horizon, a colossal ancient tree with a giant golden beehive hanging from its branches; black-violet corruption creeps across the fields and swarms of small shadowy creatures with glowing magenta eyes pour over the hills toward the tree. [7-10 s] Cut to a long-lens shot of the colossal tree and hive: black-violet tendrils climb the bark, the hive's honey glow dims, bees scatter, lightning flickers in the storm above. [10-13 s] Cut to Keena: the camera arcs around to her front and rises to a close-up of her face for the first time, serious and determined, wind in her hair, rain on her skin. [13-17 s] Same close-up: she breaks into a goofy face with crossed eyes, tongue out and one cheek puffed; Moku pops up over her shoulder and pulls the same goofy face beside her; they hold it."
+  },
+  {
+   "id": "clipA",
+   "note": "Boots to over-the-shoulder reveal; first frame from draft2.",
+   "endpoint": "veo3.1-fast-image-to-video",
+   "params": {
+    "resolution": "1080p",
+    "aspect_ratio": "16:9",
+    "duration": 8
+   },
+   "first": "out/keys/a_first.png",
+   "prompt": "Live-action film footage, one continuous shot. Ground-level close-up of a young woman's scuffed teal leather boots with white laces planted in tall wet grass whipped by storm wind at dusk. The camera cranes up slowly while orbiting around her: past her knitted pale-pink leg warmers, her mint-green tunic and cream gloves, up her back and her long pink hair with mint highlights, rising past her tall furry pink rabbit ears to an over-the-shoulder view of the kingdom of Leporidia in the valley below: rolling green hills, small stone cottages and, on the horizon, a colossal ancient tree with a giant golden beehive hanging from its branches. Black-violet corruption creeps across the fields and swarms of small shadowy creatures with glowing magenta eyes pour over the hills toward the tree. Her face stays hidden. Wind and distant thunder."
+  },
+  {
+   "id": "clipB",
+   "note": "Corrupted tree and hive, text only so Veo renders it in its own photoreal look.",
+   "endpoint": "veo3.1-fast-text-to-video",
+   "params": {
+    "resolution": "1080p",
+    "aspect_ratio": "16:9",
+    "duration": 8
+   },
+   "prompt": "Live-action film footage. Long-lens shot of a colossal ancient tree on a hill with a giant golden beehive hanging from its branches, glowing warm amber from inside. Black-violet corruption tendrils creep up the bark from the roots, where swarms of small shadowy creatures with glowing magenta eyes climb the trunk; the hive's honey glow dims and flickers, bees scatter, lightning flashes inside the swirling storm clouds above. Slow push-in."
+  },
+  {
+   "id": "clipCD",
+   "note": "Serious close-up to the goofy face with Moku; first and last frames from draft2.",
+   "endpoint": "veo3.1-fast-image-to-video",
+   "params": {
+    "resolution": "1080p",
+    "aspect_ratio": "16:9",
+    "duration": 8
+   },
+   "first": "out/keys/cd_first.png",
+   "last": "out/keys/cd_last.png",
+   "prompt": "Live-action film footage. Close-up of the young woman with pink hair, mint highlights and tall furry pink rabbit ears standing in the storm, rain on her face. For two seconds she stares ahead, serious and determined, wind in her hair. Then she suddenly pulls a goofy face: she crosses her eyes, sticks her tongue out and puffs one cheek. Moku, a small dark-teal rabbit-like creature with long soft ears, pops up onto her shoulder and pulls the same goofy face beside her. They hold the pose."
+  },
+  {
+   "id": "clipCD2",
+   "note": "Redo of clipCD with Moku as he really is: a floating blob with bunny ears. Same first frame; no last frame, because the draft has the wrong Moku in it.",
+   "endpoint": "veo3.1-fast-image-to-video",
+   "params": {
+    "resolution": "1080p",
+    "aspect_ratio": "16:9",
+    "duration": 8
+   },
+   "first": "out/keys/cd_first.png",
+   "prompt": "Live-action film footage. Close-up of the young woman with pink hair, mint highlights and tall furry pink rabbit ears standing in the storm, rain on her face. For two seconds she stares ahead, serious and determined, wind in her hair. Then she suddenly pulls a goofy face: she crosses her eyes, sticks her tongue out and puffs one cheek. Moku floats up into the frame beside her cheek and pulls the same goofy face, tongue out. Moku is a magical floating blob, not an animal: a smooth, round, dark-teal body the size of a grapefruit, soft and a little squishy like a gummy sweet, with two long upright bunny ears on top, two big glossy dark eyes and a tiny mouth. Moku has no arms, no legs, no paws, no tail and no animal body, and never touches her: he hovers in mid-air next to her face, bobbing gently. They hold the goofy pose together."
+  }
+ ]
+}

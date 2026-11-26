@@ -1,0 +1,9 @@
+{
+  "name": "keena-trailer-generator",
+  "private": true,
+  "description": "Renders the 3D cold open of the Keena the Void Slayer sample trailer.",
+  "dependencies": {
+    "playwright": "1.65.1",
+    "three": "0.170.0"
+  }
+}
