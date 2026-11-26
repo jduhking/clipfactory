@@ -6,12 +6,14 @@ out/intro_solo_audio.wav (the intro on its own with a one-second tail).
 """
 
 import json
+import os
 from pathlib import Path
 
 import numpy as np
 import soundfile as sf
 
-OUT = Path(__file__).resolve().parent / "out"
+# the low-poly build points KTVS_OUT at its own out/
+OUT = Path(os.environ.get("KTVS_OUT", Path(__file__).resolve().parent / "out"))
 SR = 48000
 CUT_A, CUT_B = 9.0, 392 / 30  # trailer frames 270-391; keep in step with build.sh
 XF = 0.04  # equal-power crossfade at the cut

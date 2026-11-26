@@ -23,7 +23,7 @@ import soundfile as sf
 from scipy.signal import butter, fftconvolve, resample_poly, sosfilt
 
 HERE = Path(__file__).resolve().parent
-OUT = HERE / "out"
+OUT = Path(os.environ.get("KTVS_OUT", HERE / "out"))  # the low-poly build scores into its own out/
 VSCO = Path(os.environ.get("VSCO_DIR", HERE / "out" / "vsco"))
 SR = 48000
 RNG = np.random.default_rng(7)
